@@ -668,6 +668,7 @@ function getDailyRecovery(dateStr) {
 }
 
 function renderSettingsPage() {
+  try {
   setFieldValue('s-name', appSettings.athleteName);
   setFieldValue('s-role', appSettings.athleteRole);
   setFieldValue('s-height', appSettings.heightCm);
@@ -695,6 +696,9 @@ function renderSettingsPage() {
       : '通知はOFFです。アプリ起動中のローカル通知も停止します。';
   }
   updateSupabaseAuthUI();
+  } catch (err) {
+    console.error('BOXER PRO: renderSettingsPage', err);
+  }
 }
 
 function saveAppSettings() {
@@ -990,7 +994,9 @@ function initNav() {
   };
 
   navItems.forEach(item => {
-    item.querySelector('.nav-link').addEventListener('click', (e) => {
+    const link = item.querySelector('.nav-link');
+    if (!link) return;
+    link.addEventListener('click', (e) => {
       e.preventDefault();
       const page = item.dataset.page;
       switchPage(page);
@@ -1166,15 +1172,33 @@ async function getSupabaseClient() {
   if (!isSupabaseConfigured()) return null;
   if (supabaseClientPromise) return supabaseClientPromise;
   supabaseClientPromise = (async () => {
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.49.1');
-    const cfg = window.BOXER_PRO_CONFIG;
-    return createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-    });
+    try {
+      let createClient;
+      const g = typeof window !== 'undefined' ? window.supabase : null;
+      if (g && typeof g.createClient === 'function') {
+        createClient = g.createClient.bind(g);
+      } else {
+        let mod;
+        try {
+          mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm');
+        } catch (e1) {
+          console.warn('BOXER PRO: jsDelivr からの Supabase 読み込みに失敗、esm.sh を試します', e1);
+          mod = await import('https://esm.sh/@supabase/supabase-js@2.49.1');
+        }
+        createClient = mod.createClient;
+      }
+      const cfg = window.BOXER_PRO_CONFIG;
+      return createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      });
+    } catch (err) {
+      console.error('BOXER PRO: Supabase クライアントを作成できません', err);
+      return null;
+    }
   })();
   return supabaseClientPromise;
 }
@@ -1275,7 +1299,10 @@ async function persistAppSettingsToSupabase() {
 async function initSupabaseAuth() {
   if (!isSupabaseConfigured()) return;
   const sb = await getSupabaseClient();
-  if (!sb) return;
+  if (!sb) {
+    setStorageMode(STORAGE_MODE.LOCAL);
+    return;
+  }
 
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
@@ -4238,7 +4265,6 @@ function bindAppEventHandlers() {
 document.addEventListener('DOMContentLoaded', async () => {
   setStorageMode(STORAGE_MODE.CHECKING);
   appSettings = loadSettingsFromStorage();
-  await initSupabaseAuth();
   initNav();
   initMobileQuickUI();
   updateMobileNav(appSettings.landingPage || 'dashboard');
@@ -4247,6 +4273,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindAppEventHandlers();
   setDateInputs();
   applyAppSettings(true);
+  try {
+    await initSupabaseAuth();
+  } catch (err) {
+    console.error('BOXER PRO: initSupabaseAuth', err);
+    setStorageMode(STORAGE_MODE.LOCAL);
+  }
   await loadCuttingPlanData();
   await loadAllData();
   startReminderLoop();

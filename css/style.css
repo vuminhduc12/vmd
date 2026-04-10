@@ -225,8 +225,12 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 /* ══════════════════════════════════════════
    PAGES
 ══════════════════════════════════════════ */
-.page{display:none;padding:28px 28px 80px;animation:pageIn .28s cubic-bezier(.4,0,.2,1)}
-.page.active{display:block}
+.page{display:none;padding:28px 28px 80px}
+.page.active{
+  display:block;
+  opacity:1;
+  animation:pageIn .28s cubic-bezier(.4,0,.2,1) forwards;
+}
 @keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
 .page-header{margin-bottom:28px}
