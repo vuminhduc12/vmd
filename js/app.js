@@ -3,6 +3,29 @@
    ============================================================ */
 
 'use strict';
+(function purgeLocalhostServiceWorkerOnce() {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+  const h = (location.hostname || "").toLowerCase();
+  if (h !== "localhost" && h !== "127.0.0.1" && h !== "[::1]" && h !== "0.0.0.0") return;
+  navigator.serviceWorker.getRegistrations().then(async (regs) => {
+    if (!regs.length) {
+      sessionStorage.removeItem("bpDevSwPurgeAttempts");
+      return;
+    }
+    const n = Number(sessionStorage.getItem("bpDevSwPurgeAttempts") || "0");
+    if (n >= 5) return;
+    sessionStorage.setItem("bpDevSwPurgeAttempts", String(n + 1));
+    await Promise.all(regs.map((r) => r.unregister()));
+    if ("caches" in window) {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      } catch (_) {}
+    }
+    location.reload();
+  });
+})();
+
 
 // ============================================================
 // CONSTANTS
@@ -4258,9 +4281,23 @@ function initInstallPrompt() {
   });
 }
 
+function isLocalDevHost() {
+  const h = (location.hostname || '').toLowerCase();
+  return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h === '0.0.0.0';
+}
+
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   window.addEventListener('load', () => {
+    if (isLocalDevHost()) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      });
+      if ('caches' in window) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {});
+      }
+      return;
+    }
     navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).catch(err => {
       console.error('Service worker registration failed:', err);
     });
@@ -4297,8 +4334,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadAllData();
   startReminderLoop();
 
-  // Set mealViewDate to today and load summary
-  document.getElementById('mealViewDate').value = TODAY();
+  // Set mealViewDate to today and load summary（要素欠落でここで止まると active ページが更新されないことがある）
+  const mealViewDateEl = document.getElementById('mealViewDate');
+  if (mealViewDateEl) mealViewDateEl.value = TODAY();
   loadMealSummary();
   switchPage(appSettings.landingPage || 'dashboard');
 });
