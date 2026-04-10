@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'boxer-pro-v8';
+﻿const CACHE_NAME = 'boxer-pro-v10';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -83,3 +83,4 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+

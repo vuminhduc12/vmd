@@ -9,12 +9,10 @@
   if (h !== "localhost" && h !== "127.0.0.1" && h !== "[::1]" && h !== "0.0.0.0") return;
   navigator.serviceWorker.getRegistrations().then(async (regs) => {
     if (!regs.length) {
-      sessionStorage.removeItem("bpDevSwPurgeAttempts");
+      sessionStorage.removeItem("bpDevSwReloadOnce");
       return;
     }
-    const n = Number(sessionStorage.getItem("bpDevSwPurgeAttempts") || "0");
-    if (n >= 5) return;
-    sessionStorage.setItem("bpDevSwPurgeAttempts", String(n + 1));
+    const alreadyReloaded = sessionStorage.getItem("bpDevSwReloadOnce") === "1";
     await Promise.all(regs.map((r) => r.unregister()));
     if ("caches" in window) {
       try {
@@ -22,7 +20,15 @@
         await Promise.all(keys.map((k) => caches.delete(k)));
       } catch (_) {}
     }
-    location.reload();
+    if (!alreadyReloaded) {
+      sessionStorage.setItem("bpDevSwReloadOnce", "1");
+      location.reload();
+      return;
+    }
+    sessionStorage.removeItem("bpDevSwReloadOnce");
+    console.warn(
+      "BOXER PRO: localhost で Service Worker が残っています。Chrome → Application → 「サイトデータを削除」でキャッシュを消してください。"
+    );
   });
 })();
 
@@ -1164,7 +1170,18 @@ function switchPage(pageName) {
   // Update pages（必ず1つ active — 未知IDですべて非表示になるのを防ぐ）
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const activePage = document.getElementById(`page-${page}`) || document.getElementById('page-dashboard');
-  if (activePage) activePage.classList.add('active');
+  if (activePage) {
+    const main = document.getElementById('mainWrapper');
+    if (main) {
+      const outsideMain = !main.contains(activePage);
+      const nestedInOtherPage = !!(activePage.parentElement && activePage.parentElement.closest && activePage.parentElement.closest('.page'));
+      if (outsideMain || nestedInOtherPage) {
+        console.warn('BOXER PRO: #' + activePage.id + ' を mainWrapper 直下へ移動（HTMLの誤配置または古いキャッシュ対策）');
+        main.appendChild(activePage);
+      }
+    }
+    activePage.classList.add('active');
+  }
 
   // Update topbar title
   const titles = {
