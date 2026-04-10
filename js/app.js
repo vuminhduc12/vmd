@@ -544,6 +544,17 @@ function parseOptionalIntBounded(raw, bounds, label) {
   return { ok: true, value: n };
 }
 
+function parseRequiredIntBounded(raw, bounds, label) {
+  const s = String(raw ?? '').trim();
+  if (!s) return { ok: false, msg: `${label}を入力してください` };
+  const n = parseInt(s, 10);
+  if (!Number.isFinite(n)) return { ok: false, msg: `${label}は整数で入力してください` };
+  if (n < bounds[0] || n > bounds[1]) {
+    return { ok: false, msg: `${label}は${bounds[0]}〜${bounds[1]}の範囲で入力してください` };
+  }
+  return { ok: true, value: n };
+}
+
 function getLatestEntryForDate(rows, dateStr) {
   return [...rows].reverse().find(row => row.date && row.date.slice(0, 10) === dateStr) || null;
 }
