@@ -1,0 +1,9 @@
+# Cloudflare Workers — 静的ファイル（index.html / js / css）をルートから配信
+# ダッシュボードのプロジェクト名と一致させる（vmd のままならこのまま）
+name = "vmd"
+compatibility_date = "2025-04-01"
+
+[assets]
+directory = "."
+# 単一 index.html の SPA のため、存在しないパスでも index.html を返す（リロード対策）
+not_found_handling = "single-page-application"

@@ -1,0 +1,11 @@
+{
+  "name": "boxer-pro",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "build": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.114.0"
+  }
+}
