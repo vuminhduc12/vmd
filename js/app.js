@@ -1459,6 +1459,12 @@ async function mergeLocalDataToSupabase() {
   showToast(`ローカルデータを反映しました（${n} 件処理）`, 'success');
 }
 
+if (typeof window !== 'undefined') {
+  window.signInWithGoogle = signInWithGoogle;
+  window.signOutSupabase = signOutSupabase;
+  window.mergeLocalDataToSupabase = mergeLocalDataToSupabase;
+}
+
 function updateSupabaseAuthUI() {
   const hint = document.getElementById('supabase-config-hint');
   const emailEl = document.getElementById('supabase-auth-email');
@@ -1480,7 +1486,13 @@ function updateSupabaseAuthUI() {
   }
 
   getSupabaseClient().then(async (sb) => {
-    if (!sb) return;
+    if (!sb) {
+      emailEl.textContent = '接続できません（URL・anon key・Console を確認）';
+      loginBtn.style.display = 'inline-flex';
+      logoutBtn.style.display = 'none';
+      mergeBtn.style.display = 'none';
+      return;
+    }
     const { data: { session } } = await sb.auth.getSession();
     const email = session?.user?.email || '';
     emailEl.textContent = email || '未ログイン';
@@ -1488,7 +1500,13 @@ function updateSupabaseAuthUI() {
     loginBtn.style.display = inCloud ? 'none' : 'inline-flex';
     logoutBtn.style.display = inCloud ? 'inline-flex' : 'none';
     mergeBtn.style.display = inCloud ? 'inline-flex' : 'none';
-  }).catch(() => {});
+  }).catch((err) => {
+    console.error('BOXER PRO: updateSupabaseAuthUI', err);
+    emailEl.textContent = '接続エラー（Console を確認）';
+    loginBtn.style.display = 'inline-flex';
+    logoutBtn.style.display = 'none';
+    mergeBtn.style.display = 'none';
+  });
 }
 
 // ============================================================
@@ -4325,6 +4343,9 @@ function bindAppEventHandlers() {
   document.getElementById('appDataImportInput')?.addEventListener('change', importAppDataFromFile);
   document.getElementById('w-height')?.addEventListener('input', updateWeightBmiPreview);
   document.getElementById('w-weight')?.addEventListener('input', updateWeightBmiPreview);
+  document.getElementById('supabase-login-btn')?.addEventListener('click', () => { void signInWithGoogle(); });
+  document.getElementById('supabase-logout-btn')?.addEventListener('click', () => { void signOutSupabase(); });
+  document.getElementById('supabase-merge-btn')?.addEventListener('click', () => { void mergeLocalDataToSupabase(); });
 }
 
 // ============================================================
