@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <!-- boxer-pro-build 11 -->
+  <!-- boxer-pro-build 12 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
   <meta name="theme-color" content="#080a10">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>BOXER PRO v2 - 隧ｦ蜷育ｮ｡逅・す繧ｹ繝・Β</title>
+  <title>BOXER PRO v2 - 試合管理システム</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/app-icon.svg">
@@ -17,11 +17,11 @@
 </head>
 <body>
 
-<!-- 笊絶武笊絶武笊絶武 SIDEBAR 笊絶武笊絶武笊絶武 -->
+<!-- ══════ SIDEBAR ══════ -->
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="logo-wrap">
-      <span class="logo-icon">･・/span>
+      <span class="logo-icon">🥊</span>
       <div>
         <div class="logo-title">BOXER PRO</div>
         <div class="logo-sub">FIGHT MANAGEMENT SYSTEM</div>
@@ -33,33 +33,33 @@
   <div class="nav-section-label">Navigation</div>
   <ul class="nav-list">
     <li class="nav-item active" data-page="dashboard">
-      <a href="#" class="nav-link"><i class="fas fa-th-large"></i><span>繝繝・す繝･繝懊・繝・/span></a>
+      <a href="#" class="nav-link"><i class="fas fa-th-large"></i><span>ダッシュボード</span></a>
     </li>
     <li class="nav-item" data-page="weight">
-      <a href="#" class="nav-link"><i class="fas fa-weight-scale"></i><span>菴馴㍾邂｡逅・/span></a>
+      <a href="#" class="nav-link"><i class="fas fa-weight-scale"></i><span>体重管理</span></a>
     </li>
     <li class="nav-item" data-page="meals">
-      <a href="#" class="nav-link"><i class="fas fa-bowl-food"></i><span>鬟滉ｺ九Γ繝九Η繝ｼ</span></a>
+      <a href="#" class="nav-link"><i class="fas fa-bowl-food"></i><span>食事メニュー</span></a>
     </li>
     <li class="nav-item" data-page="training">
-      <a href="#" class="nav-link"><i class="fas fa-person-running"></i><span>邱ｴ鄙偵せ繧ｱ繧ｸ繝･繝ｼ繝ｫ</span></a>
+      <a href="#" class="nav-link"><i class="fas fa-person-running"></i><span>練習スケジュール</span></a>
     </li>
     <li class="nav-item" data-page="calories">
-      <a href="#" class="nav-link"><i class="fas fa-fire-flame-curved"></i><span>繧ｫ繝ｭ繝ｪ繝ｼ險育ｮ・/span></a>
+      <a href="#" class="nav-link"><i class="fas fa-fire-flame-curved"></i><span>カロリー計算</span></a>
     </li>
     <li class="nav-item" data-page="fight">
-      <a href="#" class="nav-link"><i class="fas fa-trophy"></i><span>隧ｦ蜷育岼讓・/span>
+      <a href="#" class="nav-link"><i class="fas fa-trophy"></i><span>試合目標</span>
         <span class="nav-badge" id="navFightBadge" style="display:none">!</span>
       </a>
     </li>
     <li class="nav-item" data-page="settings">
-      <a href="#" class="nav-link"><i class="fas fa-sliders"></i><span>繝槭う險ｭ螳・/span></a>
+      <a href="#" class="nav-link"><i class="fas fa-sliders"></i><span>マイ設定</span></a>
     </li>
   </ul>
 
   <div class="sidebar-footer">
     <div class="fighter-card">
-      <div class="fighter-avatar">･・/div>
+      <div class="fighter-avatar">🥊</div>
       <div>
         <div class="fighter-name" id="profileNameDisplay">Vu Minh Duc</div>
         <div class="fighter-title" id="profileRoleDisplay">SE / Pro Boxer</div>
@@ -68,30 +68,30 @@
   </div>
 </nav>
 
-<!-- 笊絶武笊絶武笊絶武 MAIN 笊絶武笊絶武笊絶武 -->
+<!-- ══════ MAIN ══════ -->
 <div class="main-wrapper" id="mainWrapper">
 
   <!-- TOPBAR -->
   <header class="topbar">
     <button class="topbar-menu-btn" id="topbarMenuBtn"><i class="fas fa-bars"></i></button>
-    <div class="topbar-title" id="topbarTitle">繝繝・す繝･繝懊・繝・/div>
+    <div class="topbar-title" id="topbarTitle">ダッシュボード</div>
     <div class="topbar-right">
-      <button class="status-chip" id="storageStatusBadge" type="button">蜷梧悄遒ｺ隱堺ｸｭ</button>
+      <button class="status-chip" id="storageStatusBadge" type="button">同期確認中</button>
       <button class="status-chip install-chip" id="installAppBtn" type="button" style="display:none">
-        <i class="fas fa-mobile-screen-button"></i> 繧｢繝励Μ蛹・     </button>
+        <i class="fas fa-mobile-screen-button"></i> アプリをインストール     </button>
       <div class="today-date" id="todayDate"></div>
       <div class="countdown-pill" id="countdownPill" onclick="switchPage('fight')">
         <i class="fas fa-calendar-alt"></i>
-        <span id="countdownText">隧ｦ蜷医∪縺ｧ --譌･</span>
+        <span id="countdownText">試合まで --日</span>
       </div>
     </div>
   </header>
 
-  <!-- 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 DASHBOARD 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 -->
+  <!-- ══════ DASHBOARD ══════ -->
   <div class="page active" id="page-dashboard">
     <div class="page-header">
-      <h1><i class="fas fa-th-large" style="color:var(--red);font-size:24px"></i> 繝繝・す繝･繝懊・繝・/h1>
-      <p class="page-subtitle">莉頑律縺ｮ繧ｳ繝ｳ繝・ぅ繧ｷ繝ｧ繝ｳ繧剃ｸ逶ｮ縺ｧ遒ｺ隱・<span id="dashSubDate"></span></p>
+      <h1><i class="fas fa-th-large" style="color:var(--red);font-size:24px"></i> ダッシュボード</h1>
+      <p class="page-subtitle">今日のコンディションを一目で確認<span id="dashSubDate"></span></p>
     </div>
 
     <!-- KPI Row -->
@@ -99,7 +99,7 @@
       <div class="kpi-card kpi-weight">
         <div class="kpi-icon-wrap"><i class="fas fa-weight-scale"></i></div>
         <div class="kpi-body">
-          <div class="kpi-label">迴ｾ蝨ｨ縺ｮ菴馴㍾</div>
+          <div class="kpi-label">現在の体重</div>
           <div class="kpi-value" id="kpi-current-weight">-- kg</div>
           <div class="kpi-sub" id="kpi-bmi-badge"></div>
         </div>
@@ -107,7 +107,7 @@
       <div class="kpi-card kpi-kcal">
         <div class="kpi-icon-wrap"><i class="fas fa-fire-flame-curved"></i></div>
         <div class="kpi-body">
-          <div class="kpi-label">譛ｬ譌･鞫ょ叙繧ｫ繝ｭ繝ｪ繝ｼ</div>
+          <div class="kpi-label">本日摂取カロリー</div>
           <div class="kpi-value" id="kpi-today-calories">-- kcal</div>
           <div id="kpi-cal-bar-wrap" style="margin-top:6px;width:100%;max-width:130px">
             <div class="progress-track" style="height:5px">
@@ -119,17 +119,17 @@
       <div class="kpi-card kpi-protein">
         <div class="kpi-icon-wrap"><i class="fas fa-drumstick-bite"></i></div>
         <div class="kpi-body">
-          <div class="kpi-label">譛ｬ譌･繧ｿ繝ｳ繝代け雉ｪ</div>
+          <div class="kpi-label">本日タンパク質</div>
           <div class="kpi-value" id="kpi-today-protein">-- g</div>
-          <div class="kpi-sub">謗ｨ螂ｨ 菴馴㍾ﾃ・.2g</div>
+          <div class="kpi-sub">目安 体重×2.2g</div>
         </div>
       </div>
       <div class="kpi-card kpi-train">
         <div class="kpi-icon-wrap"><i class="fas fa-dumbbell"></i></div>
         <div class="kpi-body">
-          <div class="kpi-label">譛ｬ譌･縺ｮ邱ｴ鄙・/div>
-          <div class="kpi-value" id="kpi-today-training">-- 蛻・/div>
-          <div class="kpi-sub" id="kpi-burned">豸郁ｲｻ -- kcal</div>
+          <div class="kpi-label">本日の練習</div>
+          <div class="kpi-value" id="kpi-today-training">-- 分</div>
+          <div class="kpi-sub" id="kpi-burned">消費 -- kcal</div>
         </div>
       </div>
     </div>
@@ -139,27 +139,27 @@
       <div class="chart-card chart-card-featured">
         <div class="chart-card-header">
           <div>
-            <h3><i class="fas fa-chart-area"></i> 菴馴㍾謗ｨ遘ｻ・育峩霑・4譌･・・/h3>
-            <div class="chart-card-subtitle">貂幃㍼繝壹・繧ｹ縺ｨ逶ｮ讓吶Λ繧､繝ｳ繧貞酔譎ゅ↓遒ｺ隱・/div>
+            <h3><i class="fas fa-chart-area"></i> 体重推移（直近14日）</h3>
+            <div class="chart-card-subtitle">減量ペースと目標ラインを同時に確認</div>
           </div>
-          <div class="trend-badge" id="dashWeightTrend">險倬鹸蠕・■</div>
+          <div class="trend-badge" id="dashWeightTrend">記録待ち</div>
         </div>
         <div class="chart-canvas-wrap chart-canvas-wrap-lg"><canvas id="weightChart"></canvas></div>
         <div class="chart-stat-grid">
           <div class="chart-stat">
-            <span>迴ｾ蝨ｨ</span>
+            <span>現在</span>
             <strong id="dashWeightCurrent">-- kg</strong>
           </div>
           <div class="chart-stat">
-            <span>14譌･蟷ｳ蝮・/span>
+            <span>14日平均</span>
             <strong id="dashWeightAvg">-- kg</strong>
           </div>
           <div class="chart-stat">
-            <span>螟牙喧驥・/span>
+            <span>前回比</span>
             <strong id="dashWeightDelta">-- kg</strong>
           </div>
           <div class="chart-stat">
-            <span>逶ｮ讓吝ｷｮ</span>
+            <span>目標差</span>
             <strong id="dashWeightGap">-- kg</strong>
           </div>
         </div>
@@ -167,8 +167,8 @@
       <div class="chart-card chart-card-accent">
         <div class="chart-card-header">
           <div>
-            <h3><i class="fas fa-chart-pie"></i> 譛ｬ譌･ PFC 繝舌Λ繝ｳ繧ｹ</h3>
-            <div class="chart-card-subtitle">鬟滉ｺ九・雉ｪ繧貞庄隕門喧縺励※貂幃㍼荳ｭ縺ｧ繧ゅメ繧ｧ繝・け</div>
+            <h3><i class="fas fa-chart-pie"></i> 本日 PFC バランス</h3>
+            <div class="chart-card-subtitle">食事から逆算して減量中でもチェック</div>
           </div>
         </div>
         <div class="chart-donut-shell">
@@ -185,48 +185,48 @@
     <!-- Mid Row: Streak + Quick Weight + Quick Training + Fight -->
     <div class="quick-log-row" id="dash-quick-anchor" style="margin-bottom:16px">
       <div class="quick-log-card">
-        <div class="quick-header"><h3><i class="fas fa-bolt-lightning"></i> 繧ｯ繧､繝・け菴馴㍾險倬鹸</h3></div>
+        <div class="quick-header"><h3><i class="fas fa-bolt-lightning"></i> クイック体重記録</h3></div>
         <div class="quick-form">
-          <input type="number" id="quickWeight" class="input-field" placeholder="菴馴㍾ (kg)" step="0.1">
+          <input type="number" id="quickWeight" class="input-field" placeholder="体重 (kg)" step="0.1">
           <div class="input-row">
-            <input type="number" id="quickBodyFat" class="input-field" placeholder="菴楢р閧ｪ邇・%)">
-            <input type="number" id="quickHeight" class="input-field" placeholder="霄ｫ髟ｷ (cm)" value="170">
+            <input type="number" id="quickBodyFat" class="input-field" placeholder="体脂肪率 (%)">
+            <input type="number" id="quickHeight" class="input-field" placeholder="身長 (cm)" value="170">
           </div>
-          <textarea id="quickNote" class="input-field" placeholder="繝｡繝｢繝ｻ豌嶺ｻ倥″" rows="2"></textarea>
+          <textarea id="quickNote" class="input-field" placeholder="メモ・体調など" rows="2"></textarea>
           <button class="btn btn-primary btn-full" onclick="quickSaveWeight()">
-            <i class="fas fa-save"></i> 莉頑律縺ｮ菴馴㍾繧定ｨ倬鹸
+            <i class="fas fa-save"></i> 今日の体重を記録
           </button>
         </div>
       </div>
 
       <div class="quick-log-card">
-        <div class="quick-header"><h3><i class="fas fa-stopwatch"></i> 莉頑律縺ｮ邱ｴ鄙定ｨ倬鹸</h3></div>
+        <div class="quick-header"><h3><i class="fas fa-stopwatch"></i> 今日の練習を記録</h3></div>
         <div class="quick-form">
           <select id="quickTrainingType" class="input-field">
-            <option value="">邱ｴ鄙堤ｨｮ逶ｮ繧帝∈謚・/option>
-            <option>繧ｷ繝｣繝峨・繝懊け繧ｷ繝ｳ繧ｰ</option><option>繧ｵ繝ｳ繝峨ヰ繝・げ</option>
-            <option>繝溘ャ繝域遠縺｡</option><option>繧ｹ繝代・繝ｪ繝ｳ繧ｰ</option>
-            <option>繝ｭ繝ｼ繝峨Ρ繝ｼ繧ｯ</option><option>遲九ヨ繝ｬ</option>
-            <option>邵・ｷｳ縺ｳ</option><option>繧ｹ繝医Ξ繝・メ</option>
+            <option value="">種目を選択</option>
+            <option>シャドーボクシング</option><option>サンドバッグ</option>
+            <option>ミット打ち</option><option>スパーリング</option>
+            <option>ロードワーク</option><option>筋トレ</option>
+            <option>縄跳び</option><option>ストレッチ</option>
           </select>
           <div class="input-row">
-            <input type="number" id="quickDuration" class="input-field" placeholder="譎る俣 (蛻・>
+            <input type="number" id="quickDuration" class="input-field" placeholder="時間 (分)">
             <select id="quickIntensity" class="input-field">
-              <option value="">蠑ｷ蠎ｦ</option>
-              <option>菴・/option><option>荳ｭ</option><option>鬮・/option><option>譛螟ｧ</option>
+              <option value="">強度</option>
+              <option>低</option><option>中</option><option>高</option><option>最大</option>
             </select>
           </div>
           <div id="quickBurnEstimate" style="font-size:11px;color:var(--tx-2);text-align:center"></div>
           <button class="btn btn-gold btn-full" onclick="quickSaveTraining()">
-            <i class="fas fa-save"></i> 邱ｴ鄙偵ｒ險倬鹸
+            <i class="fas fa-save"></i> 練習を記録
           </button>
         </div>
       </div>
 
       <div class="quick-log-card">
-        <div class="quick-header"><h3><i class="fas fa-trophy"></i> 谺｡縺ｮ隧ｦ蜷・/h3></div>
+        <div class="quick-header"><h3><i class="fas fa-trophy"></i> 次の試合</h3></div>
         <div id="fightGoalCard" class="fight-goal-display">
-          <div class="no-fight-msg">隧ｦ蜷育岼讓吶′譛ｪ逋ｻ骭ｲ<br><small>縲瑚ｩｦ蜷育岼讓吶阪ち繝悶°繧芽ｿｽ蜉</small></div>
+          <div class="no-fight-msg">試合目標が未登録<br><small>「試合目標」タブから追加</small></div>
         </div>
       </div>
     </div>
@@ -235,23 +235,23 @@
     <div class="dash-grid-bot" style="margin-bottom:0">
       <div class="chart-card">
         <div class="chart-card-header">
-          <h3><i class="fas fa-chart-bar"></i> 逶ｴ霑・譌･ 繧ｫ繝ｭ繝ｪ繝ｼ蜿取髪</h3>
+          <h3><i class="fas fa-chart-bar"></i> 過去7日 カロリー収支</h3>
         </div>
         <div style="height:200px"><canvas id="dash7dayChart"></canvas></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
         <!-- Streak -->
         <div class="streak-card">
-          <div class="streak-flame">櫨</div>
+          <div class="streak-flame">🔥</div>
           <div>
             <div class="streak-val" id="streakDays">0</div>
-            <div class="streak-label">譌･騾｣邯夂ｷｴ鄙剃ｸｭ</div>
+            <div class="streak-label">日連続記録中</div>
             <div style="font-size:11px;color:var(--tx-3);margin-top:4px" id="streakSub"></div>
           </div>
         </div>
         <!-- Today rings -->
         <div class="card">
-          <div class="card-header"><h3><i class="fas fa-circle-notch"></i> 莉頑律縺ｮ驕疲・邇・/h3></div>
+          <div class="card-header"><h3><i class="fas fa-circle-notch"></i> 今日の達成度</h3></div>
           <div style="display:flex;justify-content:space-around;padding:16px 8px">
             <div class="ring-wrap">
               <svg class="ring-svg" width="80" height="80" viewBox="0 0 80 80">
@@ -274,7 +274,7 @@
               </svg>
               <div class="ring-center">
                 <div class="ring-val" id="ringProPct">0%</div>
-                <div class="ring-unit">繧ｿ繝ｳ繝代け</div>
+                <div class="ring-unit">タンパク質</div>
               </div>
             </div>
             <div class="ring-wrap">
@@ -286,7 +286,7 @@
               </svg>
               <div class="ring-center">
                 <div class="ring-val" id="ringTrainPct">0%</div>
-                <div class="ring-unit">邱ｴ鄙・/div>
+                <div class="ring-unit">練習</div>
               </div>
             </div>
           </div>
@@ -297,122 +297,122 @@
     <!-- Recent Activity -->
     <div class="section-card mt-16">
       <div class="section-card-header">
-        <h3><i class="fas fa-history"></i> 譛霑代・繧｢繧ｯ繝・ぅ繝薙ユ繧｣</h3>
+        <h3><i class="fas fa-history"></i> 最近のアクティビティ</h3>
         <span id="activityCount" style="font-size:11px;color:var(--tx-3)"></span>
       </div>
-      <div id="recentActivity"><div class="empty-state">縺ｾ縺險倬鹸縺後≠繧翫∪縺帙ｓ</div></div>
+      <div id="recentActivity"><div class="empty-state">まだ記録がありません</div></div>
     </div>
 
     <div class="section-card mt-16 performance-card">
       <div class="section-card-header">
-        <h3><i class="fas fa-bolt"></i> 莉頑律縺ｮ蜍晁ｲ繧ｳ繝ｳ繝・ぅ繧ｷ繝ｧ繝ｳ</h3>
-        <span class="trend-badge" id="readinessBadge">蛻､螳壼ｾ・■</span>
+        <h3><i class="fas fa-bolt"></i> 今日の戦闘コンディション</h3>
+        <span class="trend-badge" id="readinessBadge">分析待ち</span>
       </div>
       <div class="performance-layout">
         <div class="performance-hero">
           <div class="performance-score" id="readinessScore">--</div>
           <div class="performance-score-copy">
-            <strong id="readinessTitle">繝・・繧ｿ蠕・■</strong>
-            <p id="readinessSummary">菴馴㍾繝ｻ鬟滉ｺ九・豌ｴ蛻・・蝗槫ｾｩ繝ｭ繧ｰ縺悟・繧九→縲∽ｻ頑律縺ｮ蜍晁ｲ繧ｳ繝ｳ繝・ぅ繧ｷ繝ｧ繝ｳ繧貞愛螳壹＠縺ｾ縺吶・/p>
+            <strong id="readinessTitle">データ待ち</strong>
+            <p id="readinessSummary">体重・食事・水分・睡眠・リカバリーログが揃うと、今日の戦闘コンディションを更新します。</p>
           </div>
         </div>
         <div class="performance-stat-grid">
           <div class="performance-stat">
-            <span>貂幃㍼繝ｩ繧､繝ｳ</span>
+            <span>減量ライン</span>
             <strong id="readinessWeightStatus">--</strong>
-            <div class="performance-stat-sub" id="readinessWeightSub">隧ｦ蜷医・繝ｩ繝ｳ蠕・■</div>
+            <div class="performance-stat-sub" id="readinessWeightSub">試合までのライン待ち</div>
           </div>
           <div class="performance-stat">
-            <span>豌ｴ蛻・/span>
+            <span>水分</span>
             <strong id="readinessHydrationStatus">--</strong>
-            <div class="performance-stat-sub" id="readinessHydrationSub">豌ｴ蛻・Ο繧ｰ蠕・■</div>
+            <div class="performance-stat-sub" id="readinessHydrationSub">水分ログ待ち</div>
           </div>
           <div class="performance-stat">
-            <span>蝗槫ｾｩ</span>
+            <span>回復</span>
             <strong id="readinessRecoveryStatus">--</strong>
-            <div class="performance-stat-sub" id="readinessRecoverySub">逹｡逵繝ｭ繧ｰ蠕・■</div>
+            <div class="performance-stat-sub" id="readinessRecoverySub">睡眠ログ待ち</div>
           </div>
           <div class="performance-stat">
-            <span>譬・､・/span>
+            <span>燃料</span>
             <strong id="readinessFuelStatus">--</strong>
-            <div class="performance-stat-sub" id="readinessFuelSub">鬟滉ｺ九Ο繧ｰ蠕・■</div>
+            <div class="performance-stat-sub" id="readinessFuelSub">食事ログ待ち</div>
           </div>
         </div>
-        <div class="settings-note performance-note" id="readinessFocus">莉頑律縺ｮ驥咲せ繝昴う繝ｳ繝医′縺薙％縺ｫ陦ｨ遉ｺ縺輔ｌ縺ｾ縺吶・/div>
+        <div class="settings-note performance-note" id="readinessFocus">今日のフォーカスポイントがここに表示されます。</div>
       </div>
     </div>
 
     <div class="two-col mt-16">
       <div class="section-card">
         <div class="section-card-header">
-          <h3><i class="fas fa-calendar-week"></i> 騾ｱ蝣ｱ繧ｵ繝槭Μ繝ｼ</h3>
+          <h3><i class="fas fa-calendar-week"></i> 週次サマリー</h3>
         </div>
-        <div class="summary-copy" id="weeklySummaryText">繝・・繧ｿ縺後◎繧阪≧縺ｨ騾ｱ谺｡縺ｮ隕∫ｴ・′陦ｨ遉ｺ縺輔ｌ縺ｾ縺吶・/div>
+        <div class="summary-copy" id="weeklySummaryText">データが揃うと週次の傾向が表示されます。</div>
       </div>
       <div class="section-card">
         <div class="section-card-header">
-          <h3><i class="fas fa-calendar-days"></i> 譛亥ｱ繧ｵ繝槭Μ繝ｼ</h3>
+          <h3><i class="fas fa-calendar-days"></i> 月次サマリー</h3>
         </div>
-        <div class="summary-copy" id="monthlySummaryText">繝・・繧ｿ縺後◎繧阪≧縺ｨ譛域ｬ｡縺ｮ隕∫ｴ・′陦ｨ遉ｺ縺輔ｌ縺ｾ縺吶・/div>
+        <div class="summary-copy" id="monthlySummaryText">データが揃うと月次の傾向が表示されます。</div>
       </div>
     </div>
   </div>
 
-  <!-- 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 WEIGHT PAGE 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 -->
+  <!-- ══════ WEIGHT PAGE ══════ -->
   <div class="page" id="page-weight">
     <div class="page-header">
-      <h1><i class="fas fa-weight-scale" style="color:var(--blue);font-size:24px"></i> 菴馴㍾邂｡逅・/h1>
-      <p class="page-subtitle">菴馴㍾繝ｻ菴楢р閧ｪ繝ｻBMI縺ｮ險倬鹸縺ｨ謗ｨ遘ｻ繧ｰ繝ｩ繝・/p>
+      <h1><i class="fas fa-weight-scale" style="color:var(--blue);font-size:24px"></i> 体重管理</h1>
+      <p class="page-subtitle">体重・体脂肪率・BMIの記録と推移グラフ</p>
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
       <!-- Form -->
       <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-plus-circle"></i> 菴馴㍾繧定ｨ倬鹸</h3>
+        <h3 class="form-title"><i class="fas fa-plus-circle"></i> 体重を記録</h3>
         <div id="weightEditBanner" class="weight-edit-banner" style="display:none">
-          <span><i class="fas fa-pen"></i> 縺薙・陦後ｒ邱ｨ髮・ｸｭ縺ｧ縺吶ゆｿ晏ｭ倥〒荳頑嶌縺阪＠縺ｾ縺吶・/span>
-          <button type="button" class="btn btn-sm btn-secondary" onclick="cancelEditWeight()">繧ｭ繝｣繝ｳ繧ｻ繝ｫ</button>
+          <span><i class="fas fa-pen"></i> この行を編集中です。保存で反映されます。</span>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="cancelEditWeight()">キャンセル</button>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">譌･莉・/label>
+            <label class="form-label">日付</label>
             <input type="date" id="w-date" class="input-field">
           </div>
           <div class="form-group">
-            <label class="form-label">霄ｫ髟ｷ (cm)</label>
+            <label class="form-label">身長 (cm)</label>
             <input type="number" id="w-height" class="input-field" placeholder="170" value="170">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">菴馴㍾ (kg)</label>
+            <label class="form-label">体重 (kg)</label>
             <input type="number" id="w-weight" class="input-field" placeholder="65.5" step="0.1">
           </div>
           <div class="form-group">
-            <label class="form-label">菴楢р閧ｪ邇・(%)</label>
+            <label class="form-label">体脂肪率(%)</label>
             <input type="number" id="w-fat" class="input-field" placeholder="12.5" step="0.1">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">遲玖ｉ驥・(kg)</label>
+            <label class="form-label">筋肉量(kg)</label>
             <input type="number" id="w-muscle" class="input-field" placeholder="55.0" step="0.1">
           </div>
           <div class="form-group">
-            <label class="form-label">逶ｮ讓吩ｽ馴㍾ (kg)</label>
+            <label class="form-label">目標体重 (kg)</label>
             <input type="number" id="w-target" class="input-field" placeholder="63.5" step="0.1">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">襍ｷ蠎頑凾菴楢ｪｿ繝ｻ繧ｳ繝ｳ繝・ぅ繧ｷ繝ｧ繝ｳ</label>
-          <input type="text" id="w-note" class="input-field" placeholder="襍ｷ蠎顔峩蠕後∵悃邱ｴ蠕後↑縺ｩ...">
+          <label class="form-label">減量時体調・コンディション</label>
+          <input type="text" id="w-note" class="input-field" placeholder="減量調整・脚の重さなど...">
         </div>
         <button type="button" id="weightSaveBtn" class="btn btn-primary btn-full" onclick="saveWeight()">
-          <i class="fas fa-save"></i> 菴馴㍾繧剃ｿ晏ｭ・       </button>
+          <i class="fas fa-save"></i> 体重を保存       </button>
         <!-- BMI Preview -->
         <div id="bmiPreview" style="margin-top:14px;display:none">
           <div style="background:var(--bg-input);border-radius:var(--rs);padding:12px;text-align:center;border:1px solid var(--b1)">
-            <div style="font-size:11px;color:var(--tx-3);margin-bottom:4px">BMI 繝励Ξ繝薙Η繝ｼ</div>
+            <div style="font-size:11px;color:var(--tx-3);margin-bottom:4px">BMI プレビュー</div>
             <div style="font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:var(--tx-1)" id="bmiPreviewVal">--</div>
             <div id="bmiPreviewBadge"></div>
           </div>
@@ -422,23 +422,23 @@
       <!-- Stats Panel -->
       <div style="display:flex;flex-direction:column;gap:14px">
         <div class="form-card" style="padding:18px">
-          <h3 class="form-title" style="margin-bottom:14px"><i class="fas fa-chart-simple"></i> 邨ｱ險医し繝槭Μ繝ｼ</h3>
+          <h3 class="form-title" style="margin-bottom:14px"><i class="fas fa-chart-simple"></i> 直近サマリー</h3>
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-label">譛譁ｰ菴馴㍾</div>
+              <div class="stat-label">最新体重</div>
               <div class="stat-val" id="latest-weight">-- kg</div>
               <div class="stat-sub" id="weight-delta-display"></div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">逶ｮ讓吩ｽ馴㍾</div>
+              <div class="stat-label">目標体重</div>
               <div class="stat-val" id="target-weight-display">-- kg</div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">谿九ｊ貂幃㍼</div>
+              <div class="stat-label">残り減量</div>
               <div class="stat-val" id="weight-remain">-- kg</div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">菴楢р閧ｪ邇・/div>
+              <div class="stat-label">体脂肪率</div>
               <div class="stat-val" id="latest-fat">-- %</div>
             </div>
           </div>
@@ -451,7 +451,7 @@
           <!-- Progress -->
           <div class="progress-wrap mt-16">
             <div class="progress-bar-row">
-              <span>貂幃㍼驕疲・邇・/span>
+              <span>減量達成度</span>
               <span id="weight-progress-pct">0%</span>
             </div>
             <div class="progress-track">
@@ -462,7 +462,7 @@
 
         <!-- Muscle & Fat rings -->
         <div class="form-card" style="padding:16px">
-          <h3 class="form-title" style="margin-bottom:12px"><i class="fas fa-circle-half-stroke"></i> 霄ｫ菴鍋ｵ・・</h3>
+          <h3 class="form-title" style="margin-bottom:12px"><i class="fas fa-circle-half-stroke"></i> 体組成リング</h3>
           <div style="display:flex;justify-content:space-around;padding:8px 0">
             <div class="ring-wrap">
               <svg class="ring-svg" width="90" height="90" viewBox="0 0 90 90">
@@ -473,7 +473,7 @@
               </svg>
               <div class="ring-center">
                 <div class="ring-val" id="ringFatVal">--%</div>
-                <div class="ring-unit">菴楢р閧ｪ</div>
+                <div class="ring-unit">体脂肪</div>
               </div>
             </div>
             <div class="ring-wrap">
@@ -485,7 +485,7 @@
               </svg>
               <div class="ring-center">
                 <div class="ring-val" id="ringMuscleVal">-- kg</div>
-                <div class="ring-unit">遲玖ｉ驥・/div>
+                <div class="ring-unit">筋肉量</div>
               </div>
             </div>
           </div>
@@ -497,32 +497,32 @@
     <div class="chart-card mt-16">
       <div class="chart-card-header">
           <div>
-            <h3><i class="fas fa-chart-line"></i> 菴馴㍾謗ｨ遘ｻ繧ｰ繝ｩ繝・/h3>
-            <div class="chart-card-subtitle">菴馴㍾繝ｻ逶ｮ讓吶・菴楢р閧ｪ邇・ｒ縺ｾ縺ｨ繧√※遒ｺ隱・/div>
+            <h3><i class="fas fa-chart-line"></i> 体重推移グラフ</h3>
+            <div class="chart-card-subtitle">体重・目標・体脂肪率をまとめて確認</div>
           </div>
         <div class="chart-filter">
-          <button class="filter-btn active" onclick="setWeightRange(7,this)">7譌･</button>
-          <button class="filter-btn" onclick="setWeightRange(14,this)">14譌･</button>
-          <button class="filter-btn" onclick="setWeightRange(30,this)">30譌･</button>
-          <button class="filter-btn" onclick="setWeightRange(0,this)">蜈ｨ譛滄俣</button>
+          <button class="filter-btn active" onclick="setWeightRange(7,this)">7日</button>
+          <button class="filter-btn" onclick="setWeightRange(14,this)">14日</button>
+          <button class="filter-btn" onclick="setWeightRange(30,this)">30日</button>
+          <button class="filter-btn" onclick="setWeightRange(0,this)">全期間</button>
         </div>
       </div>
         <div class="chart-canvas-wrap chart-canvas-wrap-xl"><canvas id="weightDetailChart"></canvas></div>
         <div class="chart-stat-grid">
           <div class="chart-stat">
-            <span>譛譁ｰ</span>
+            <span>最新</span>
             <strong id="weightDetailLatest">-- kg</strong>
           </div>
           <div class="chart-stat">
-            <span>蟷ｳ蝮・/span>
+            <span>平均</span>
             <strong id="weightDetailAvg">-- kg</strong>
           </div>
           <div class="chart-stat">
-            <span>髢句ｧ句､</span>
+            <span>変化量</span>
             <strong id="weightDetailDelta">-- kg</strong>
           </div>
           <div class="chart-stat">
-            <span>逶ｮ讓吝ｷｮ</span>
+            <span>目標差</span>
             <strong id="weightDetailGap">-- kg</strong>
           </div>
         </div>
@@ -531,59 +531,59 @@
     <!-- Weight Table -->
     <div class="section-card mt-16">
       <div class="section-card-header">
-        <h3><i class="fas fa-list"></i> 險倬鹸荳隕ｧ</h3>
-        <button class="btn btn-sm btn-danger" onclick="clearWeightLogs()"><i class="fas fa-trash"></i> 蜈ｨ蜑企勁</button>
+        <h3><i class="fas fa-list"></i> 記録一覧</h3>
+        <button class="btn btn-sm btn-danger" onclick="clearWeightLogs()"><i class="fas fa-trash"></i> 全削除</button>
       </div>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr>
-            <th>譌･莉・/th><th>菴馴㍾</th><th>BMI</th><th>菴楢р閧ｪ邇・/th>
-            <th>遲玖ｉ驥・/th><th>逶ｮ讓吩ｽ馴㍾</th><th>繝｡繝｢</th><th>謫堺ｽ・/th>
+            <th>日付</th><th>体重</th><th>BMI</th><th>体脂肪率</th>
+            <th>筋肉量</th><th>目標体重</th><th>メモ</th><th>操作</th>
           </tr></thead>
-          <tbody id="weightTableBody"><tr><td colspan="8" class="empty-cell">繝・・繧ｿ縺ｪ縺・/td></tr></tbody>
+          <tbody id="weightTableBody"><tr><td colspan="8" class="empty-cell">データなし</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 MEALS PAGE 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 -->
+  <!-- ══════ MEALS PAGE ══════ -->
   <div class="page" id="page-meals">
     <div class="page-header">
-      <h1><i class="fas fa-bowl-food" style="color:var(--green);font-size:24px"></i> 鬟滉ｺ九Γ繝九Η繝ｼ邂｡逅・/h1>
-      <p class="page-subtitle">鬟溷刀蜷阪ｒ蜈･蜉帙☆繧九□縺代〒 <strong style="color:var(--red-light)">繧ｫ繝ｭ繝ｪ繝ｼ繝ｻPFC 閾ｪ蜍戊ｨ育ｮ・/strong> 笨ｨ</p>
+      <h1><i class="fas fa-bowl-food" style="color:var(--green);font-size:24px"></i> 食事メニュー管理</h1>
+      <p class="page-subtitle">食品名を入力して <strong style="color:var(--red-light)">カロリー・PFC 自動計算</strong> ✨</p>
     </div>
 
     <!-- Input Master -->
     <div class="meal-input-master" id="meal-input-anchor">
       <div class="meal-input-top">
         <div class="form-group">
-          <label class="form-label"><i class="fas fa-calendar"></i> 譌･莉・/label>
+          <label class="form-label"><i class="fas fa-calendar"></i> 日付</label>
           <input type="date" id="m-date" class="input-field">
         </div>
         <div class="form-group">
-          <label class="form-label"><i class="fas fa-clock"></i> 鬟滉ｺ九ち繧､繝・/label>
+          <label class="form-label"><i class="fas fa-clock"></i> 食事タイプ</label>
           <select id="m-type" class="input-field">
-            <option value="譛晞｣・>桁 譛晞｣・/option>
-            <option value="譏ｼ鬟・>笘 譏ｼ鬟・/option>
-            <option value="螟暮｣・>嫌 螟暮｣・/option>
-            <option value="髢馴｣・>克 髢馴｣・/option>
-            <option value="繝励Ο繝・う繝ｳ">･､ 繝励Ο繝・う繝ｳ</option>
+            <option value="朝食">🌅 朝食</option>
+            <option value="昼食">🍽 昼食</option>
+            <option value="夕食">🌆 夕食</option>
+            <option value="間食">🌙 間食</option>
+            <option value="プロテイン">💪 プロテイン</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label"><i class="fas fa-magic"></i> 繝励Μ繧ｻ繝・ヨ</label>
+          <label class="form-label"><i class="fas fa-magic"></i> プリセット</label>
           <select id="mealPreset" class="input-field" onchange="loadMealPreset()">
-            <option value="">- 繝励Μ繧ｻ繝・ヨ驕ｸ謚・-</option>
-            <option>譛晞｣溘・繝ｪ繧ｻ繝・ヨ(貂幃㍼)</option>
-            <option>譛晞｣溘・繝ｪ繧ｻ繝・ヨ(隱ｿ謨ｴ)</option>
-            <option>譏ｼ鬟溘・繝ｪ繧ｻ繝・ヨ</option>
-            <option>螟暮｣溘・繝ｪ繧ｻ繝・ヨ(霆ｽ繧・</option>
-            <option>繝励Ο繝・う繝ｳ繧ｷ繧ｧ繧､繧ｯ</option>
+            <option value="">- プリセットを選択 -</option>
+            <option>朝食プリセット(減量)</option>
+            <option>朝食プリセット(標準)</option>
+            <option>昼食プリセット</option>
+            <option>夕食プリセット(軽め)</option>
+            <option>プロテインシェイク</option>
           </select>
         </div>
         <div class="form-group" style="position:relative">
-          <label class="form-label"><i class="fas fa-search"></i> 鬟溷刀讀懃ｴ｢ (繧､繝ｳ繧ｯ繝ｪ繝｡繝ｳ繧ｿ繝ｫ)</label>
-          <input type="text" id="foodSearch" class="input-field" placeholder="魄ｭ縲√・繝ｭ繝・う繝ｳ縲・ｶ剰・... 縺ｪ縺ｩ縺ｧ讀懃ｴ｢" oninput="searchFoodLive(this.value)">
+          <label class="form-label"><i class="fas fa-search"></i> 食品検索 (インクリメンタル)</label>
+          <input type="text" id="foodSearch" class="input-field" placeholder="鶏胸、オートミール、卵... などで検索" oninput="searchFoodLive(this.value)">
           <div id="foodSearchResults" class="food-results-dropdown"></div>
         </div>
       </div>
@@ -591,24 +591,24 @@
       <!-- Food items list -->
       <div class="food-items-section">
         <div class="food-items-header">
-          <h4><i class="fas fa-list-ul"></i> 鬟溷刀繝ｪ繧ｹ繝・<span id="foodItemCount" style="color:var(--tx-3);font-weight:400">(0蜩・</span></h4>
+          <h4><i class="fas fa-list-ul"></i> 食品リスト<span id="foodItemCount" style="color:var(--tx-3);font-weight:400">(0件)</span></h4>
           <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-secondary" onclick="addFoodItemRow()"><i class="fas fa-plus"></i> 謇句虚霑ｽ蜉</button>
-            <button class="btn btn-sm btn-ghost" onclick="clearAllFoodItems()"><i class="fas fa-times"></i> 繧ｯ繝ｪ繧｢</button>
+            <button class="btn btn-sm btn-secondary" onclick="addFoodItemRow()"><i class="fas fa-plus"></i> 行を追加</button>
+            <button class="btn btn-sm btn-ghost" onclick="clearAllFoodItems()"><i class="fas fa-times"></i> クリア</button>
           </div>
         </div>
         <div id="foodItemsList"></div>
         <div class="food-items-empty" id="foodItemsEmpty">
           <i class="fas fa-utensils" style="font-size:26px;margin-bottom:6px"></i>
-          <div>鬟溷刀繧定ｿｽ蜉縺吶ｋ縺ｨ縲√％縺薙↓鬟滉ｺ句・螳ｹ縺瑚｡ｨ遉ｺ縺輔ｌ縺ｾ縺吶よ､懃ｴ｢縺ｾ縺溘・謇句虚霑ｽ蜉縺ｧ逋ｻ骭ｲ縺励※縺上□縺輔＞縲・/div>
-          <div style="font-size:11px;margin-top:4px;color:var(--tx-3)">驥上ｒ隱ｿ謨ｴ縺吶ｋ縺ｨ PFC繝ｻkcal 縺瑚・蜍輔〒蜀崎ｨ育ｮ励＆繧後∪縺・/div>
+          <div>食品を追加すると、ここに食事内容が表示されます。検索または行追加で登録してください。</div>
+          <div style="font-size:11px;margin-top:4px;color:var(--tx-3)">量を調整すると PFC・kcal が自動で再計算されます</div>
         </div>
       </div>
 
       <!-- Goal Bar -->
       <div class="calorie-goal-bar">
         <div class="cgb-row">
-          <span class="cgb-label">逶ｮ讓・kcal</span>
+          <span class="cgb-label">目標 kcal</span>
           <input type="number" id="caloricGoalInput" class="input-field input-sm"
             style="width:90px;padding:5px 8px;font-size:13px" placeholder="1800" oninput="updateGoalBar()">
           <div class="cgb-track"><div class="cgb-fill ok" id="cgbFill" style="width:0%"></div></div>
@@ -620,20 +620,20 @@
       <div class="meal-realtime-total">
         <div class="mrt-item mrt-cal">
           <div class="mrt-val" id="rt-cal">0</div>
-          <div class="mrt-label">蜷郁ｨ・KCAL</div>
+          <div class="mrt-label">合計 KCAL</div>
         </div>
         <div class="mrt-divider"></div>
         <div class="mrt-item">
           <div class="mrt-val" id="rt-p" style="color:var(--red-light)">0</div>
-          <div class="mrt-label">繧ｿ繝ｳ繝代け (g)</div>
+          <div class="mrt-label">タンパク質 (g)</div>
         </div>
         <div class="mrt-item">
           <div class="mrt-val" id="rt-f" style="color:var(--gold)">0</div>
-          <div class="mrt-label">閼りｳｪ (g)</div>
+          <div class="mrt-label">脂質 (g)</div>
         </div>
         <div class="mrt-item">
           <div class="mrt-val" id="rt-c" style="color:var(--blue)">0</div>
-          <div class="mrt-label">轤ｭ豌ｴ蛹也黄 (g)</div>
+          <div class="mrt-label">炭水化物 (g)</div>
         </div>
         <div class="mrt-divider"></div>
         <div class="mrt-item">
@@ -644,24 +644,24 @@
 
       <!-- Save row -->
       <div class="meal-save-row">
-        <textarea id="m-note" class="input-field" rows="2" placeholder="鬟溷ｾ後・菴楢ｪｿ繝ｻ繝｡繝｢繝ｻ豌嶺ｻ倥″"></textarea>
+        <textarea id="m-note" class="input-field" rows="2" placeholder="食後の体調・メモ・メモなど"></textarea>
         <button class="btn btn-primary meal-save-btn" onclick="saveMealBatch()">
-          <i class="fas fa-save"></i> 縺薙・鬟滉ｺ九ｒ菫晏ｭ・       </button>
+          <i class="fas fa-save"></i> この食事を保存       </button>
       </div>
     </div>
 
     <!-- Summary + 7-day -->
     <div class="two-col mt-20">
       <div class="meal-today-panel">
-        <h3 class="form-title"><i class="fas fa-calendar-day"></i> 譌･蛻･ 鬟滉ｺ九し繝槭Μ繝ｼ</h3>
+        <h3 class="form-title"><i class="fas fa-calendar-day"></i> 日別 食事サマリー</h3>
         <div style="margin-bottom:12px">
           <input type="date" id="mealViewDate" class="input-field" onchange="loadMealSummary()">
         </div>
         <div class="meal-summary-kpi">
           <div class="msumm-item"><div class="msumm-val" id="summ-cal">0</div><div class="msumm-label">kcal</div></div>
-          <div class="msumm-item"><div class="msumm-val" id="summ-p" style="color:var(--red-light)">0</div><div class="msumm-label">繧ｿ繝ｳ繝代け g</div></div>
-          <div class="msumm-item"><div class="msumm-val" id="summ-f" style="color:var(--gold)">0</div><div class="msumm-label">閼りｳｪ g</div></div>
-          <div class="msumm-item"><div class="msumm-val" id="summ-c" style="color:var(--blue)">0</div><div class="msumm-label">轤ｭ豌ｴ蛹也黄 g</div></div>
+          <div class="msumm-item"><div class="msumm-val" id="summ-p" style="color:var(--red-light)">0</div><div class="msumm-label">タンパク質 g</div></div>
+          <div class="msumm-item"><div class="msumm-val" id="summ-f" style="color:var(--gold)">0</div><div class="msumm-label">脂質 g</div></div>
+          <div class="msumm-item"><div class="msumm-val" id="summ-c" style="color:var(--blue)">0</div><div class="msumm-label">炭水化物 g</div></div>
         </div>
         <div style="height:190px"><canvas id="mealPfcChart"></canvas></div>
         <div id="mealList" class="meal-list"></div>
@@ -669,7 +669,7 @@
 
       <div class="chart-card">
         <div class="chart-card-header">
-          <h3><i class="fas fa-chart-column"></i> 7譌･髢・繧ｫ繝ｭ繝ｪ繝ｼ謗ｨ遘ｻ</h3>
+          <h3><i class="fas fa-chart-column"></i> 7日間カロリー推移</h3>
         </div>
         <div style="height:190px"><canvas id="meal7dayChart"></canvas></div>
         <div class="weekly-meal-stats" id="weeklyMealStats"></div>
@@ -679,13 +679,13 @@
     <!-- Meals Table -->
     <div class="section-card mt-20">
       <div class="section-card-header">
-        <h3><i class="fas fa-list"></i> 鬟滉ｺ玖ｨ倬鹸荳隕ｧ</h3>
+        <h3><i class="fas fa-list"></i> 食事記録一覧</h3>
         <div class="filter-row">
           <input type="date" id="mealFilterDate" class="input-field input-sm" onchange="filterMeals()">
           <select id="mealFilterType" class="input-field input-sm" onchange="filterMeals()">
-            <option value="">蜈ｨ繧ｿ繧､繝・/option>
-            <option>譛晞｣・/option><option>譏ｼ鬟・/option><option>螟暮｣・/option>
-            <option>髢馴｣・/option><option>繝励Ο繝・う繝ｳ</option>
+            <option value="">全タイプ</option>
+            <option>朝食</option><option>昼食</option><option>夕食</option>
+            <option>間食</option><option>プロテイン</option>
           </select>
           <button class="btn btn-sm btn-ghost" onclick="clearMealFilter()"><i class="fas fa-times"></i></button>
         </div>
@@ -693,86 +693,86 @@
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr>
-            <th>譌･莉・/th><th>遞ｮ蛻･</th><th>鬟溷刀蜷・/th><th>驥・/th>
-            <th>kcal</th><th>P(g)</th><th>F(g)</th><th>C(g)</th><th>謫堺ｽ・/th>
+            <th>日付</th><th>種別</th><th>食品名</th><th>量</th>
+            <th>kcal</th><th>P(g)</th><th>F(g)</th><th>C(g)</th><th>操作</th>
           </tr></thead>
-          <tbody id="mealsTableBody"><tr><td colspan="9" class="empty-cell">繝・・繧ｿ縺ｪ縺・/td></tr></tbody>
+          <tbody id="mealsTableBody"><tr><td colspan="9" class="empty-cell">データなし</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 TRAINING PAGE 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 -->
+  <!-- ══════ TRAINING PAGE ══════ -->
   <div class="page" id="page-training">
     <div class="page-header">
-      <h1><i class="fas fa-person-running" style="color:var(--red);font-size:24px"></i> 邱ｴ鄙偵せ繧ｱ繧ｸ繝･繝ｼ繝ｫ</h1>
-      <p class="page-subtitle">繝医Ξ繝ｼ繝九Φ繧ｰ險倬鹸繝ｻ豸郁ｲｻ繧ｫ繝ｭ繝ｪ繝ｼ繝ｻ隱ｲ鬘後Ξ繝薙Η繝ｼ邂｡逅・/p>
+      <h1><i class="fas fa-person-running" style="color:var(--red);font-size:24px"></i> 練習スケジュール</h1>
+      <p class="page-subtitle">トレーニング記録・消費カロリー・感想レビュー管理</p>
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
       <div class="form-card" id="training-record-anchor">
-        <h3 class="form-title"><i class="fas fa-plus-circle"></i> 邱ｴ鄙偵ｒ險倬鹸</h3>
+        <h3 class="form-title"><i class="fas fa-plus-circle"></i> 練習を記録</h3>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">譌･莉・/label>
+            <label class="form-label">日付</label>
             <input type="date" id="t-date" class="input-field">
           </div>
           <div class="form-group">
-            <label class="form-label">邱ｴ鄙堤ｨｮ逶ｮ</label>
+            <label class="form-label">練習種目</label>
             <select id="t-type" class="input-field" onchange="autoCalcBurned()">
-              <option value="">驕ｸ謚槭＠縺ｦ縺上□縺輔＞</option>
-              <option>繧ｷ繝｣繝峨・繝懊け繧ｷ繝ｳ繧ｰ</option><option>繧ｵ繝ｳ繝峨ヰ繝・げ</option>
-              <option>繝溘ャ繝域遠縺｡</option><option>繧ｹ繝代・繝ｪ繝ｳ繧ｰ</option>
-              <option>繝ｭ繝ｼ繝峨Ρ繝ｼ繧ｯ</option><option>遲九ヨ繝ｬ</option>
-              <option>邵・ｷｳ縺ｳ</option><option>繧ｹ繝医Ξ繝・メ</option><option>縺昴・莉・/option>
+              <option value="">選択してください</option>
+              <option>シャドーボクシング</option><option>サンドバッグ</option>
+              <option>ミット打ち</option><option>スパーリング</option>
+              <option>ロードワーク</option><option>筋トレ</option>
+              <option>縄跳び</option><option>ストレッチ</option><option>その他</option>
             </select>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">邱ｴ鄙呈凾髢・(蛻・</label>
+            <label class="form-label">練習時間 (分)</label>
             <input type="number" id="t-duration" class="input-field" placeholder="60" oninput="autoCalcBurned()">
           </div>
           <div class="form-group">
-            <label class="form-label">蠑ｷ蠎ｦ</label>
+            <label class="form-label">強度</label>
             <select id="t-intensity" class="input-field" onchange="autoCalcBurned()">
-              <option value="菴・>泙 菴・/option>
-              <option value="荳ｭ" selected>泯 荳ｭ</option>
-              <option value="鬮・>泛 鬮・/option>
-              <option value="譛螟ｧ">閥 譛螟ｧ</option>
+              <option value="低">🟢 低</option>
+              <option value="中" selected>🟡 中</option>
+              <option value="高">🟠 高</option>
+              <option value="最大">🔴 最大</option>
             </select>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">豸郁ｲｻ繧ｫ繝ｭ繝ｪ繝ｼ (kcal)
-            <button class="btn-calc-inline" onclick="calcCaloriesBurned()"><i class="fas fa-calculator"></i> 閾ｪ蜍戊ｨ育ｮ・/button>
+          <label class="form-label">消費カロリー (kcal)
+            <button class="btn-calc-inline" onclick="calcCaloriesBurned()"><i class="fas fa-calculator"></i> 自動計算</button>
           </label>
-          <input type="number" id="t-burned" class="input-field" placeholder="閾ｪ蜍戊ｨ育ｮ励∪縺溘・謇句・蜉・>
+          <input type="number" id="t-burned" class="input-field" placeholder="自動計算または手入力">
           <div id="burnPreview" style="font-size:11px;color:var(--tx-2);margin-top:4px"></div>
         </div>
         <div class="form-group">
-          <label class="form-label">繝｡繝｢繝ｻ隱ｲ鬘・/label>
-          <textarea id="t-note" class="input-field" rows="3" placeholder="莉頑律縺ｮ隱ｲ鬘後∵ｰ励▼縺・.."></textarea>
+          <label class="form-label">メモ・感想</label>
+          <textarea id="t-note" class="input-field" rows="3" placeholder="今日の感想・メモなど..."></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">繝ｩ繧ｦ繝ｳ繝画焚</label>
+            <label class="form-label">ラウンド数</label>
             <input type="number" id="t-rounds" class="input-field" placeholder="6">
           </div>
           <div class="form-group">
-            <label class="form-label">繧ｹ繝代・逶ｸ謇・/label>
-            <input type="text" id="t-opponent" class="input-field" placeholder="逶ｸ謇句錐 / 繧ｸ繝蜷・>
+            <label class="form-label">スパー相手</label>
+            <input type="text" id="t-opponent" class="input-field" placeholder="相手名 / ジム名">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">繝・・繝・/label>
-            <input type="text" id="t-theme" class="input-field" placeholder="萓・ 蟾ｦ繧ｸ繝｣繝悶・邊ｾ蠎ｦ"
+            <label class="form-label">テーマ</label>
+            <input type="text" id="t-theme" class="input-field" placeholder="例: 左ジャブの精度">
           </div>
           <div class="form-group">
-            <label class="form-label">閾ｪ蟾ｱ隧穂ｾ｡</label>
+            <label class="form-label">自己評価</label>
             <select id="t-rating" class="input-field">
-              <option value="">驕ｸ謚槭＠縺ｦ縺上□縺輔＞</option>
+              <option value="">選択してください</option>
               <option value="1">1 / 5</option>
               <option value="2">2 / 5</option>
               <option value="3">3 / 5</option>
@@ -782,24 +782,24 @@
           </div>
         </div>
         <button class="btn btn-primary btn-full" onclick="saveTraining()">
-          <i class="fas fa-save"></i> 邱ｴ鄙偵ｒ菫晏ｭ・       </button>
+          <i class="fas fa-save"></i> 練習を保存       </button>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:14px">
         <!-- Week stats -->
         <div class="training-today-panel">
-          <h3 class="form-title" style="margin-bottom:12px"><i class="fas fa-calendar-week"></i> 莉企ｱ縺ｮ繧ｵ繝槭Μ繝ｼ</h3>
+          <h3 class="form-title" style="margin-bottom:12px"><i class="fas fa-calendar-week"></i> 今週のサマリー</h3>
           <div class="week-stats">
-            <div class="week-stat"><div class="week-stat-val" id="week-sessions">0</div><div class="week-stat-label">邱ｴ鄙貞屓謨ｰ</div></div>
-            <div class="week-stat"><div class="week-stat-val" id="week-minutes">0</div><div class="week-stat-label">蜷郁ｨ・蛻・/div></div>
-            <div class="week-stat"><div class="week-stat-val" id="week-burned">0</div><div class="week-stat-label">豸郁ｲｻkcal</div></div>
+            <div class="week-stat"><div class="week-stat-val" id="week-sessions">0</div><div class="week-stat-label">練習回数</div></div>
+            <div class="week-stat"><div class="week-stat-val" id="week-minutes">0</div><div class="week-stat-label">合計分</div></div>
+            <div class="week-stat"><div class="week-stat-val" id="week-burned">0</div><div class="week-stat-label">消費kcal</div></div>
           </div>
           <div style="height:200px"><canvas id="weeklyTrainingChart"></canvas></div>
         </div>
         <!-- Radar chart -->
         <div class="chart-card" style="padding:16px">
           <div class="chart-card-header" style="margin-bottom:10px">
-            <h3><i class="fas fa-spider"></i> 邱ｴ鄙偵ヰ繝ｩ繝ｳ繧ｹ (莉頑怦)</h3>
+            <h3><i class="fas fa-spider"></i> 練習バランス (今週)</h3>
           </div>
           <div class="radar-wrap" style="height:200px"><canvas id="trainingRadarChart"></canvas></div>
         </div>
@@ -809,7 +809,7 @@
     <!-- Calendar -->
     <div class="section-card mt-16">
       <div class="section-card-header">
-        <h3><i class="fas fa-calendar-alt"></i> 邱ｴ鄙偵き繝ｬ繝ｳ繝繝ｼ</h3>
+        <h3><i class="fas fa-calendar-alt"></i> 練習カレンダー</h3>
         <div style="display:flex;align-items:center;gap:10px">
           <button class="btn btn-sm btn-ghost" onclick="prevMonth()"><i class="fas fa-chevron-left"></i></button>
           <span id="calendarTitle" style="font-size:14px;font-weight:700;color:var(--tx-1)"></span>
@@ -821,90 +821,90 @@
 
     <!-- Training table -->
     <div class="section-card mt-16">
-      <div class="section-card-header"><h3><i class="fas fa-list"></i> 邱ｴ鄙定ｨ倬鹸荳隕ｧ</h3></div>
+      <div class="section-card-header"><h3><i class="fas fa-list"></i> 練習記録一覧</h3></div>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr>
-            <th>譌･莉・/th><th>遞ｮ逶ｮ</th><th>譎る俣(蛻・</th><th>蠑ｷ蠎ｦ</th><th>隧ｳ邏ｰ</th><th>閾ｪ蟾ｱ隧穂ｾ｡</th><th>豸郁ｲｻkcal</th><th>繝｡繝｢</th><th>謫堺ｽ・/th>
+            <th>日付</th><th>種目</th><th>時間(分)</th><th>強度</th><th>詳細</th><th>自己評価</th><th>消費kcal</th><th>メモ</th><th>操作</th>
           </tr></thead>
-          <tbody id="trainingTableBody"><tr><td colspan="9" class="empty-cell">繝・・繧ｿ縺ｪ縺・/td></tr></tbody>
+          <tbody id="trainingTableBody"><tr><td colspan="9" class="empty-cell">データなし</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 CALORIES PAGE 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 -->
+  <!-- ══════ CALORIES PAGE ══════ -->
   <div class="page" id="page-calories">
     <div class="page-header">
-      <h1><i class="fas fa-fire-flame-curved" style="color:var(--red);font-size:24px"></i> 繧ｫ繝ｭ繝ｪ繝ｼ險育ｮ・/h1>
-      <p class="page-subtitle">BMR / TDEE 險育ｮ励・PFC繝舌Λ繝ｳ繧ｹ邂｡逅・/p>
+      <h1><i class="fas fa-fire-flame-curved" style="color:var(--red);font-size:24px"></i> カロリー計算</h1>
+      <p class="page-subtitle">BMR / TDEE 計算とPFCバランス管理</p>
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
       <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-calculator"></i> BMR / TDEE 險育ｮ・/h3>
+        <h3 class="form-title"><i class="fas fa-calculator"></i> BMR / TDEE 計算</h3>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">蟷ｴ鮨｢</label>
+            <label class="form-label">年齢</label>
             <input type="number" id="calc-age" class="input-field" placeholder="27" value="27">
           </div>
           <div class="form-group">
-            <label class="form-label">諤ｧ蛻･</label>
+            <label class="form-label">性別</label>
             <select id="calc-gender" class="input-field">
-              <option value="male">逕ｷ諤ｧ</option>
-              <option value="female">螂ｳ諤ｧ</option>
+              <option value="male">男性</option>
+              <option value="female">女性</option>
             </select>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">霄ｫ髟ｷ (cm)</label>
+            <label class="form-label">身長 (cm)</label>
             <input type="number" id="calc-height" class="input-field" placeholder="170" value="170">
           </div>
           <div class="form-group">
-            <label class="form-label">菴馴㍾ (kg)</label>
+            <label class="form-label">体重 (kg)</label>
             <input type="number" id="calc-weight" class="input-field" placeholder="65">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">豢ｻ蜍輔Ξ繝吶Ν</label>
+          <label class="form-label">活動レベル</label>
           <select id="calc-activity" class="input-field">
-            <option value="1.2">菴弱＞豢ｻ蜍暮㍼・医⊇縺ｼ驕句虚縺ｪ縺暦ｼ・/option>
-            <option value="1.375">霆ｽ縺・ｴｻ蜍暮㍼・磯ｱ1-2蝗橸ｼ・/option>
-            <option value="1.55" selected>荳ｭ遞句ｺｦ縺ｮ豢ｻ蜍暮㍼・磯ｱ3-5蝗橸ｼ・/option>
-            <option value="1.725">鬮倥＞豢ｻ蜍暮㍼・磯ｱ6蝗樔ｻ･荳奇ｼ・/option>
-            <option value="1.9">繧｢繧ｹ繝ｪ繝ｼ繝・/ 髱槫ｸｸ縺ｫ鬮倥＞豢ｻ蜍暮㍼</option>
+            <option value="1.2">低い活動（座りがち）</option>
+            <option value="1.375">軽い活動（週1-2回）</option>
+            <option value="1.55" selected>中程度の活動（週3-5回）</option>
+            <option value="1.725">高い活動（週6回以上）</option>
+            <option value="1.9">アスリート / 非常に高い活動</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">逶ｮ讓・/label>
+          <label class="form-label">目標</label>
           <select id="calc-goal" class="input-field">
-            <option value="cut">貂幃㍼譛・(-20%)</option>
-            <option value="cut_mild">霆ｽ繧∵ｸ幃㍼譛・(-10%)</option>
-            <option value="maintain">筐｡ 邯ｭ謖・/option>
-            <option value="bulk">蠅鈴㍼譛・(+10%)</option>
+            <option value="cut">減量強め(-20%)</option>
+            <option value="cut_mild">軽め減量(-10%)</option>
+            <option value="maintain">維持 標準</option>
+            <option value="bulk">増量(+10%)</option>
           </select>
         </div>
         <button class="btn btn-primary btn-full" onclick="calcBMR()">
-          <i class="fas fa-calculator"></i> 險育ｮ励☆繧・       </button>
+          <i class="fas fa-calculator"></i> 計算する       </button>
       </div>
 
       <div class="calc-result-panel">
         <div class="calc-result-item">
-          <span class="calc-label">蝓ｺ遉惹ｻ｣隰・(BMR)</span>
+          <span class="calc-label">基礎代謝量 (BMR)</span>
           <span class="calc-val" id="res-bmr">-- kcal</span>
         </div>
         <div class="calc-result-item highlight">
-          <span class="calc-label">1譌･縺ｮ豸郁ｲｻ繧ｫ繝ｭ繝ｪ繝ｼ (TDEE)</span>
+          <span class="calc-label">1日の総消費カロリー (TDEE)</span>
           <span class="calc-val" id="res-tdee">-- kcal</span>
         </div>
         <div class="calc-result-item">
-          <span class="calc-label">逶ｮ讓呎曹蜿悶き繝ｭ繝ｪ繝ｼ</span>
+          <span class="calc-label">目標別カロリー</span>
           <span class="calc-val" id="res-goal">-- kcal</span>
         </div>
         <div class="pfc-recommend">
-          <h4>逅・Φ PFC繝舌Λ繝ｳ繧ｹ・医・繧ｯ繧ｵ繝ｼ蜷代￠・・/h4>
-          <div class="pfc-rec-row"><span class="pfc-rec-label pfc-p">繧ｿ繝ｳ繝代け雉ｪ</span><span class="pfc-rec-val" id="rec-p">-- g</span></div>
+          <h4>推奨 PFCバランス（ボクサー向け）</h4>
+          <div class="pfc-rec-row"><span class="pfc-rec-label pfc-p">タンパク質</span><span class="pfc-rec-val" id="rec-p">-- g</span></div>
           <div class="pfc-rec-row"><span class="pfc-rec-label pfc-f">閼りｳｪ</span><span class="pfc-rec-val" id="rec-f">-- g</span></div>
           <div class="pfc-rec-row"><span class="pfc-rec-label pfc-c">轤ｭ豌ｴ蛹也黄</span><span class="pfc-rec-val" id="rec-c">-- g</span></div>
         </div>
@@ -915,16 +915,16 @@
     <!-- 7-day balance chart -->
     <div class="chart-card mt-16">
       <div class="chart-card-header">
-        <h3><i class="fas fa-chart-area"></i> 鞫ょ叙 vs 豸郁ｲｻ繧ｫ繝ｭ繝ｪ繝ｼ・育峩霑・譌･・・/h3>
+        <h3><i class="fas fa-chart-area"></i> 摂取 vs 消費カロリー（直近7日）</h3>
         <div id="weeklyCalSummary" style="font-size:12px;color:var(--tx-2)"></div>
       </div>
       <div style="height:280px"><canvas id="calorieBalanceChart"></canvas></div>
     </div>
 
-    <!-- 邱ｴ鄙偵・菴馴㍾繝ｻ蝗槫ｾｩ縺ｮ逶ｸ髢｢・育峩霑・4譌･・・-->
+    <!-- 練習と体重・回復の相関（直近14日）-->
     <div class="chart-card mt-16">
       <div class="chart-card-header">
-        <h3><i class="fas fa-link"></i> 邱ｴ鄙偵・菴馴㍾繝ｻ蝗槫ｾｩ縺ｮ逶ｸ髢｢・育峩霑・4譌･・・/h3>
+        <h3><i class="fas fa-link"></i> 練習と体重・回復の相関（直近14日）</h3>
         <div id="trainingWeightRecoverySummary" style="font-size:12px;color:var(--tx-2);text-align:right;max-width:55%"></div>
       </div>
       <div style="height:320px"><canvas id="trainingWeightRecoveryChart"></canvas></div>
@@ -933,242 +933,242 @@
 
     <!-- Today balance -->
     <div class="section-card mt-16" id="cal-anchor-today">
-      <div class="section-card-header"><h3><i class="fas fa-scale-balanced"></i> 莉頑律縺ｮ繧ｫ繝ｭ繝ｪ繝ｼ蜿取髪</h3></div>
+      <div class="section-card-header"><h3><i class="fas fa-scale-balanced"></i> 今日のカロリー収支</h3></div>
       <div class="calorie-balance-display">
         <div class="cal-bal-item">
           <div class="cal-bal-icon intake"><i class="fas fa-utensils"></i></div>
           <div class="cal-bal-val" id="today-intake">0</div>
-          <div class="cal-bal-label">鞫ょ叙 kcal</div>
+          <div class="cal-bal-label">摂取 kcal</div>
         </div>
         <div class="cal-bal-minus">-</div>
         <div class="cal-bal-item">
           <div class="cal-bal-icon burned"><i class="fas fa-fire-flame-curved"></i></div>
           <div class="cal-bal-val" id="today-burned-cal">0</div>
-          <div class="cal-bal-label">豸郁ｲｻ kcal</div>
+          <div class="cal-bal-label">消費 kcal</div>
         </div>
         <div class="cal-bal-equals">=</div>
         <div class="cal-bal-item">
           <div class="cal-bal-icon" id="netIcon"><i class="fas fa-scale-balanced"></i></div>
           <div class="cal-bal-val" id="today-net">0</div>
-          <div class="cal-bal-label">蜿取髪 kcal</div>
+          <div class="cal-bal-label">収支 kcal</div>
         </div>
       </div>
     </div>
 
     <div class="two-col mt-16">
       <div class="form-card" id="cal-anchor-hydration">
-        <h3 class="form-title"><i class="fas fa-bottle-water"></i> 豌ｴ蛻・/ 逋ｺ豎・/ 蝪ｩ蛻・/h3>
+        <h3 class="form-title"><i class="fas fa-bottle-water"></i> 水分 / 発汗 / 塩分</h3>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">譌･莉・/label>
+            <label class="form-label">日付</label>
             <input type="date" id="h-date" class="input-field">
           </div>
           <div class="form-group">
-            <label class="form-label">豌ｴ蛻・曹蜿夜㍼ (ml)</label>
+            <label class="form-label">水分摂取量 (ml)</label>
             <input type="number" id="h-water" class="input-field" placeholder="3000">
           </div>
         </div>
         <div class="form-row three-col">
           <div class="form-group">
-            <label class="form-label">逋ｺ豎励Ξ繝吶Ν</label>
+            <label class="form-label">発汗レベル</label>
             <select id="h-sweat-level" class="input-field">
-              <option value="菴・>菴・/option>
-              <option value="荳ｭ" selected>荳ｭ</option>
-              <option value="鬮・>鬮・/option>
-              <option value="譛螟ｧ">譛螟ｧ</option>
+              <option value="低">低</option>
+              <option value="中" selected>中</option>
+              <option value="高">高</option>
+              <option value="最大">最大</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">謗ｨ螳夂匱豎鈴㍼ (ml)</label>
+            <label class="form-label">推定発汗量 (ml)</label>
             <input type="number" id="h-sweat-loss" class="input-field" placeholder="1200">
           </div>
           <div class="form-group">
-            <label class="form-label">蝪ｩ蛻・ Na (mg)</label>
+            <label class="form-label">塩分 Na (mg)</label>
             <input type="number" id="h-sodium" class="input-field" placeholder="2500">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">陬懃ｵｦ繝｡繝｢</label>
-          <textarea id="h-note" class="input-field" rows="2" placeholder="OS-1縲∫匱豎鈴㍼縲・°蜍募ｾ後・豌ｴ蛻・ｪｿ謨ｴ縺ｪ縺ｩ"></textarea>
+          <label class="form-label">補給メモ</label>
+          <textarea id="h-note" class="input-field" rows="2" placeholder="OS-1、発汗量、練習後の水分目安など"></textarea>
         </div>
         <button class="btn btn-primary btn-full" onclick="saveHydrationLog()">
-          <i class="fas fa-save"></i> 豌ｴ蛻・Ο繧ｰ繧剃ｿ晏ｭ・       </button>
+          <i class="fas fa-save"></i> 水分ログを保存       </button>
       </div>
 
       <div class="form-card" id="cal-anchor-recovery">
-        <h3 class="form-title"><i class="fas fa-bed"></i> 逹｡逵 / 逍ｲ蜉ｴ / 菴楢ｪｿ</h3>
+        <h3 class="form-title"><i class="fas fa-bed"></i> 睡眠 / 疲労 / 体調</h3>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">譌･莉・/label>
+            <label class="form-label">日付</label>
             <input type="date" id="r-date" class="input-field">
           </div>
           <div class="form-group">
-            <label class="form-label">逹｡逵譎る俣 (h)</label>
+            <label class="form-label">睡眠時間 (h)</label>
             <input type="number" id="r-sleep" class="input-field" placeholder="7.5" step="0.1">
           </div>
         </div>
         <div class="form-row three-col">
           <div class="form-group">
-            <label class="form-label">逍ｲ蜉ｴ蠎ｦ (1-10)</label>
+            <label class="form-label">疲労度 (1-10)</label>
             <input type="number" id="r-fatigue" class="input-field" min="1" max="10" placeholder="6">
           </div>
           <div class="form-group">
-            <label class="form-label">菴楢ｪｿ繧ｹ繧ｳ繧｢ (1-10)</label>
+            <label class="form-label">体調スコア (1-10)</label>
             <input type="number" id="r-condition" class="input-field" min="1" max="10" placeholder="8">
           </div>
           <div class="form-group">
-            <label class="form-label">螳蛾撕譎ょｿ・牛</label>
+            <label class="form-label">安静時心拍</label>
             <input type="number" id="r-rhr" class="input-field" placeholder="52">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">蝗槫ｾｩ繝｡繝｢</label>
-          <textarea id="r-note" class="input-field" rows="2" placeholder="逵繧翫′豬・＞縲∬・縺碁㍾縺・∬か縺ｮ蠑ｵ繧翫′蠑ｷ縺・縺ｪ縺ｩ"></textarea>
+          <label class="form-label">回復メモ</label>
+          <textarea id="r-note" class="input-field" rows="2" placeholder="眠りが浅い、朝が重い、脚の張りが強いなど"></textarea>
         </div>
         <button class="btn btn-primary btn-full" onclick="saveRecoveryLog()">
-          <i class="fas fa-save"></i> 蝗槫ｾｩ繝ｭ繧ｰ繧剃ｿ晏ｭ・       </button>
+          <i class="fas fa-save"></i> 回復ログを保存       </button>
       </div>
     </div>
 
     <div class="two-col mt-16">
       <div class="section-card">
-        <div class="section-card-header"><h3><i class="fas fa-droplet"></i> 莉頑律縺ｮ豌ｴ蛻・し繝槭Μ繝ｼ</h3></div>
+        <div class="section-card-header"><h3><i class="fas fa-droplet"></i> 今日の水分サマリー</h3></div>
         <div class="health-kpi-grid">
-          <div class="health-kpi"><span>豌ｴ蛻・/span><strong id="todayWaterIntake">0 ml</strong></div>
-          <div class="health-kpi"><span>逋ｺ豎・/span><strong id="todaySweatLoss">0 ml</strong></div>
-          <div class="health-kpi"><span>蝪ｩ蛻・/span><strong id="todaySodium">0 mg</strong></div>
-          <div class="health-kpi"><span>陬懃ｵｦ蟾ｮ蛻・/span><strong id="todayHydrationGap">0 ml</strong></div>
+          <div class="health-kpi"><span>水分</span><strong id="todayWaterIntake">0 ml</strong></div>
+          <div class="health-kpi"><span>発汗</span><strong id="todaySweatLoss">0 ml</strong></div>
+          <div class="health-kpi"><span>蝪ｩ蛻・</span><strong id="todaySodium">0 mg</strong></div>
+          <div class="health-kpi"><span>補給ギャップ</span><strong id="todayHydrationGap">0 ml</strong></div>
         </div>
       </div>
       <div class="section-card">
-        <div class="section-card-header"><h3><i class="fas fa-heart-pulse"></i> 莉頑律縺ｮ蝗槫ｾｩ繧ｵ繝槭Μ繝ｼ</h3></div>
+        <div class="section-card-header"><h3><i class="fas fa-heart-pulse"></i> 今日の回復サマリー</h3></div>
         <div class="health-kpi-grid">
-          <div class="health-kpi"><span>逹｡逵</span><strong id="todaySleepHours">0 h</strong></div>
+          <div class="health-kpi"><span>睡眠</span><strong id="todaySleepHours">0 h</strong></div>
           <div class="health-kpi"><span>逍ｲ蜉ｴ</span><strong id="todayFatigueScore">0 / 10</strong></div>
-          <div class="health-kpi"><span>菴楢ｪｿ</span><strong id="todayConditionScore">0 / 10</strong></div>
-          <div class="health-kpi"><span>螳蛾撕譎ょｿ・牛</span><strong id="todayRestingHr">--</strong></div>
+          <div class="health-kpi"><span>体調</span><strong id="todayConditionScore">0 / 10</strong></div>
+          <div class="health-kpi"><span>安静時心拍</span><strong id="todayRestingHr">--</strong></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 FIGHT GOALS PAGE 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 -->
+  <!-- ══════ FIGHT GOALS PAGE ══════ -->
   <div class="page" id="page-fight">
     <div class="page-header">
-      <h1><i class="fas fa-trophy" style="color:var(--gold);font-size:24px"></i> 隧ｦ蜷育岼讓咏ｮ｡逅・/h1>
-      <p class="page-subtitle">谺｡縺ｮ隧ｦ蜷医↓蜷代￠縺溘き繧ｦ繝ｳ繝医ム繧ｦ繝ｳ縺ｨ貂幃㍼騾ｲ謐・/p>
+      <h1><i class="fas fa-trophy" style="color:var(--gold);font-size:24px"></i> 試合目標管理</h1>
+      <p class="page-subtitle">次の試合に向けたカウントダウンと減量進捗</p>
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
       <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-plus-circle"></i> 隧ｦ蜷育岼讓吶ｒ逋ｻ骭ｲ</h3>
+        <h3 class="form-title"><i class="fas fa-plus-circle"></i> 試合目標を登録</h3>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">隧ｦ蜷域律</label>
+            <label class="form-label">試合日</label>
             <input type="date" id="f-date" class="input-field">
           </div>
           <div class="form-group">
-            <label class="form-label">蟇ｾ謌ｦ逶ｸ謇・/label>
-            <input type="text" id="f-opponent" class="input-field" placeholder="逕ｰ荳ｭ驕ｸ謇・>
+            <label class="form-label">対戦相手名</label>
+            <input type="text" id="f-opponent" class="input-field" placeholder="実戦相手名">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">髫守ｴ・/label>
+            <label class="form-label">階級</label>
             <select id="f-class" class="input-field">
-              <option>繝溘ル繝槭Β邏・(47.6kg)</option>
-              <option>繝ｩ繧､繝医ヵ繝ｩ繧､邏・(49kg)</option>
-              <option>繝輔Λ繧､邏・(50.8kg)</option>
-              <option>繧ｹ繝ｼ繝代・繝輔Λ繧､邏・(52.2kg)</option>
-              <option>繝舌Φ繧ｿ繝邏・(53.5kg)</option>
-              <option>繧ｹ繝ｼ繝代・繝舌Φ繧ｿ繝邏・(55.3kg)</option>
-              <option>繝輔ぉ繧ｶ繝ｼ邏・(57.2kg)</option>
-              <option>繧ｹ繝ｼ繝代・繝輔ぉ繧ｶ繝ｼ邏・(58.9kg)</option>
-              <option>繝ｩ繧､繝育ｴ・(61.2kg)</option>
-              <option>繧ｹ繝ｼ繝代・繝ｩ繧､繝育ｴ・(63.5kg)</option>
-              <option>繧ｦ繧ｧ繝ｫ繧ｿ繝ｼ邏・(66.7kg)</option>
-              <option>繝溘ラ繝ｫ邏・(72.6kg)</option>
-              <option>縺昴・莉・/option>
+              <option>ミニマム級 (47.6kg)</option>
+              <option>ライトフライ級 (49kg)</option>
+              <option>フライ級 (50.8kg)</option>
+              <option>スーパーフライ級 (52.2kg)</option>
+              <option>バンタム級 (53.5kg)</option>
+              <option>スーパーバンタム級 (55.3kg)</option>
+              <option>フェザー級 (57.2kg)</option>
+              <option>スーパーフェザー級 (58.9kg)</option>
+              <option>ライト級 (61.2kg)</option>
+              <option>スーパーライト級 (63.5kg)</option>
+              <option>ウェルター級 (66.7kg)</option>
+              <option>ミドル級 (72.6kg)</option>
+              <option>その他</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">逶ｮ讓吩ｽ馴㍾ (kg)</label>
+            <label class="form-label">目標体重 (kg)</label>
             <input type="number" id="f-target" class="input-field" placeholder="63.5" step="0.1">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">莨壼ｴ</label>
-          <input type="text" id="f-venue" class="input-field" placeholder="蠕梧･ｽ蝨偵・繝ｼ繝ｫ">
+          <label class="form-label">会場</label>
+          <input type="text" id="f-venue" class="input-field" placeholder="東京ドームなど">
         </div>
         <div class="form-group">
-          <label class="form-label">繧ｹ繝・・繧ｿ繧ｹ</label>
+          <label class="form-label">ステータス</label>
           <select id="f-status" class="input-field">
-            <option value="貅門ｙ荳ｭ">櫨 貅門ｙ荳ｭ</option>
-            <option value="螳御ｺ・>笨・螳御ｺ・/option>
-            <option value="荳ｭ豁｢">笶・荳ｭ豁｢</option>
+            <option value="準備中">🔥 準備中</option>
+            <option value="完了">✅ 完了</option>
+            <option value="中止">⚠️ 中止</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">菴懈姶繝｡繝｢繝ｻ逶ｮ讓・/label>
-          <textarea id="f-note" class="input-field" rows="3" placeholder="菴懈姶繝ｻ逶ｮ讓吶せ繧ｿ繧､繝ｫ縺ｪ縺ｩ..."></textarea>
+          <label class="form-label">備考メモ・目標</label>
+          <textarea id="f-note" class="input-field" rows="3" placeholder="備考・目標スタイルなど..."></textarea>
         </div>
         <button class="btn btn-primary btn-full" onclick="saveFightGoal()">
-          <i class="fas fa-save"></i> 隧ｦ蜷育岼讓吶ｒ菫晏ｭ・       </button>
+          <i class="fas fa-save"></i> 試合目標を保存       </button>
       </div>
 
       <div class="fight-countdown-panel">
         <div class="countdown-display">
           <div class="countdown-number" id="countdown-days">--</div>
-          <div class="countdown-unit">譌･蠕・/ 隧ｦ蜷・/div>
+          <div class="countdown-unit">日数 / 試合</div>
         </div>
         <div class="fight-info">
           <div class="fight-info-row"><i class="fas fa-user"></i><span id="fi-opponent">-- vs --</span></div>
           <div class="fight-info-row"><i class="fas fa-calendar"></i><span id="fi-date">----/--/--</span></div>
           <div class="fight-info-row"><i class="fas fa-map-marker-alt"></i><span id="fi-venue">--</span></div>
-          <div class="fight-info-row"><i class="fas fa-weight-scale"></i><span id="fi-target">逶ｮ讓吩ｽ馴㍾: -- kg</span></div>
+          <div class="fight-info-row"><i class="fas fa-weight-scale"></i><span id="fi-target">目標体重: -- kg</span></div>
         </div>
         <div class="weight-cut-progress">
-          <h4>貂幃㍼騾ｲ謐・/h4>
+          <h4>減量進捗</h4>
           <div class="wcp-bar-row">
-            <span id="wcp-current">迴ｾ蝨ｨ: -- kg</span>
-            <span id="wcp-target">逶ｮ讓・-- kg</span>
+            <span id="wcp-current">現在: -- kg</span>
+            <span id="wcp-target">目標-- kg</span>
           </div>
           <div class="progress-track">
             <div class="progress-fill pf-green" id="fightWeightProgressFill" style="width:0%"></div>
           </div>
-          <div class="wcp-remain" id="wcp-remain">谿九ｊ -- kg</div>
+          <div class="wcp-remain" id="wcp-remain">残り -- kg</div>
         </div>
         <!-- Fight day schedule rings -->
         <div id="fightDayStats" style="display:flex;justify-content:space-around;padding-top:14px;border-top:1px solid var(--b1);margin-top:14px">
           <div style="text-align:center">
             <div style="font-family:'Oswald',sans-serif;font-size:32px;font-weight:700;color:var(--gold)" id="fdWeeks">--</div>
-            <div style="font-size:10px;color:var(--tx-3)">谿九ｊ騾ｱ</div>
+            <div style="font-size:10px;color:var(--tx-3)">残り週</div>
           </div>
           <div style="text-align:center">
             <div style="font-family:'Oswald',sans-serif;font-size:32px;font-weight:700;color:var(--blue)" id="fdTrainDays">--</div>
-            <div style="font-size:10px;color:var(--tx-3)">邱ｴ鄙貞庄閭ｽ譌･</div>
+            <div style="font-size:10px;color:var(--tx-3)">練習可能日</div>
           </div>
           <div style="text-align:center">
             <div style="font-family:'Oswald',sans-serif;font-size:32px;font-weight:700;color:var(--red-light)" id="fdCutPerDay">--</div>
-            <div style="font-size:10px;color:var(--tx-3)">蠢・ｦ∵ｸ幃㍼/譌･(g)</div>
+            <div style="font-size:10px;color:var(--tx-3)">推定減量/日(g)</div>
           </div>
         </div>
         <div class="weight-cut-plan">
           <div class="section-card-header" style="padding:0 0 12px;border-bottom:none">
-            <h3><i class="fas fa-triangle-exclamation"></i> 螳牙・縺ｪ貂幃㍼蛻､螳・/h3>
-            <span class="trend-badge" id="weightCutWarningBadge">蛻､螳壼ｾ・■</span>
+            <h3><i class="fas fa-triangle-exclamation"></i> 危険な減量診断</h3>
+            <span class="trend-badge" id="weightCutWarningBadge">分析待ち</span>
           </div>
           <div class="health-kpi-grid">
-            <div class="health-kpi"><span>蠢・ｦ∵ｸ幃㍼ / 騾ｱ</span><strong id="cutPerWeek">-- kg</strong></div>
-            <div class="health-kpi"><span>蠢・ｦ∵ｸ幃㍼ / 譌･</span><strong id="cutPerDay">-- g</strong></div>
-            <div class="health-kpi"><span>螳牙・縺ｪ騾ｱ縺ゅ◆繧頑ｸ幃㍼</span><strong id="safeCutLimit">-- kg</strong></div>
-            <div class="health-kpi"><span>蛻､螳・/span><strong id="weightCutStatus">--</strong></div>
+            <div class="health-kpi"><span>推定減量 / 週</span><strong id="cutPerWeek">-- kg</strong></div>
+            <div class="health-kpi"><span>推定減量 / 日</span><strong id="cutPerDay">-- g</strong></div>
+            <div class="health-kpi"><span>危険な週あたり減量</span><strong id="safeCutLimit">-- kg</strong></div>
+            <div class="health-kpi"><span>診断</span><strong id="weightCutStatus">--</strong></div>
           </div>
-          <div class="settings-note" id="weightCutPlanNote">隧ｦ蜷域律遞九ｒ逋ｻ骭ｲ縺吶ｋ縺ｨ貂幃㍼繝壹・繧ｹ縺ｮ謠先｡医′陦ｨ遉ｺ縺輔ｌ縺ｾ縺吶・/div>
+          <div class="settings-note" id="weightCutPlanNote">試合日を登録すると減量ペースの目安が表示されます。</div>
           <div class="weight-cut-alerts" id="weightCutAlerts" style="display:none" aria-live="polite">
             <div class="wca-head">
-              <span class="wca-title"><i class="fas fa-layer-group"></i> 蜴溷屏蛻･繧｢繝ｩ繝ｼ繝・/span>
-              <span class="wca-pill">髢ｾ蛟､縺ｯ莉ｮ險ｭ螳・/span>
+              <span class="wca-title"><i class="fas fa-layer-group"></i> 原因別アラート</span>
+              <span class="wca-pill">閾値は仮設定</span>
             </div>
             <p class="wca-summary" id="weightCutAlertsSummary"></p>
             <div class="wca-list" id="weightCutAlertsList"></div>
@@ -1180,19 +1180,19 @@
     <!-- Fight list -->
     <div class="section-card mt-16">
       <div class="section-card-header">
-        <h3><i class="fas fa-clipboard-list"></i> 貂幃㍼鬟滉ｺ九・繝ｩ繝ｳ</h3>
+        <h3><i class="fas fa-clipboard-list"></i> 減量食事プラン</h3>
         <div class="cut-plan-header-actions">
           <span id="cutPlanSummary" style="font-size:11px;color:var(--tx-3)"></span>
-          <div class="cut-plan-tabs" role="tablist" aria-label="貂幃㍼鬟滉ｺ九・繝ｩ繝ｳ陦ｨ遉ｺ蛻・崛">
-            <button class="cut-plan-tab active" id="cutPlanTabCard" type="button" onclick="switchCutPlanTab('card')">莉頑律/谺｡蝗・/button>
-            <button class="cut-plan-tab" id="cutPlanTabTable" type="button" onclick="switchCutPlanTab('table')">蜈ｨ譛滄俣荳隕ｧ</button>
+          <div class="cut-plan-tabs" role="tablist" aria-label="減量食事プランの表示切替">
+            <button class="cut-plan-tab active" id="cutPlanTabCard" type="button" onclick="switchCutPlanTab('card')">今日/次戦</button>
+            <button class="cut-plan-tab" id="cutPlanTabTable" type="button" onclick="switchCutPlanTab('table')">全期間一覧</button>
           </div>
         </div>
       </div>
       <div class="cut-plan-layout">
         <div class="cut-plan-panel active" id="cutPlanPanelCard">
           <div class="cut-plan-card" id="todayCutPlanCard">
-            <div class="empty-state">繝励Λ繝ｳ繧定ｪｭ縺ｿ霎ｼ縺ｿ荳ｭ...</div>
+            <div class="empty-state">プランを読み込み中...</div>
           </div>
         </div>
         <div class="cut-plan-panel" id="cutPlanPanelTable">
@@ -1200,10 +1200,10 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>譌･莉・/th><th>繝輔ぉ繝ｼ繧ｺ</th><th>逶ｮ讓呎悃菴馴㍾</th><th>kcal</th><th>P</th><th>F</th><th>C</th><th>繝｡繝九Η繝ｼ</th><th>繝｡繝｢</th>
+                  <th>日付</th><th>フェーズ</th><th>目標朝体重</th><th>kcal</th><th>P</th><th>F</th><th>C</th><th>メニュー</th><th>メモ</th>
                 </tr>
               </thead>
-              <tbody id="cutPlanTableBody"><tr><td colspan="9" class="empty-cell">繝励Λ繝ｳ繝・・繧ｿ縺ｪ縺・/td></tr></tbody>
+              <tbody id="cutPlanTableBody"><tr><td colspan="9" class="empty-cell">プランデータなし</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1212,232 +1212,232 @@
 
     <div class="section-card mt-16">
       <div class="section-card-header">
-        <h3><i class="fas fa-crosshairs"></i> 險育判 vs 螳溽ｸｾ</h3>
-        <span class="trend-badge" id="planCompareBadge">豈碑ｼ・ｾ・■</span>
+        <h3><i class="fas fa-crosshairs"></i> 計画 vs 実績</h3>
+        <span class="trend-badge" id="planCompareBadge">比較待ち</span>
       </div>
       <div class="plan-compare-layout">
         <div class="plan-compare-grid">
           <div class="plan-compare-card">
-            <span>蟇ｾ雎｡繝励Λ繝ｳ譌･</span>
+            <span>対戦プラン日</span>
             <strong id="planCompareDate">--</strong>
-            <div class="plan-compare-sub" id="planComparePhase">繝輔ぉ繝ｼ繧ｺ譛ｪ險ｭ螳・/div>
+            <div class="plan-compare-sub" id="planComparePhase">フェーズ未設定</div>
           </div>
           <div class="plan-compare-card">
-            <span>莠亥ｮ壽悃菴馴㍾</span>
+            <span>計画朝体重</span>
             <strong id="planTargetWeightRange">--</strong>
-            <div class="plan-compare-sub" id="planActualWeight">螳溽ｸｾ菴馴㍾ --</div>
+            <div class="plan-compare-sub" id="planActualWeight">実績体重 --</div>
           </div>
           <div class="plan-compare-card">
-            <span>菴馴㍾蟾ｮ蛻・/span>
+            <span>体重差分</span>
             <strong id="planWeightDiff">--</strong>
-            <div class="plan-compare-sub" id="planWeightDiffSub">蟇ｾ雎｡譌･縺ｮ菴馴㍾險倬鹸蠕・■</div>
+            <div class="plan-compare-sub" id="planWeightDiffSub">対戦日の体重記録待ち</div>
           </div>
           <div class="plan-compare-card">
-            <span>kcal蟾ｮ蛻・/span>
+            <span>kcal差分</span>
             <strong id="planKcalDiff">--</strong>
-            <div class="plan-compare-sub" id="planKcalDiffSub">鬟滉ｺ九Ο繧ｰ蠕・■</div>
+            <div class="plan-compare-sub" id="planKcalDiffSub">食事ログ待ち</div>
           </div>
           <div class="plan-compare-card">
-            <span>PFC蟾ｮ蛻・/span>
+            <span>PFC差分</span>
             <strong id="planPfcDiff">--</strong>
-            <div class="plan-compare-sub" id="planPfcDiffSub">PFC豈碑ｼ・ｾ・■</div>
+            <div class="plan-compare-sub" id="planPfcDiffSub">PFC比較待ち</div>
           </div>
           <div class="plan-compare-card">
-            <span>蠖ｱ髻ｿ蛻､螳・/span>
+            <span>影響診断</span>
             <strong id="planImpactStatus">--</strong>
-            <div class="plan-compare-sub" id="planImpactSub">豌ｴ蛻・・逹｡逵縺ｮ蠖ｱ髻ｿ繧定｡ｨ遉ｺ縺励∪縺・/div>
+            <div class="plan-compare-sub" id="planImpactSub">水分と睡眠の影響を表示します</div>
           </div>
         </div>
         <div class="plan-compare-chip-row">
-          <div class="plan-compare-chip" id="planHydrationStatus">豌ｴ蛻・ --</div>
-          <div class="plan-compare-chip" id="planRecoveryStatus">蝗槫ｾｩ: --</div>
-          <div class="plan-compare-chip" id="planTrainingStatus">邱ｴ鄙・ --</div>
+          <div class="plan-compare-chip" id="planHydrationStatus">水分 --</div>
+          <div class="plan-compare-chip" id="planRecoveryStatus">回復: --</div>
+          <div class="plan-compare-chip" id="planTrainingStatus">練習: --</div>
         </div>
-        <div class="settings-note" id="planCompareNote">貂幃㍼繝励Λ繝ｳ縺ｨ螳溽ｸｾ繝ｭ繧ｰ繧堤ｪ√″蜷医ｏ縺帙※縲∽ｻ頑律縺ｮ隱ｿ謨ｴ繝昴う繝ｳ繝医ｒ陦ｨ遉ｺ縺励∪縺吶・/div>
+        <div class="settings-note" id="planCompareNote">減量プランと実績ログを照らし合わせ、今日の調整ポイントを表示します。</div>
       </div>
     </div>
 
     <div class="section-card">
-      <div class="section-card-header"><h3><i class="fas fa-list"></i> 隧ｦ蜷医Μ繧ｹ繝・/h3></div>
+      <div class="section-card-header"><h3><i class="fas fa-list"></i> 試合リスト</h3></div>
       <div class="fight-cards-grid" id="fightCardsList">
-        <div class="empty-state">隧ｦ蜷井ｺ亥ｮ壹′逋ｻ骭ｲ縺輔ｌ縺ｦ縺・∪縺帙ｓ</div>
+        <div class="empty-state">試合カードが登録されていません</div>
       </div>
     </div>
   </div>
 
-  <!-- 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 SETTINGS PAGE 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武 -->
+  <!-- ══════ SETTINGS PAGE ══════ -->
   <div class="page" id="page-settings">
     <div class="page-header">
-      <h1><i class="fas fa-sliders" style="color:var(--blue);font-size:24px"></i> 繝槭う險ｭ螳・/h1>
-      <p class="page-subtitle">閾ｪ蛻・畑縺ｮ蛻晄悄蛟､繝ｻ騾夂衍險ｭ螳壹・繝舌ャ繧ｯ繧｢繝・・邂｡逅・/p>
+      <h1><i class="fas fa-sliders" style="color:var(--blue);font-size:24px"></i> マイ設定</h1>
+      <p class="page-subtitle">個人用の基本設定・通知・バックアップ管理</p>
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
       <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-user-gear"></i> 蛟倶ｺｺ繝励Ο繝輔ぅ繝ｼ繝ｫ險ｭ螳・/h3>
+        <h3 class="form-title"><i class="fas fa-user-gear"></i> 個人プロフィール設定</h3>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">陦ｨ遉ｺ蜷・/label>
-            <input type="text" id="s-name" class="input-field" placeholder="萓・ Vu Minh Duc">
+            <label class="form-label">表示名</label>
+            <input type="text" id="s-name" class="input-field" placeholder="例: Vu Minh Duc">
           </div>
           <div class="form-group">
-            <label class="form-label">閧ｩ譖ｸ縺・/label>
-            <input type="text" id="s-role" class="input-field" placeholder="萓・ SE / Pro Boxer">
+            <label class="form-label">肩書き</label>
+            <input type="text" id="s-role" class="input-field" placeholder="例: SE / Pro Boxer">
           </div>
         </div>
         <div class="form-row four-col">
           <div class="form-group">
-            <label class="form-label">霄ｫ髟ｷ (cm)</label>
+            <label class="form-label">身長 (cm)</label>
             <input type="number" id="s-height" class="input-field" placeholder="170">
           </div>
           <div class="form-group">
-            <label class="form-label">蟷ｴ鮨｢</label>
+            <label class="form-label">年齢</label>
             <input type="number" id="s-age" class="input-field" placeholder="27">
           </div>
           <div class="form-group">
-            <label class="form-label">諤ｧ蛻･</label>
+            <label class="form-label">性別</label>
             <select id="s-gender" class="input-field">
-              <option value="male">逕ｷ諤ｧ</option>
-              <option value="female">螂ｳ諤ｧ</option>
+              <option value="male">男性</option>
+              <option value="female">女性</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">逶ｮ讓吩ｽ馴㍾ (kg)</label>
+            <label class="form-label">目標体重 (kg)</label>
             <input type="number" id="s-target-weight" class="input-field" placeholder="63.5" step="0.1">
           </div>
         </div>
         <div class="form-row four-col">
           <div class="form-group">
-            <label class="form-label">譌｢螳・kcal</label>
+            <label class="form-label">既定 kcal</label>
             <input type="number" id="s-calorie-goal" class="input-field" placeholder="1800">
           </div>
           <div class="form-group">
-            <label class="form-label">譌｢螳・鬟滉ｺ九ち繧､繝・/label>
+            <label class="form-label">既定の食事タイプ</label>
             <select id="s-meal-type" class="input-field">
-              <option value="譛晞｣・>譛晞｣・/option>
-              <option value="譏ｼ鬟・>譏ｼ鬟・/option>
-              <option value="螟暮｣・>螟暮｣・/option>
-              <option value="髢馴｣・>髢馴｣・/option>
-              <option value="繝励Ο繝・う繝ｳ">繝励Ο繝・う繝ｳ</option>
+              <option value="朝食">朝食</option>
+              <option value="昼食">昼食</option>
+              <option value="夕食">夕食</option>
+              <option value="間食">間食</option>
+              <option value="プロテイン">プロテイン</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">譌｢螳・邱ｴ鄙貞ｼｷ蠎ｦ</label>
+            <label class="form-label">既定の練習強度</label>
             <select id="s-intensity" class="input-field">
-              <option value="菴・>菴・/option>
-              <option value="荳ｭ">荳ｭ</option>
-              <option value="鬮・>鬮・/option>
-              <option value="譛螟ｧ">譛螟ｧ</option>
+              <option value="低">低</option>
+              <option value="中">中</option>
+              <option value="高">高</option>
+              <option value="最大">最大</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">襍ｷ蜍輔・繝ｼ繧ｸ</label>
+            <label class="form-label">起動ページ</label>
             <select id="s-landing-page" class="input-field">
-              <option value="dashboard">繝繝・す繝･繝懊・繝・/option>
-              <option value="weight">菴馴㍾邂｡逅・/option>
-              <option value="meals">鬟滉ｺ九Γ繝九Η繝ｼ</option>
-              <option value="training">邱ｴ鄙偵せ繧ｱ繧ｸ繝･繝ｼ繝ｫ</option>
-              <option value="calories">繧ｫ繝ｭ繝ｪ繝ｼ險育ｮ・/option>
-              <option value="fight">隧ｦ蜷育岼讓・/option>
-              <option value="settings">繝槭う險ｭ螳・/option>
+              <option value="dashboard">ダッシュボード</option>
+              <option value="weight">体重管理</option>
+              <option value="meals">食事メニュー</option>
+              <option value="training">練習スケジュール</option>
+              <option value="calories">カロリー計算</option>
+              <option value="fight">試合目標</option>
+              <option value="settings">マイ設定</option>
             </select>
           </div>
         </div>
         <button class="btn btn-primary btn-full" onclick="saveAppSettings()">
-          <i class="fas fa-save"></i> 險ｭ螳壹ｒ菫晏ｭ・       </button>
+          <i class="fas fa-save"></i> 設定を保存       </button>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:14px">
         <div class="form-card">
-          <h3 class="form-title"><i class="fas fa-database"></i> 菫晏ｭ倥せ繝・・繧ｿ繧ｹ</h3>
+          <h3 class="form-title"><i class="fas fa-database"></i> 保存先ステータス</h3>
           <div class="settings-summary-grid">
             <div class="stat-card">
-              <div class="stat-label">菫晏ｭ俶婿蠑・/div>
+              <div class="stat-label">保存先種別</div>
               <div class="stat-val" id="settings-storage-mode">--</div>
-              <div class="stat-sub">辟｡譁呎棧SaaS遘ｻ陦悟燕縺ｧ繧らｶ咏ｶ壼茜逕ｨ蜿ｯ閭ｽ</div>
+              <div class="stat-sub">将来は軽量SaaS移行も選択可能</div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">邱上Ξ繧ｳ繝ｼ繝画焚</div>
+              <div class="stat-label">レコード件数</div>
               <div class="stat-val" id="settings-total-records">0</div>
-              <div class="stat-sub">菴馴㍾繝ｻ鬟滉ｺ九・邱ｴ鄙偵・險倬鹸謨ｰ</div>
+              <div class="stat-sub">体重・食事・練習の記録数</div>
             </div>
           </div>
           <div class="settings-note">
-            縺ｾ縺壹・繝ｭ繝ｼ繧ｫ繝ｫ繝輔ぃ繝ｼ繧ｹ繝医〒菫晏ｭ倥＠縲∝ｿ・ｦ√↓縺ｪ縺｣縺溘ｉ蟆・擂 BaaS 縺ｸ遘ｻ陦後〒縺阪ｋ讒区・縺ｧ縺吶・         </div>
+            当面はローカルファーストで保存し、必要になれば外部 BaaS へ移行できる設計です。         </div>
         </div>
 
         <div class="form-card" id="supabase-auth-card">
-          <h3 class="form-title"><i class="fas fa-cloud"></i> 繧ｯ繝ｩ繧ｦ繝牙酔譛・(Supabase)</h3>
+          <h3 class="form-title"><i class="fas fa-cloud"></i> クラウド同期 (Supabase)</h3>
           <p class="settings-note" id="supabase-config-hint">
-            <code>js/config.example.js</code> 繧・<code>js/config.js</code> 縺ｫ繧ｳ繝斐・縺励ヾupabase 縺ｮ Project URL 縺ｨ anon public API key 繧定ｨｭ螳壹＠縺ｦ縺上□縺輔＞縲・
+            <code>js/config.example.js</code> を<code>js/config.js</code> にコピーし、Supabase の Project URL と anon public API key を設定してください。
           </p>
           <div class="form-row">
             <div class="form-group" style="flex:1">
-              <label class="form-label">繧｢繧ｫ繧ｦ繝ｳ繝・/label>
-              <div class="input-field" style="border-style:dashed" id="supabase-auth-email">窶・/div>
+              <label class="form-label">アカウント</label>
+              <div class="input-field" style="border-style:dashed" id="supabase-auth-email">—</div>
             </div>
           </div>
           <div class="settings-actions" style="margin-top:10px">
             <button type="button" class="btn btn-primary btn-full" id="supabase-login-btn">
-              <i class="fab fa-google"></i> Google 縺ｧ繝ｭ繧ｰ繧､繝ｳ
+              <i class="fab fa-google"></i> Google でログイン
             </button>
             <button type="button" class="btn btn-secondary btn-full" id="supabase-merge-btn">
-              <i class="fas fa-cloud-upload-alt"></i> 縺薙・遶ｯ譛ｫ縺ｮ繝・・繧ｿ繧偵け繝ｩ繧ｦ繝峨∈繝槭・繧ｸ
+              <i class="fas fa-cloud-upload-alt"></i> この端末のデータをクラウドへマージ
             </button>
             <button type="button" class="btn btn-ghost btn-full" id="supabase-logout-btn">
-              <i class="fas fa-right-from-bracket"></i> 繝ｭ繧ｰ繧｢繧ｦ繝・
+              <i class="fas fa-right-from-bracket"></i> ログアウト
             </button>
           </div>
           <div class="settings-note" style="margin-top:8px">
-            Supabase 縺ｧ SQL 繧貞ｮ溯｡後＠縲、uthentication 竊・Google 繧呈怏蜉ｹ蛹悶＠縺ｦ縺上□縺輔＞・・code>supabase/migrations/001_boxer_pro_schema.sql</code> 蜀帝ｭ・峨・
+            Supabase で SQL を実行し、Authentication → Google を有効にしてください。<code>supabase/migrations/001_boxer_pro_schema.sql</code> を参照。
           </div>
         </div>
 
         <div class="form-card">
-          <h3 class="form-title"><i class="fas fa-cloud-arrow-down"></i> 繝舌ャ繧ｯ繧｢繝・・ / 蠕ｩ蜈・/h3>
+          <h3 class="form-title"><i class="fas fa-cloud-arrow-down"></i> バックアップ / 復元</h3>
           <div class="settings-actions">
             <button class="btn btn-secondary btn-full" onclick="exportAppData()">
-              <i class="fas fa-file-export"></i> JSON繝舌ャ繧ｯ繧｢繝・・繧剃ｿ晏ｭ・           </button>
+              <i class="fas fa-file-export"></i> JSONバックアップを保存           </button>
             <button class="btn btn-ghost btn-full" onclick="triggerImportAppData()">
-              <i class="fas fa-file-import"></i> JSON縺九ｉ蠕ｩ蜈・           </button>
+              <i class="fas fa-file-import"></i> JSONから復元           </button>
           </div>
           <div class="settings-note">
-            縺薙・繧ｨ繧ｯ繧ｹ繝昴・繝亥ｽ｢蠑上ｒ繝吶・繧ｹ縺ｫ縺吶ｋ縺ｨ縲∝ｰ・擂縺ｮ繧ｯ繝ｩ繧ｦ繝臥ｧｻ陦後ｄ莉悶し繝ｼ繝薙せ騾｣謳ｺ繧ゅ＠繧・☆縺上↑繧翫∪縺吶・         </div>
+            このエクスポートをベースに、別端末のクラウド移行や端末変更にも使えます。         </div>
           <input type="file" id="appDataImportInput" accept="application/json" hidden>
         </div>
 
         <div class="form-card">
-          <h3 class="form-title"><i class="fas fa-bell"></i> 騾夂衍 / 繝ｪ繝槭う繝ｳ繝繝ｼ</h3>
+          <h3 class="form-title"><i class="fas fa-bell"></i> 通知 / リマインダー</h3>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">騾夂衍繧呈怏蜉ｹ蛹・/label>
+              <label class="form-label">通知を有効化</label>
               <select id="s-reminders-enabled" class="input-field">
                 <option value="true">ON</option>
                 <option value="false">OFF</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">騾夂衍讓ｩ髯・/label>
+              <label class="form-label">通知許可</label>
               <button class="btn btn-secondary btn-full" type="button" onclick="requestNotificationPermission()">
-                <i class="fas fa-bell"></i> 讓ｩ髯舌ｒ險ｱ蜿ｯ
+                <i class="fas fa-bell"></i> 許可をリクエスト
               </button>
             </div>
           </div>
           <div class="form-row three-col">
             <div class="form-group">
-              <label class="form-label">菴馴㍾險倬鹸</label>
+              <label class="form-label">体重記録</label>
               <input type="time" id="s-reminder-weight" class="input-field">
             </div>
             <div class="form-group">
-              <label class="form-label">豌ｴ蛻・メ繧ｧ繝・け</label>
+              <label class="form-label">水分チェック</label>
               <input type="time" id="s-reminder-hydration" class="input-field">
             </div>
             <div class="form-group">
-              <label class="form-label">逹｡逵 / 蝗槫ｾｩ</label>
+              <label class="form-label">睡眠 / 回復</label>
               <input type="time" id="s-reminder-sleep" class="input-field">
             </div>
           </div>
-          <div class="settings-note" id="reminderStatusText">繧｢繝励Μ襍ｷ蜍穂ｸｭ縺ｫ繝ｭ繝ｼ繧ｫ繝ｫ騾夂衍縺ｨ繝医・繧ｹ繝医〒縺顔衍繧峨○縺励∪縺吶・/div>
+          <div class="settings-note" id="reminderStatusText">アプリ起動中にローカル通知とトーストでお知らせします。</div>
         </div>
       </div>
     </div>
@@ -1449,53 +1449,53 @@
 <div class="mobile-quick-sheet" id="mobileQuickSheet" role="dialog" aria-modal="true" aria-labelledby="mobileQuickTitle" hidden>
   <div class="mobile-quick-sheet-inner">
     <div class="mobile-quick-handle" aria-hidden="true"></div>
-    <h2 id="mobileQuickTitle" class="mobile-quick-title">縺吶・繧・￥險倬鹸</h2>
-    <p class="mobile-quick-sub">繧医￥菴ｿ縺・・蜉帷判髱｢縺ｸ縺吶＄遘ｻ蜍包ｼ育強縺・判髱｢蜷代￠・・/p>
+    <h2 id="mobileQuickTitle" class="mobile-quick-title">すばやく記録</h2>
+    <p class="mobile-quick-sub">よく使う入力画面へすぐ移動（開いている画面から）</p>
     <div class="mobile-quick-grid">
       <button type="button" class="mobile-quick-tile" data-mq-action="dash-weight">
-        <i class="fas fa-weight-scale"></i><span>菴馴㍾</span>
+        <i class="fas fa-weight-scale"></i><span>体重</span>
       </button>
       <button type="button" class="mobile-quick-tile" data-mq-action="meals">
-        <i class="fas fa-bowl-food"></i><span>鬟滉ｺ・/span>
+        <i class="fas fa-bowl-food"></i><span>食事</span>
       </button>
       <button type="button" class="mobile-quick-tile" data-mq-action="training">
-        <i class="fas fa-stopwatch"></i><span>邱ｴ鄙・/span>
+        <i class="fas fa-stopwatch"></i><span>練習</span>
       </button>
       <button type="button" class="mobile-quick-tile" data-mq-action="hydration">
-        <i class="fas fa-bottle-water"></i><span>豌ｴ蛻・/span>
+        <i class="fas fa-bottle-water"></i><span>水分</span>
       </button>
       <button type="button" class="mobile-quick-tile" data-mq-action="recovery">
-        <i class="fas fa-bed"></i><span>逹｡逵繝ｻ蝗槫ｾｩ</span>
+        <i class="fas fa-bed"></i><span>睡眠・回復</span>
       </button>
       <button type="button" class="mobile-quick-tile" data-mq-action="calories">
-        <i class="fas fa-fire-flame-curved"></i><span>繧ｫ繝ｭ繝ｪ繝ｼ</span>
+        <i class="fas fa-fire-flame-curved"></i><span>カロリー</span>
       </button>
       <button type="button" class="mobile-quick-tile" data-mq-action="settings">
-        <i class="fas fa-sliders"></i><span>險ｭ螳・/span>
+        <i class="fas fa-sliders"></i><span>設定</span>
       </button>
     </div>
-    <button type="button" class="btn btn-secondary btn-full mobile-quick-close-btn" id="mobileQuickCloseBtn">髢峨§繧・/button>
+    <button type="button" class="btn btn-secondary btn-full mobile-quick-close-btn" id="mobileQuickCloseBtn">閉じる</button>
   </div>
 </div>
-<button type="button" class="mobile-record-fab" id="mobileRecordFab" aria-label="縺吶・繧・￥險倬鹸" aria-expanded="false" aria-controls="mobileQuickSheet">
+<button type="button" class="mobile-record-fab" id="mobileRecordFab" aria-label="すばやく記録" aria-expanded="false" aria-controls="mobileQuickSheet">
   <i class="fas fa-plus"></i>
 </button>
 
-<nav class="mobile-bottom-nav" aria-label="繝｢繝舌う繝ｫ繝翫ン繧ｲ繝ｼ繧ｷ繝ｧ繝ｳ">
+<nav class="mobile-bottom-nav" aria-label="モバイルナビゲーション">
   <button class="mobile-nav-btn active" data-page="dashboard" onclick="switchPage('dashboard')">
-    <i class="fas fa-house"></i><span>繝帙・繝</span>
+    <i class="fas fa-house"></i><span>ホーム</span>
   </button>
   <button class="mobile-nav-btn" data-page="weight" onclick="switchPage('weight')">
-    <i class="fas fa-weight-scale"></i><span>菴馴㍾</span>
+    <i class="fas fa-weight-scale"></i><span>体重</span>
   </button>
   <button class="mobile-nav-btn" data-page="meals" onclick="switchPage('meals')">
-    <i class="fas fa-bowl-food"></i><span>鬟滉ｺ・/span>
+    <i class="fas fa-bowl-food"></i><span>食事</span>
   </button>
   <button class="mobile-nav-btn" data-page="training" onclick="switchPage('training')">
-    <i class="fas fa-dumbbell"></i><span>邱ｴ鄙・/span>
+    <i class="fas fa-dumbbell"></i><span>練習</span>
   </button>
   <button class="mobile-nav-btn" data-page="fight" onclick="switchPage('fight')">
-    <i class="fas fa-trophy"></i><span>隧ｦ蜷・/span>
+    <i class="fas fa-trophy"></i><span>試合</span>
   </button>
 </nav>
 
@@ -1506,17 +1506,17 @@
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-box">
     <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
-    <h3 class="modal-title" id="modalTitle">遒ｺ隱・/h3>
-    <p class="modal-msg" id="modalMsg">譛ｬ蠖薙↓蜑企勁縺励∪縺吶°・・/p>
+    <h3 class="modal-title" id="modalTitle">確認</h3>
+    <p class="modal-msg" id="modalMsg">本当に削除しますか？</p>
     <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">繧ｭ繝｣繝ｳ繧ｻ繝ｫ</button>
-      <button class="btn btn-danger" id="modalConfirmBtn">蜑企勁縺吶ｋ</button>
+      <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-danger" id="modalConfirmBtn">削除する</button>
     </div>
   </div>
 </div>
 
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
-<script src="js/app.js?v=11"></script>
+<script src="js/app.js?v=12"></script>
 </body>
 </html>
