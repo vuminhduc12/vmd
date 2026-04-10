@@ -1,4 +1,4 @@
-const CACHE_NAME = 'boxer-pro-v6';
+﻿const CACHE_NAME = 'boxer-pro-v8';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -12,7 +12,10 @@ const CORE_ASSETS = [
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS))
+    Promise.all([
+      caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS)),
+      self.skipWaiting(),
+    ])
   );
 });
 
@@ -25,7 +28,8 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-function isAppAssetUrl(url) {
+function shouldFetchNetworkFirst(url, request) {
+  if (request.mode === 'navigate') return true;
   try {
     const p = new URL(url).pathname;
     return p.endsWith('/js/config.js') || p.endsWith('/js/app.js') || p.endsWith('/css/style.css') || p.endsWith('/index.html');
@@ -37,7 +41,7 @@ function isAppAssetUrl(url) {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
-  if (isAppAssetUrl(event.request.url)) {
+  if (shouldFetchNetworkFirst(event.request.url, event.request)) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
