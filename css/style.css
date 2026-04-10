@@ -229,9 +229,10 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 .page.active{
   display:block;
   opacity:1;
-  animation:pageIn .28s cubic-bezier(.4,0,.2,1) forwards;
+  /* opacity は常に 1（アニメ未完成でも真っ黒に見えないようキーフレームでは動かさない） */
+  animation:pageInSlide .28s cubic-bezier(.4,0,.2,1) forwards;
 }
-@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pageInSlide{from{transform:translateY(12px)}to{transform:translateY(0)}}
 
 .page-header{margin-bottom:28px}
 .page-header h1{

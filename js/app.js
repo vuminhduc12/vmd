@@ -40,6 +40,13 @@ const DEFAULT_SETTINGS = {
   reminderSleepTime: '22:00',
 };
 
+const APP_PAGE_IDS = ['dashboard', 'weight', 'meals', 'training', 'calories', 'fight', 'settings'];
+
+function normalizeAppPageId(name) {
+  const p = String(name == null ? '' : name).trim();
+  return APP_PAGE_IDS.includes(p) ? p : 'dashboard';
+}
+
 // ============================================================
 // FOOD DATABASE -- 120+ items (per 100g unless noted)
 // CSV data from user's actual meal plan included
@@ -334,6 +341,7 @@ function mergeSettings(raw = {}) {
     age: Number(raw.age ?? DEFAULT_SETTINGS.age) || DEFAULT_SETTINGS.age,
     dailyCalorieGoal: Number(raw.dailyCalorieGoal ?? DEFAULT_SETTINGS.dailyCalorieGoal) || DEFAULT_SETTINGS.dailyCalorieGoal,
     remindersEnabled: typeof raw.remindersEnabled === 'boolean' ? raw.remindersEnabled : DEFAULT_SETTINGS.remindersEnabled,
+    landingPage: normalizeAppPageId(raw.landingPage ?? DEFAULT_SETTINGS.landingPage),
   };
 }
 
@@ -1119,15 +1127,20 @@ function initMobileQuickUI() {
 
 function switchPage(pageName) {
   closeMobileQuickSheet();
+  const page = normalizeAppPageId(pageName);
+  if (page !== String(pageName || '').trim() && pageName != null && String(pageName).trim() !== '') {
+    console.warn('BOXER PRO: invalid page id, using', page, 'was:', pageName);
+  }
+
   // Update nav
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-  const activeItem = document.querySelector(`.nav-item[data-page="${pageName}"]`);
+  const activeItem = document.querySelector(`.nav-item[data-page="${page}"]`);
   if (activeItem) activeItem.classList.add('active');
-  updateMobileNav(pageName);
+  updateMobileNav(page);
 
-  // Update pages
+  // Update pages（必ず1つ active — 未知IDですべて非表示になるのを防ぐ）
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const activePage = document.getElementById(`page-${pageName}`);
+  const activePage = document.getElementById(`page-${page}`) || document.getElementById('page-dashboard');
   if (activePage) activePage.classList.add('active');
 
   // Update topbar title
@@ -1140,15 +1153,16 @@ function switchPage(pageName) {
     fight: '試合目標',
     settings: 'マイ設定',
   };
-  document.getElementById('topbarTitle').textContent = titles[pageName] || pageName;
+  const topTitle = document.getElementById('topbarTitle');
+  if (topTitle) topTitle.textContent = titles[page] || page;
 
   // Load page-specific data
-  if (pageName === 'weight') renderWeightPage();
-  if (pageName === 'meals') renderMealsPage();
-  if (pageName === 'training') renderTrainingPage();
-  if (pageName === 'calories') renderCaloriesPage();
-  if (pageName === 'fight') renderFightPage();
-  if (pageName === 'settings') renderSettingsPage();
+  if (page === 'weight') renderWeightPage();
+  if (page === 'meals') renderMealsPage();
+  if (page === 'training') renderTrainingPage();
+  if (page === 'calories') renderCaloriesPage();
+  if (page === 'fight') renderFightPage();
+  if (page === 'settings') renderSettingsPage();
 }
 
 // ============================================================
