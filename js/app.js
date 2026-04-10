@@ -909,7 +909,15 @@ function getLocalTableResponse(table, params = '') {
 function shouldFallbackToLocal(error, res) {
   if (!navigator.onLine) return true;
   if (res && (res.status === 404 || res.status >= 500)) return true;
-  return error instanceof TypeError;
+  if (error instanceof TypeError) return true;
+  // 静的ホストが /tables/* に HTML を返して res.json() が失敗したとき
+  if (error instanceof SyntaxError) return true;
+  return false;
+}
+
+function responseLooksLikeJson(res) {
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json');
 }
 
 function notifyLocalFallback() {
@@ -1139,8 +1147,21 @@ async function apiGet(table, params = '') {
       }
       throw new Error(`GET ${table} failed`);
     }
-    setStorageMode(STORAGE_MODE.API);
-    return res.json();
+    // Workers/Pages 等で /tables が無いと index.html が 200 で返ることがある → JSON でなければローカル
+    if (!responseLooksLikeJson(res)) {
+      setStorageMode(STORAGE_MODE.LOCAL);
+      notifyLocalFallback();
+      return getLocalTableResponse(table, params);
+    }
+    try {
+      const data = await res.json();
+      setStorageMode(STORAGE_MODE.API);
+      return data;
+    } catch (parseErr) {
+      setStorageMode(STORAGE_MODE.LOCAL);
+      notifyLocalFallback();
+      return getLocalTableResponse(table, params);
+    }
   } catch (error) {
     if (shouldFallbackToLocal(error)) {
       setStorageMode(STORAGE_MODE.LOCAL);
@@ -1170,8 +1191,20 @@ async function apiPost(table, data) {
       }
       throw new Error(`POST ${table} failed`);
     }
-    setStorageMode(STORAGE_MODE.API);
-    return res.json();
+    if (!responseLooksLikeJson(res)) {
+      setStorageMode(STORAGE_MODE.LOCAL);
+      notifyLocalFallback();
+      return saveLocalRecord(table, data);
+    }
+    try {
+      const record = await res.json();
+      setStorageMode(STORAGE_MODE.API);
+      return record;
+    } catch (parseErr) {
+      setStorageMode(STORAGE_MODE.LOCAL);
+      notifyLocalFallback();
+      return saveLocalRecord(table, data);
+    }
   } catch (error) {
     if (shouldFallbackToLocal(error)) {
       setStorageMode(STORAGE_MODE.LOCAL);
@@ -1190,7 +1223,18 @@ async function apiDelete(table, id) {
 
   try {
     const res = await fetch(`${API_BASE}/${table}/${id}`, { method: 'DELETE' });
-    if (res.status === 204 || res.ok) {
+    if (res.status === 204) {
+      setStorageMode(STORAGE_MODE.API);
+      return true;
+    }
+    if (res.ok) {
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('text/html')) {
+        setStorageMode(STORAGE_MODE.LOCAL);
+        notifyLocalFallback();
+        deleteLocalRecord(table, id);
+        return true;
+      }
       setStorageMode(STORAGE_MODE.API);
       return true;
     }
@@ -1224,11 +1268,23 @@ async function apiPut(table, id, data) {
       body: JSON.stringify(data),
     });
     if (res.ok) {
+      if (res.status === 204) {
+        setStorageMode(STORAGE_MODE.API);
+        return { id, ...data };
+      }
+      if (!responseLooksLikeJson(res)) {
+        setStorageMode(STORAGE_MODE.LOCAL);
+        notifyLocalFallback();
+        return updateLocalRecord(table, id, data);
+      }
       setStorageMode(STORAGE_MODE.API);
-      if (res.status === 204) return { id, ...data };
-      const ct = res.headers.get('content-type');
-      if (ct && ct.includes('application/json')) return res.json();
-      return { id, ...data };
+      try {
+        return await res.json();
+      } catch (parseErr) {
+        setStorageMode(STORAGE_MODE.LOCAL);
+        notifyLocalFallback();
+        return updateLocalRecord(table, id, data);
+      }
     }
     // 405/501 は API が PUT 未対応のことが多い → ローカル更新に切り替え
     const putUnsupported = res.status === 405 || res.status === 501;
