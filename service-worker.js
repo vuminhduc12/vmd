@@ -1,8 +1,9 @@
-﻿const CACHE_NAME = 'boxer-pro-v4';
+const CACHE_NAME = 'boxer-pro-v5';
 const CORE_ASSETS = [
   './',
   './index.html',
   './css/style.css',
+  './js/config.js',
   './js/app.js',
   './manifest.webmanifest',
   './icons/app-icon.svg',
@@ -27,7 +28,7 @@ self.addEventListener('activate', event => {
 function isAppAssetUrl(url) {
   try {
     const p = new URL(url).pathname;
-    return p.endsWith('/js/app.js') || p.endsWith('/css/style.css') || p.endsWith('/index.html');
+    return p.endsWith('/js/config.js') || p.endsWith('/js/app.js') || p.endsWith('/css/style.css') || p.endsWith('/index.html');
   } catch (e) {
     return false;
   }
