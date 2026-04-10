@@ -1338,6 +1338,7 @@
               <option value="training">練習スケジュール</option>
               <option value="calories">カロリー計算</option>
               <option value="fight">試合目標</option>
+              <option value="settings">マイ設定</option>
             </select>
           </div>
         </div>
@@ -1362,6 +1363,33 @@
           </div>
           <div class="settings-note">
             まずはローカルファーストで保存し、必要になったら将来 BaaS へ移行できる構成です。          </div>
+        </div>
+
+        <div class="form-card" id="supabase-auth-card">
+          <h3 class="form-title"><i class="fas fa-cloud"></i> クラウド同期 (Supabase)</h3>
+          <p class="settings-note" id="supabase-config-hint">
+            <code>js/config.example.js</code> を <code>js/config.js</code> にコピーし、Supabase の Project URL と anon public API key を設定してください。
+          </p>
+          <div class="form-row">
+            <div class="form-group" style="flex:1">
+              <label class="form-label">アカウント</label>
+              <div class="input-field" style="border-style:dashed" id="supabase-auth-email">—</div>
+            </div>
+          </div>
+          <div class="settings-actions" style="margin-top:10px">
+            <button type="button" class="btn btn-primary btn-full" id="supabase-login-btn" onclick="signInWithGoogle()">
+              <i class="fab fa-google"></i> Google でログイン
+            </button>
+            <button type="button" class="btn btn-secondary btn-full" id="supabase-merge-btn" onclick="mergeLocalDataToSupabase()">
+              <i class="fas fa-cloud-upload-alt"></i> この端末のデータをクラウドへマージ
+            </button>
+            <button type="button" class="btn btn-ghost btn-full" id="supabase-logout-btn" onclick="signOutSupabase()">
+              <i class="fas fa-right-from-bracket"></i> ログアウト
+            </button>
+          </div>
+          <div class="settings-note" style="margin-top:8px">
+            Supabase で SQL を実行し、Authentication → Google を有効化してください（<code>supabase/migrations/001_boxer_pro_schema.sql</code> 冒頭）。
+          </div>
         </div>
 
         <div class="form-card">
@@ -1486,9 +1514,8 @@
   </div>
 </div>
 
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
-
-
-
