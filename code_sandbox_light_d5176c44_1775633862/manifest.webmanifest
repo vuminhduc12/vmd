@@ -1,0 +1,19 @@
+{
+  "name": "BOXER PRO",
+  "short_name": "BOXER PRO",
+  "description": "体重、食事、練習、試合準備を毎日記録するボクサー向け管理アプリ",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#080a10",
+  "theme_color": "#080a10",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
