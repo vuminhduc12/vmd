@@ -68,11 +68,7 @@
   </div>
 </nav>
 
-<<<<<<< HEAD
-=======
 <div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
-
->>>>>>> 3a27dcf (initial commit)
 <!-- ══════ MAIN ══════ -->
 <div class="main-wrapper" id="mainWrapper">
 
@@ -242,7 +238,7 @@
         <div class="chart-card-header">
           <h3><i class="fas fa-chart-bar"></i> 過去7日 カロリー収支</h3>
         </div>
-        <div style="height:200px"><canvas id="dash7dayChart"></canvas></div>
+        <div class="chart-surface chart-surface-md"><canvas id="dash7dayChart"></canvas></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
         <!-- Streak -->
@@ -668,7 +664,7 @@
           <div class="msumm-item"><div class="msumm-val" id="summ-f" style="color:var(--gold)">0</div><div class="msumm-label">脂質 g</div></div>
           <div class="msumm-item"><div class="msumm-val" id="summ-c" style="color:var(--blue)">0</div><div class="msumm-label">炭水化物 g</div></div>
         </div>
-        <div style="height:190px"><canvas id="mealPfcChart"></canvas></div>
+        <div class="chart-surface chart-surface-md"><canvas id="mealPfcChart"></canvas></div>
         <div id="mealList" class="meal-list"></div>
       </div>
 
@@ -676,7 +672,7 @@
         <div class="chart-card-header">
           <h3><i class="fas fa-chart-column"></i> 7日間カロリー推移</h3>
         </div>
-        <div style="height:190px"><canvas id="meal7dayChart"></canvas></div>
+        <div class="chart-surface chart-surface-md"><canvas id="meal7dayChart"></canvas></div>
         <div class="weekly-meal-stats" id="weeklyMealStats"></div>
       </div>
     </div>
@@ -799,14 +795,14 @@
             <div class="week-stat"><div class="week-stat-val" id="week-minutes">0</div><div class="week-stat-label">合計分</div></div>
             <div class="week-stat"><div class="week-stat-val" id="week-burned">0</div><div class="week-stat-label">消費kcal</div></div>
           </div>
-          <div style="height:200px"><canvas id="weeklyTrainingChart"></canvas></div>
+          <div class="chart-surface chart-surface-md"><canvas id="weeklyTrainingChart"></canvas></div>
         </div>
         <!-- Radar chart -->
         <div class="chart-card" style="padding:16px">
           <div class="chart-card-header" style="margin-bottom:10px">
             <h3><i class="fas fa-spider"></i> 練習バランス (今週)</h3>
           </div>
-          <div class="radar-wrap" style="height:200px"><canvas id="trainingRadarChart"></canvas></div>
+          <div class="radar-wrap chart-surface chart-surface-md"><canvas id="trainingRadarChart"></canvas></div>
         </div>
       </div>
     </div>
@@ -910,10 +906,10 @@
         <div class="pfc-recommend">
           <h4>推奨 PFCバランス（ボクサー向け）</h4>
           <div class="pfc-rec-row"><span class="pfc-rec-label pfc-p">タンパク質</span><span class="pfc-rec-val" id="rec-p">-- g</span></div>
-          <div class="pfc-rec-row"><span class="pfc-rec-label pfc-f">閼りｳｪ</span><span class="pfc-rec-val" id="rec-f">-- g</span></div>
-          <div class="pfc-rec-row"><span class="pfc-rec-label pfc-c">轤ｭ豌ｴ蛹也黄</span><span class="pfc-rec-val" id="rec-c">-- g</span></div>
+          <div class="pfc-rec-row"><span class="pfc-rec-label pfc-f">脂質</span><span class="pfc-rec-val" id="rec-f">-- g</span></div>
+          <div class="pfc-rec-row"><span class="pfc-rec-label pfc-c">炭水化物</span><span class="pfc-rec-val" id="rec-c">-- g</span></div>
         </div>
-        <div id="calcChartWrap" style="height:160px"><canvas id="tdeeBreakdownChart"></canvas></div>
+        <div id="calcChartWrap" class="chart-surface chart-surface-sm"><canvas id="tdeeBreakdownChart"></canvas></div>
       </div>
     </div>
 
@@ -923,7 +919,7 @@
         <h3><i class="fas fa-chart-area"></i> 摂取 vs 消費カロリー（直近7日）</h3>
         <div id="weeklyCalSummary" style="font-size:12px;color:var(--tx-2)"></div>
       </div>
-      <div style="height:280px"><canvas id="calorieBalanceChart"></canvas></div>
+      <div class="chart-surface chart-surface-lg"><canvas id="calorieBalanceChart"></canvas></div>
     </div>
 
     <!-- 練習と体重・回復の相関（直近14日）-->
@@ -932,7 +928,7 @@
         <h3><i class="fas fa-link"></i> 練習と体重・回復の相関（直近14日）</h3>
         <div id="trainingWeightRecoverySummary" style="font-size:12px;color:var(--tx-2);text-align:right;max-width:55%"></div>
       </div>
-      <div style="height:320px"><canvas id="trainingWeightRecoveryChart"></canvas></div>
+      <div class="chart-surface chart-surface-xl"><canvas id="trainingWeightRecoveryChart"></canvas></div>
       <p class="settings-note" id="trainingWeightRecoveryNote" style="margin-top:12px"></p>
     </div>
 

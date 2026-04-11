@@ -66,10 +66,7 @@ body{
   overflow-x:hidden;
   line-height:1.5;
 }
-<<<<<<< HEAD
-=======
 body.sidebar-open{overflow:hidden}
->>>>>>> 3a27dcf (initial commit)
 a{text-decoration:none;color:inherit}
 input,select,textarea,button{font-family:inherit}
 input[type=number]::-webkit-inner-spin-button{opacity:.4}
@@ -95,8 +92,6 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
   overflow:hidden;
 }
 
-<<<<<<< HEAD
-=======
 .sidebar-backdrop{
   position:fixed;inset:0;
   background:rgba(5,7,12,0.56);
@@ -105,8 +100,6 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
   display:none;
 }
 .sidebar-backdrop:not([hidden]){display:block}
-
->>>>>>> 3a27dcf (initial commit)
 .sidebar::before{
   content:'';
   position:absolute;top:0;left:0;right:0;height:240px;
@@ -417,6 +410,23 @@ textarea.input-field{resize:vertical;min-height:70px}
 .chart-canvas-wrap-lg{height:250px}
 .chart-canvas-wrap-md{height:220px}
 .chart-canvas-wrap-xl{height:320px}
+.chart-surface{
+  position:relative;
+  width:100%;
+  min-width:0;
+  border-radius:16px;
+  overflow:hidden;
+}
+.chart-surface canvas{
+  display:block;
+  width:100% !important;
+  height:100% !important;
+  max-width:100%;
+}
+.chart-surface-sm{height:160px}
+.chart-surface-md{height:190px}
+.chart-surface-lg{height:280px}
+.chart-surface-xl{height:320px}
 .trend-badge{
   display:inline-flex;align-items:center;justify-content:center;min-height:34px;
   padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.08);
@@ -650,6 +660,7 @@ textarea.input-field{resize:vertical;min-height:70px}
    TWO-COL LAYOUT
 ══════════════════════════════════════════ */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.two-col > *{min-width:0}
 .three-col-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 .mt-16{margin-top:16px}
 .mt-20{margin-top:20px}
@@ -687,6 +698,7 @@ textarea.input-field{resize:vertical;min-height:70px}
 .meal-input-master{
   background:var(--bg-card);border:1px solid var(--b1);
   border-radius:var(--r);padding:24px;
+  overflow:hidden;
 }
 .meal-input-top{
   display:grid;grid-template-columns:1fr 1fr 1.5fr 2fr;
@@ -798,6 +810,7 @@ textarea.input-field{resize:vertical;min-height:70px}
 .meal-today-panel{
   background:var(--bg-card);border:1px solid var(--b1);
   border-radius:var(--r);padding:22px;
+  min-width:0;
 }
 .meal-summary-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
 .msumm-item{
@@ -810,8 +823,11 @@ textarea.input-field{resize:vertical;min-height:70px}
 .meal-list-item{
   display:flex;justify-content:space-between;align-items:center;
   padding:8px 0;border-bottom:1px solid var(--b1);font-size:12.5px;
+  gap:10px;
 }
 .meal-list-item:last-child{border-bottom:none}
+.meal-list-item > div{min-width:0}
+.meal-list-item strong{word-break:break-word}
 .meal-badge{display:inline-block;padding:1px 7px;border-radius:9px;font-size:9px;font-weight:800;margin-right:5px}
 .meal-badge-朝食{background:rgba(240,192,64,0.18);color:var(--gold)}
 .meal-badge-昼食{background:rgba(74,144,226,0.18);color:var(--blue)}
@@ -858,7 +874,7 @@ textarea.input-field{resize:vertical;min-height:70px}
 .cal-day:hover{background:rgba(232,57,74,0.12);color:var(--red-light);border-color:var(--b-red)}
 .cal-day.today{border-color:var(--red);color:var(--red-light);box-shadow:0 0 10px rgba(232,57,74,.2)}
 .cal-day.has-training{background:rgba(232,57,74,0.15);border-color:rgba(232,57,74,0.25)}
-.cal-day.has-training::after{content:'🥁E;font-size:9px;position:absolute;bottom:3px}
+.cal-day.has-training::after{content:'🥊';font-size:9px;position:absolute;bottom:3px}
 .cal-day.empty{background:transparent;cursor:default;pointer-events:none}
 .cal-day-num{font-weight:700;line-height:1}
 .cal-day-kcal{font-size:8px;color:var(--tx-3)}
@@ -867,7 +883,7 @@ textarea.input-field{resize:vertical;min-height:70px}
 .badge{display:inline-block;padding:2px 8px;border-radius:9px;font-size:10px;font-weight:700}
 .intensity-低{background:rgba(48,208,128,0.12);color:var(--green)}
 .intensity-中{background:rgba(240,192,64,0.12);color:var(--gold)}
-.intensity-髁Ebackground:rgba(245,158,48,0.12);color:var(--orange)}
+.intensity-高{background:rgba(245,158,48,0.12);color:var(--orange)}
 .intensity-最大{background:rgba(232,57,74,0.12);color:var(--red-light)}
 
 /* Inline calc btn */
@@ -1284,6 +1300,9 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .form-row,.form-row.three-col,.form-row.four-col{grid-template-columns:1fr}
   .week-stats{grid-template-columns:repeat(3,1fr)}
   .meal-summary-kpi{grid-template-columns:repeat(2,1fr)}
+  .chart-surface-md{height:200px}
+  .chart-surface-lg{height:240px}
+  .chart-surface-xl{height:280px}
   .page{padding:14px 14px 60px}
   .calorie-balance-display{gap:12px}
   .countdown-number{font-size:60px}
@@ -1331,17 +1350,26 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .food-item-row>div:nth-child(4),.food-item-row>div:nth-child(5),.food-item-row>div:nth-child(6){display:none}
   .meal-input-top{grid-template-columns:1fr}
   .meal-realtime-total{gap:8px}
+  .meal-realtime-total{padding:12px}
+  .mrt-item{min-width:58px;flex:1 1 58px}
+  .mrt-item:last-child{flex:0 0 72px}
+  .mrt-divider{display:none}
+  .cgb-row{flex-wrap:wrap;align-items:flex-start}
+  .cgb-track{order:3;flex-basis:100%}
+  .cgb-val{margin-left:auto}
   .meal-save-row{flex-direction:column}
+  .meal-save-btn{width:100%;align-self:stretch}
+  .meal-today-panel,.chart-card,.form-card,.section-card,.meal-input-master,.training-today-panel{padding:16px}
+  .meal-list-item{align-items:flex-start}
+  .chart-surface-sm{height:150px}
+  .chart-surface-md{height:220px}
+  .chart-surface-lg{height:230px}
+  .chart-surface-xl{height:260px}
   .cal-bal-val{font-size:26px}
   .topbar{padding:0 12px;gap:8px}
   .topbar-right{gap:8px}
   .status-chip i{display:none}
 }
-
-<<<<<<< HEAD
-
-=======
 @media(min-width:901px){
   .sidebar-backdrop{display:none !important}
 }
->>>>>>> 3a27dcf (initial commit)
