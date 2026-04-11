@@ -397,11 +397,29 @@ function setFieldValue(id, value, force = true) {
   el.value = value ?? '';
 }
 
-function renderProfileCard() {
+function getUserDisplayName(user) {
+  if (!user) return '';
+  const meta = user.user_metadata || {};
+  return meta.full_name || meta.name || meta.user_name || '';
+}
+
+function renderProfileCard(authUser = null) {
   const nameEl = document.getElementById('profileNameDisplay');
   const roleEl = document.getElementById('profileRoleDisplay');
-  if (nameEl) nameEl.textContent = appSettings.athleteName || DEFAULT_SETTINGS.athleteName;
-  if (roleEl) roleEl.textContent = appSettings.athleteRole || DEFAULT_SETTINGS.athleteRole;
+  if (!nameEl || !roleEl) return;
+
+  const defaultName = appSettings.athleteName || DEFAULT_SETTINGS.athleteName;
+  const defaultRole = appSettings.athleteRole || DEFAULT_SETTINGS.athleteRole;
+  if (!authUser) {
+    nameEl.textContent = defaultName;
+    roleEl.textContent = defaultRole;
+    return;
+  }
+
+  const email = authUser.email || '';
+  const displayName = getUserDisplayName(authUser) || (email ? email.split('@')[0] : '') || defaultName;
+  nameEl.textContent = displayName;
+  roleEl.textContent = email || `クラウド同期中 / ${defaultRole}`;
 }
 
 function applyAppSettings(force = false) {
@@ -1562,6 +1580,7 @@ function updateSupabaseAuthUI() {
   getSupabaseClient().then(async (sb) => {
     if (!sb) {
       emailEl.textContent = '接続できません（URL・anon key・Console を確認）';
+      renderProfileCard();
       loginBtn.style.display = 'inline-flex';
       logoutBtn.style.display = 'none';
       mergeBtn.style.display = 'none';
@@ -1571,12 +1590,14 @@ function updateSupabaseAuthUI() {
     const email = session?.user?.email || '';
     emailEl.textContent = email || '未ログイン';
     const inCloud = activeStorageMode === STORAGE_MODE.SUPABASE && !!session;
+    renderProfileCard(inCloud ? session.user : null);
     loginBtn.style.display = inCloud ? 'none' : 'inline-flex';
     logoutBtn.style.display = inCloud ? 'inline-flex' : 'none';
     mergeBtn.style.display = inCloud ? 'inline-flex' : 'none';
   }).catch((err) => {
     console.error('BOXER PRO: updateSupabaseAuthUI', err);
     emailEl.textContent = '接続エラー（Console を確認）';
+    renderProfileCard();
     loginBtn.style.display = 'inline-flex';
     logoutBtn.style.display = 'none';
     mergeBtn.style.display = 'none';
