@@ -66,6 +66,10 @@ body{
   overflow-x:hidden;
   line-height:1.5;
 }
+<<<<<<< HEAD
+=======
+body.sidebar-open{overflow:hidden}
+>>>>>>> 3a27dcf (initial commit)
 a{text-decoration:none;color:inherit}
 input,select,textarea,button{font-family:inherit}
 input[type=number]::-webkit-inner-spin-button{opacity:.4}
@@ -91,6 +95,18 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
   overflow:hidden;
 }
 
+<<<<<<< HEAD
+=======
+.sidebar-backdrop{
+  position:fixed;inset:0;
+  background:rgba(5,7,12,0.56);
+  backdrop-filter:blur(4px);
+  z-index:95;
+  display:none;
+}
+.sidebar-backdrop:not([hidden]){display:block}
+
+>>>>>>> 3a27dcf (initial commit)
 .sidebar::before{
   content:'';
   position:absolute;top:0;left:0;right:0;height:240px;
@@ -1322,4 +1338,10 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .status-chip i{display:none}
 }
 
+<<<<<<< HEAD
 
+=======
+@media(min-width:901px){
+  .sidebar-backdrop{display:none !important}
+}
+>>>>>>> 3a27dcf (initial commit)
