@@ -132,6 +132,34 @@ alter table public.boxer_fight_goals enable row level security;
 alter table public.boxer_hydration_logs enable row level security;
 alter table public.boxer_recovery_logs enable row level security;
 
+drop policy if exists "boxer_profiles_select_own" on public.boxer_profiles;
+drop policy if exists "boxer_profiles_insert_own" on public.boxer_profiles;
+drop policy if exists "boxer_profiles_update_own" on public.boxer_profiles;
+drop policy if exists "boxer_weight_select_own" on public.boxer_weight_logs;
+drop policy if exists "boxer_weight_insert_own" on public.boxer_weight_logs;
+drop policy if exists "boxer_weight_update_own" on public.boxer_weight_logs;
+drop policy if exists "boxer_weight_delete_own" on public.boxer_weight_logs;
+drop policy if exists "boxer_meals_select_own" on public.boxer_meals;
+drop policy if exists "boxer_meals_insert_own" on public.boxer_meals;
+drop policy if exists "boxer_meals_update_own" on public.boxer_meals;
+drop policy if exists "boxer_meals_delete_own" on public.boxer_meals;
+drop policy if exists "boxer_training_select_own" on public.boxer_training_logs;
+drop policy if exists "boxer_training_insert_own" on public.boxer_training_logs;
+drop policy if exists "boxer_training_update_own" on public.boxer_training_logs;
+drop policy if exists "boxer_training_delete_own" on public.boxer_training_logs;
+drop policy if exists "boxer_fight_select_own" on public.boxer_fight_goals;
+drop policy if exists "boxer_fight_insert_own" on public.boxer_fight_goals;
+drop policy if exists "boxer_fight_update_own" on public.boxer_fight_goals;
+drop policy if exists "boxer_fight_delete_own" on public.boxer_fight_goals;
+drop policy if exists "boxer_hydration_select_own" on public.boxer_hydration_logs;
+drop policy if exists "boxer_hydration_insert_own" on public.boxer_hydration_logs;
+drop policy if exists "boxer_hydration_update_own" on public.boxer_hydration_logs;
+drop policy if exists "boxer_hydration_delete_own" on public.boxer_hydration_logs;
+drop policy if exists "boxer_recovery_select_own" on public.boxer_recovery_logs;
+drop policy if exists "boxer_recovery_insert_own" on public.boxer_recovery_logs;
+drop policy if exists "boxer_recovery_update_own" on public.boxer_recovery_logs;
+drop policy if exists "boxer_recovery_delete_own" on public.boxer_recovery_logs;
+
 -- Profiles: one row per user
 create policy "boxer_profiles_select_own"
   on public.boxer_profiles for select

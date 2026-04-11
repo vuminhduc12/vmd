@@ -1048,24 +1048,11 @@ function initNav() {
       e.preventDefault();
       const page = item.dataset.page;
       switchPage(page);
-<<<<<<< HEAD
-      // Close sidebar on mobile
-      if (window.innerWidth <= 900) {
-        document.getElementById('sidebar').classList.remove('open');
-      }
-=======
->>>>>>> 3a27dcf (initial commit)
     });
   });
 
   // Topbar hamburger
   document.getElementById('topbarMenuBtn').addEventListener('click', () => {
-<<<<<<< HEAD
-    document.getElementById('sidebar').classList.toggle('open');
-  });
-  document.getElementById('sidebarToggle').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('open');
-=======
     toggleSidebar();
   });
   document.getElementById('sidebarToggle').addEventListener('click', () => {
@@ -1077,7 +1064,6 @@ function initNav() {
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeSidebar();
->>>>>>> 3a27dcf (initial commit)
   });
 }
 
@@ -1087,8 +1073,6 @@ function updateMobileNav(pageName) {
   });
 }
 
-<<<<<<< HEAD
-=======
 function isMobileLayout() {
   return window.innerWidth <= 900;
 }
@@ -1112,8 +1096,6 @@ function toggleSidebar() {
   if (!sidebar) return;
   setSidebarOpen(!sidebar.classList.contains('open'));
 }
-
->>>>>>> 3a27dcf (initial commit)
 function closeMobileQuickSheet() {
   const sheet = document.getElementById('mobileQuickSheet');
   const backdrop = document.getElementById('mobileQuickBackdrop');
@@ -1211,10 +1193,7 @@ function initMobileQuickUI() {
 
 function switchPage(pageName) {
   closeMobileQuickSheet();
-<<<<<<< HEAD
-=======
   closeSidebar();
->>>>>>> 3a27dcf (initial commit)
   const page = normalizeAppPageId(pageName);
   if (page !== String(pageName || '').trim() && pageName != null && String(pageName).trim() !== '') {
     console.warn('BOXER PRO: invalid page id, using', page, 'was:', pageName);
@@ -1300,12 +1279,9 @@ async function getSupabaseClient() {
         }
         createClient = mod.createClient;
       }
-<<<<<<< HEAD
-=======
       if (typeof createClient !== 'function') {
         throw new Error('Supabase createClient is unavailable');
       }
->>>>>>> 3a27dcf (initial commit)
       const cfg = window.BOXER_PRO_CONFIG;
       return createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
         auth: {
@@ -1315,10 +1291,7 @@ async function getSupabaseClient() {
         },
       });
     } catch (err) {
-<<<<<<< HEAD
-=======
       supabaseClientPromise = null;
->>>>>>> 3a27dcf (initial commit)
       console.error('BOXER PRO: Supabase クライアントを作成できません', err);
       return null;
     }
@@ -1326,8 +1299,6 @@ async function getSupabaseClient() {
   return supabaseClientPromise;
 }
 
-<<<<<<< HEAD
-=======
 function cleanupSupabaseAuthRedirectUrl() {
   if (typeof window === 'undefined' || !window.history?.replaceState) return;
   const url = new URL(window.location.href);
@@ -1352,8 +1323,6 @@ function syncSupabaseUi() {
   updateSupabaseAuthUI();
   renderSettingsPage();
 }
-
->>>>>>> 3a27dcf (initial commit)
 function boxerRowToRecord(row) {
   if (!row) return null;
   const p = row.payload && typeof row.payload === 'object' ? row.payload : {};
@@ -1448,12 +1417,6 @@ async function persistAppSettingsToSupabase() {
 }
 
 async function initSupabaseAuth() {
-<<<<<<< HEAD
-  if (!isSupabaseConfigured()) return;
-  const sb = await getSupabaseClient();
-  if (!sb) {
-    setStorageMode(STORAGE_MODE.LOCAL);
-=======
   if (!isSupabaseConfigured()) {
     setStorageMode(STORAGE_MODE.LOCAL);
     syncSupabaseUi();
@@ -1463,7 +1426,6 @@ async function initSupabaseAuth() {
   if (!sb) {
     setStorageMode(STORAGE_MODE.LOCAL);
     syncSupabaseUi();
->>>>>>> 3a27dcf (initial commit)
     return;
   }
 
@@ -1471,17 +1433,11 @@ async function initSupabaseAuth() {
   if (session?.user) {
     setStorageMode(STORAGE_MODE.SUPABASE);
     await loadAppSettingsFromSupabase();
-<<<<<<< HEAD
-  } else {
-    setStorageMode(STORAGE_MODE.LOCAL);
-  }
-=======
     cleanupSupabaseAuthRedirectUrl();
   } else {
     setStorageMode(STORAGE_MODE.LOCAL);
   }
   syncSupabaseUi();
->>>>>>> 3a27dcf (initial commit)
 
   if (!supabaseAuthListenerBound) {
     supabaseAuthListenerBound = true;
@@ -1489,27 +1445,17 @@ async function initSupabaseAuth() {
       if (event === 'SIGNED_IN' && sess?.user) {
         setStorageMode(STORAGE_MODE.SUPABASE);
         await loadAppSettingsFromSupabase();
-<<<<<<< HEAD
-        applyAppSettings(true);
-        await loadAllData();
-        renderSettingsPage();
-=======
         cleanupSupabaseAuthRedirectUrl();
         applyAppSettings(true);
         await loadAllData();
         syncSupabaseUi();
->>>>>>> 3a27dcf (initial commit)
         if (typeof renderDashboard === 'function') renderDashboard();
       } else if (event === 'SIGNED_OUT') {
         setStorageMode(STORAGE_MODE.LOCAL);
         appSettings = loadSettingsFromStorage();
         applyAppSettings(true);
         await loadAllData();
-<<<<<<< HEAD
-        renderSettingsPage();
-=======
         syncSupabaseUi();
->>>>>>> 3a27dcf (initial commit)
         if (typeof renderDashboard === 'function') renderDashboard();
       }
     });
@@ -4506,7 +4452,3 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadMealSummary();
   switchPage(appSettings.landingPage || 'dashboard');
 });
-<<<<<<< HEAD
-
-=======
->>>>>>> 3a27dcf (initial commit)
