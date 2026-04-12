@@ -273,12 +273,12 @@ async function initSupabaseAuth() {
     return;
   }
 
-  cleanupSupabaseAuthRedirectUrl();
   const session = await getSupabaseSessionSafe(sb);
   if (session?.user) {
     setStorageMode(STORAGE_MODE.SUPABASE);
     await loadAppSettingsFromSupabase();
     await touchSupabaseLastSeen(true);
+    cleanupSupabaseAuthRedirectUrl();
   } else {
     setStorageMode(STORAGE_MODE.LOCAL);
   }
