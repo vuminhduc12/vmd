@@ -1321,110 +1321,139 @@
     </div>
     </div>
 
-    <div class="fight-section-panel" id="fightSectionPanelOpponents">
-    <div class="two-col mt-16">
-      <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-user-shield"></i> 対戦相手プロフィール</h3>
-        <div class="opponent-form-hero">
-          <div class="opponent-upload-stack">
-            <div class="media-upload-head">
-              <label class="form-label">プロフィール写真</label>
-              <span class="table-subnote">1枚まで</span>
-            </div>
-            <label class="media-upload-drop opponent-upload-drop" for="opponentPhotoInput">
-              <input type="file" id="opponentPhotoInput" accept="image/*" hidden onchange="handleOpponentPhotoInput(event)">
-              <div class="opponent-photo-preview" id="opponentPhotoPreview">
-                <div class="opponent-photo-fallback"><i class="fas fa-user"></i></div>
-              </div>
-              <span>写真を追加</span>
-              <small>対戦相手の顔写真や構えが分かる画像を1枚保存できます。</small>
-            </label>
-            <div class="media-chip-row" id="opponentPhotoMeta"></div>
-          </div>
-          <div class="settings-note opponent-form-note">
-            名前・リングネーム・構え・戦績・写真を先に揃えると、次戦登録や過去試合管理から再利用しやすくなります。
-          </div>
-        </div>
-        <div class="settings-note" id="opponentFormModeNote">新規の対戦相手プロフィールを登録します。</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">名前</label>
-            <input type="text" id="o-name" class="input-field" placeholder="相手名">
-          </div>
-          <div class="form-group">
-            <label class="form-label">リングネーム</label>
-            <input type="text" id="o-ring-name" class="input-field" placeholder="リングネーム">
-          </div>
-        </div>
-        <div class="form-row three-col">
-          <div class="form-group">
-            <label class="form-label">所属ジム</label>
-            <input type="text" id="o-gym" class="input-field" placeholder="所属ジム">
-          </div>
-          <div class="form-group">
-            <label class="form-label">国籍</label>
-            <input type="text" id="o-nationality" class="input-field" placeholder="日本">
-          </div>
-          <div class="form-group">
-            <label class="form-label">構え</label>
-            <select id="o-stance" class="input-field">
-              <option>オーソドックス</option>
-              <option>サウスポー</option>
-              <option>スイッチ</option>
-              <option>不明</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row four-col">
-          <div class="form-group">
-            <label class="form-label">身長 (cm)</label>
-            <input type="number" id="o-height" class="input-field" placeholder="170" step="0.1" min="120" max="230">
-          </div>
-          <div class="form-group">
-            <label class="form-label">リーチ (cm)</label>
-            <input type="number" id="o-reach" class="input-field" placeholder="172" step="0.1" min="120" max="250">
-          </div>
-          <div class="form-group">
-            <label class="form-label">勝</label>
-            <input type="number" id="o-wins" class="input-field" placeholder="10" min="0" max="300" step="1">
-          </div>
-          <div class="form-group">
-            <label class="form-label">KO</label>
-            <input type="number" id="o-kos" class="input-field" placeholder="5" min="0" max="300" step="1">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">敗</label>
-            <input type="number" id="o-losses" class="input-field" placeholder="2" min="0" max="300" step="1">
-          </div>
-          <div class="form-group">
-            <label class="form-label">分</label>
-            <input type="number" id="o-draws" class="input-field" placeholder="0" min="0" max="300" step="1">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">強み</label>
-          <textarea id="o-strengths" class="input-field" rows="2" placeholder="前進圧、ボディ、ジャブなど"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">弱み</label>
-          <textarea id="o-weaknesses" class="input-field" rows="2" placeholder="下がり際、被弾傾向など"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">分析メモ</label>
-          <textarea id="o-notes" class="input-field" rows="2" placeholder="過去映像や警戒点など"></textarea>
-        </div>
-        <div class="form-row">
-          <button class="btn btn-primary btn-full" id="saveOpponentBtn" onclick="saveOpponentProfile()">
-            <i class="fas fa-save"></i> 対戦相手を保存
-          </button>
-          <button class="btn btn-secondary btn-full" id="cancelOpponentEditBtn" onclick="resetOpponentForm()" style="display:none">
-            <i class="fas fa-rotate-left"></i> 編集をやめる
-          </button>
-        </div>
-      </div>
-    </div>
+	    <div class="fight-section-panel" id="fightSectionPanelOpponents">
+	    <div class="mt-16">
+	      <div class="form-card">
+	        <h3 class="form-title"><i class="fas fa-user-shield"></i> 対戦相手プロフィール</h3>
+	        <div class="opponent-editor-shell">
+	          <div class="opponent-editor-main">
+	            <div class="opponent-editor-section">
+	              <div class="opponent-editor-headline">
+	                <div>
+	                  <div class="opponent-editor-kicker">基本プロフィール</div>
+	                  <h4>次戦登録に使うコア情報</h4>
+	                </div>
+	                <p>名前、構え、戦績を先に揃えると、試合目標や過去試合で再利用しやすくなります。</p>
+	              </div>
+	              <div class="form-row">
+	                <div class="form-group">
+	                  <label class="form-label">名前</label>
+	                  <input type="text" id="o-name" class="input-field" placeholder="相手名">
+	                </div>
+	                <div class="form-group">
+	                  <label class="form-label">リングネーム</label>
+	                  <input type="text" id="o-ring-name" class="input-field" placeholder="リングネーム">
+	                </div>
+	              </div>
+	              <div class="form-row three-col">
+	                <div class="form-group">
+	                  <label class="form-label">所属ジム</label>
+	                  <input type="text" id="o-gym" class="input-field" placeholder="所属ジム">
+	                </div>
+	                <div class="form-group">
+	                  <label class="form-label">国籍</label>
+	                  <input type="text" id="o-nationality" class="input-field" placeholder="日本">
+	                </div>
+	                <div class="form-group">
+	                  <label class="form-label">構え</label>
+	                  <select id="o-stance" class="input-field">
+	                    <option>オーソドックス</option>
+	                    <option>サウスポー</option>
+	                    <option>スイッチ</option>
+	                    <option>不明</option>
+	                  </select>
+	                </div>
+	              </div>
+	              <div class="form-row four-col">
+	                <div class="form-group">
+	                  <label class="form-label">身長 (cm)</label>
+	                  <input type="number" id="o-height" class="input-field" placeholder="170" step="0.1" min="120" max="230">
+	                </div>
+	                <div class="form-group">
+	                  <label class="form-label">リーチ (cm)</label>
+	                  <input type="number" id="o-reach" class="input-field" placeholder="172" step="0.1" min="120" max="250">
+	                </div>
+	                <div class="form-group">
+	                  <label class="form-label">勝</label>
+	                  <input type="number" id="o-wins" class="input-field" placeholder="10" min="0" max="300" step="1">
+	                </div>
+	                <div class="form-group">
+	                  <label class="form-label">KO</label>
+	                  <input type="number" id="o-kos" class="input-field" placeholder="5" min="0" max="300" step="1">
+	                </div>
+	              </div>
+	              <div class="form-row">
+	                <div class="form-group">
+	                  <label class="form-label">敗</label>
+	                  <input type="number" id="o-losses" class="input-field" placeholder="2" min="0" max="300" step="1">
+	                </div>
+	                <div class="form-group">
+	                  <label class="form-label">分</label>
+	                  <input type="number" id="o-draws" class="input-field" placeholder="0" min="0" max="300" step="1">
+	                </div>
+	              </div>
+	            </div>
+	            <div class="opponent-editor-section">
+	              <div class="opponent-editor-headline compact">
+	                <div>
+	                  <div class="opponent-editor-kicker">分析メモ</div>
+	                  <h4>試合作戦に使う補足情報</h4>
+	                </div>
+	              </div>
+	              <div class="form-group">
+	                <label class="form-label">強み</label>
+	                <textarea id="o-strengths" class="input-field" rows="2" placeholder="前進圧、ボディ、ジャブなど"></textarea>
+	              </div>
+	              <div class="form-group">
+	                <label class="form-label">弱み</label>
+	                <textarea id="o-weaknesses" class="input-field" rows="2" placeholder="下がり際、被弾傾向など"></textarea>
+	              </div>
+	              <div class="form-group">
+	                <label class="form-label">分析メモ</label>
+	                <textarea id="o-notes" class="input-field" rows="3" placeholder="過去映像や警戒点など"></textarea>
+	              </div>
+	            </div>
+	          </div>
+	          <aside class="opponent-editor-side">
+	            <div class="opponent-editor-panel opponent-photo-panel">
+	              <div class="media-upload-head">
+	                <label class="form-label">プロフィール写真</label>
+	                <span class="table-subnote">1枚まで</span>
+	              </div>
+	              <label class="media-upload-drop opponent-upload-drop" for="opponentPhotoInput">
+	                <input type="file" id="opponentPhotoInput" accept="image/*" hidden onchange="handleOpponentPhotoInput(event)">
+	                <div class="opponent-photo-preview" id="opponentPhotoPreview">
+	                  <div class="opponent-photo-fallback"><i class="fas fa-user"></i></div>
+	                </div>
+	                <span>写真を追加</span>
+	                <small>対戦相手の顔写真や構えが分かる画像を1枚保存できます。</small>
+	              </label>
+	              <div class="media-chip-row" id="opponentPhotoMeta"></div>
+	            </div>
+	            <div class="opponent-editor-panel opponent-editor-summary">
+	              <div class="opponent-editor-kicker">プロフィール準備</div>
+	              <h4>登録前に揃えると良い項目</h4>
+	              <ul class="opponent-checklist">
+	                <li>名前と構えを入れる</li>
+	                <li>戦績と KO 数を入力する</li>
+	                <li>写真か分析メモを最低 1 つ残す</li>
+	              </ul>
+	            </div>
+	            <div class="opponent-editor-panel opponent-editor-actions">
+	              <div class="settings-note opponent-form-mode-note" id="opponentFormModeNote">新規の対戦相手プロフィールを登録します。</div>
+	              <div class="opponent-action-stack">
+	                <button class="btn btn-primary btn-full" id="saveOpponentBtn" onclick="saveOpponentProfile()">
+	                  <i class="fas fa-save"></i> 対戦相手を保存
+	                </button>
+	                <button class="btn btn-secondary btn-full" id="cancelOpponentEditBtn" onclick="resetOpponentForm()" style="display:none">
+	                  <i class="fas fa-rotate-left"></i> 編集をやめる
+	                </button>
+	              </div>
+	            </div>
+	          </aside>
+	        </div>
+	      </div>
+	    </div>
 
     <div class="section-card mt-16">
       <div class="section-card-header"><h3><i class="fas fa-address-card"></i> 対戦相手一覧</h3></div>
