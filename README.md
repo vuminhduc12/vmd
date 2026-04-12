@@ -10,6 +10,61 @@ SE兼プロボクサー・Vu Minh Duc専用の総合コンディション管理W
 
 ---
 
+## 現在の到達点
+
+日常利用できる機能はかなり揃っており、個人利用には十分入っています。  
+一方で「他人にそのまま配って迷わず使ってもらう」観点では、次の前提があります。
+
+- 初回利用時は `マイ設定` の入力が必要
+- クラウド同期を使うなら Supabase と Google ログイン設定が必要
+- スマホでは一覧テーブルの一部が横スクロール前提
+- PWA / ローカル保存で即利用はできるが、運用説明は README を読まないと不足しやすい
+
+このため、本リポジトリではアプリ内の初回ガイドと README のセットアップ説明を追加しています。
+
+---
+
+## すぐ使う方法
+
+### 1. ローカルだけで試す
+
+静的ファイルを配信できれば動きます。最小構成なら次のどちらかです。
+
+```bash
+python3 -m http.server 5500
+```
+
+または Cloudflare Pages / Workers などの静的ホスティングに配置します。
+
+### 2. ブラウザで開いたら最初にやること
+
+1. `マイ設定` で身長・年齢・目標体重・既定 kcal を保存
+2. `体重管理` で朝または夜の体重を 1 件登録
+3. `食事メニュー` か `練習スケジュール` を 1 件登録
+4. 必要なら `マイ設定` から Google ログインしてクラウド同期
+
+### 3. クラウド同期を有効にする場合
+
+1. `js/config.example.js` を参考に `js/config.js` を設定
+2. Supabase で `supabase/migrations/001_boxer_pro_schema.sql` を実行
+3. Authentication → Google を有効化
+4. Redirect URL / Site URL を現在の公開 URL に合わせて設定
+5. `docs/SUPABASE_SETUP_ORDER_JA.md` の順で確認
+
+補足:
+- `supabaseAnonKey` には Secret key ではなく Publishable / anon key を使います
+- Supabase 未設定でもローカル保存で動作します
+
+---
+
+## 他人に使ってもらうときの前提
+
+- 共有先がそのまま同じ Supabase プロジェクトを使う構成なら、RLS 前提でユーザー分離されます
+- ただし本番公開するなら、運用者が Supabase / Google OAuth / ドメイン設定を管理する必要があります
+- 端末変更や障害対応のため、`マイ設定` の JSON バックアップを案内した方が安全です
+
+---
+
 ## ✅ 実装済み機能
 
 ### 🏠 ダッシュボード
@@ -23,9 +78,10 @@ SE兼プロボクサー・Vu Minh Duc専用の総合コンディション管理W
 
 ### ⚖️ 体重管理
 - 体重・体脂肪率・筋肉量・目標体重の記録
+- 朝 / 夜の 1 日 2 枠記録
 - 目標達成率プログレスバー
 - 期間フィルター付き体重推移グラフ（7日/14日/30日/全期間）
-- 記録一覧テーブル（削除機能付き）
+- 記録一覧テーブル（選択編集 / 個別削除）
 
 ### 🍱 食事メニュー管理
 - 食事タイプ別記録（朝食/昼食/夕食/間食/プロテイン）
@@ -58,6 +114,14 @@ SE兼プロボクサー・Vu Minh Duc専用の総合コンディション管理W
 - 減量進捗プログレスバー
 - 試合カード一覧（準備中/完了/中止ステータス管理）
 
+### ☁️ 運用 / 同期
+- ローカル保存フォールバック
+- Supabase + Google ログイン
+- ローカルデータのクラウドマージ
+- JSON バックアップ / 復元
+- PWA インストール対応
+- Service Worker によるオフラインキャッシュ
+
 ---
 
 ## 📁 ファイル構造
@@ -67,7 +131,14 @@ index.html              # メインアプリ（SPA）
 css/
   └── style.css         # ダークテーマCSS
 js/
-  └── app.js            # メインJavaScript（全ロジック）
+  ├── app.js            # メインJavaScript（全ロジック）
+  ├── config.js         # Supabase 接続設定
+  └── config.example.js # 設定テンプレート
+docs/
+  └── SUPABASE_SETUP_ORDER_JA.md
+supabase/
+  └── migrations/001_boxer_pro_schema.sql
+service-worker.js       # PWA キャッシュ
 README.md               # このファイル
 ```
 
@@ -81,6 +152,18 @@ README.md               # このファイル
 | `meals` | 食事記録 | date, meal_type, food_name, calories, protein, fat, carbs |
 | `training_logs` | 練習記録 | date, training_type, duration, intensity, calories_burned |
 | `fight_goals` | 試合目標 | fight_date, opponent, weight_class, target_weight, status |
+| `hydration_logs` | 水分記録 | date, water_ml, timing, note |
+| `recovery_logs` | 回復記録 | date, sleep_hours, condition_score, fatigue_score |
+
+---
+
+## 🔗 データ保存方式
+
+- 既定はローカル保存
+- `tables/*` API が使える環境では API 保存
+- Supabase 設定済みかつログイン済みなら Supabase 保存
+
+ローカル保存しかなくても主要機能は利用できます。
 
 ---
 
@@ -106,7 +189,6 @@ README.md               # このファイル
 ## 🚀 今後の拡張案
 
 - [ ] データのCSVエクスポート機能
-- [ ] 水分摂取量の記録
 - [ ] サプリメント管理
 - [ ] 試合前の減量スケジュール自動生成
 - [ ] 週次・月次レポートPDF出力
@@ -114,6 +196,15 @@ README.md               # このファイル
 - [ ] スパーリング記録（ラウンド数・相手・評価）
 - [ ] SNS共有機能（note.com連携）
 - [ ] プッシュ通知（練習リマインダー）
+
+---
+
+## 現時点の注意点
+
+- スマホでは表形式の一覧が横スクロールになる画面があります
+- クラウド同期の品質は Supabase / Google OAuth 設定に依存します
+- `weight-cut-plan.csv` は固定 CSV なので、他選手向けには内容更新が必要です
+- マルチテナント SaaS として公開するなら、利用規約・障害対応・データ保持方針は別途整備が必要です
 
 ---
 

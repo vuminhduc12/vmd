@@ -43,6 +43,10 @@ const SETTINGS_KEY = 'boxerpro.settings';
 const APP_SCHEMA_VERSION = 1;
 const CUTTING_PLAN_URL = 'data/weight-cut-plan.csv';
 const DATA_TABLES = ['weight_logs', 'meals', 'training_logs', 'fight_goals', 'hydration_logs', 'recovery_logs'];
+const WEIGHT_LOG_SLOTS = [
+  { value: 'morning', label: '朝', shortLabel: '朝' },
+  { value: 'evening', label: '夜', shortLabel: '夜' },
+];
 const STORAGE_MODE = {
   CHECKING: 'checking',
   API: 'api',
@@ -263,6 +267,8 @@ let weeklyTrainingChartInst = null;
 let calorieBalanceChartInst = null;
 let trainingWeightRecoveryChartInst = null;
 let editingWeightId = null;
+let editingTrainingId = null;
+let selectedWeightRecordId = '';
 
 // ============================================================
 // UTILITIES
@@ -284,6 +290,39 @@ function normalizeSlashDate(dateStr) {
   const [year, month, day] = dateStr.split('/').map(Number);
   if (!year || !month || !day) return '';
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function getWeightSlotMeta(slot) {
+  return WEIGHT_LOG_SLOTS.find((item) => item.value === slot) || WEIGHT_LOG_SLOTS[0];
+}
+
+function getWeightSlotLabel(slot) {
+  return getWeightSlotMeta(slot).label;
+}
+
+function getWeightSlotOrder(slot) {
+  return WEIGHT_LOG_SLOTS.findIndex((item) => item.value === slot);
+}
+
+function normalizeWeightLogRecord(record = {}) {
+  return {
+    ...record,
+    slot: getWeightSlotMeta(record.slot).value,
+  };
+}
+
+function sortWeightLogsInPlace() {
+  weightLogs = weightLogs
+    .map(normalizeWeightLogRecord)
+    .sort((a, b) => {
+      const dateCmp = String(a.date || '').localeCompare(String(b.date || ''));
+      if (dateCmp !== 0) return dateCmp;
+      return getWeightSlotOrder(a.slot) - getWeightSlotOrder(b.slot);
+    });
+}
+
+function findWeightLogByDateAndSlot(date, slot) {
+  return weightLogs.find((row) => row.date === date && row.slot === slot) || null;
 }
 
 function safeStorageGetItem(key) {
@@ -420,6 +459,138 @@ function renderProfileCard(authUser = null) {
   const displayName = getUserDisplayName(authUser) || (email ? email.split('@')[0] : '') || defaultName;
   nameEl.textContent = displayName;
   roleEl.textContent = email || `クラウド同期中 / ${defaultRole}`;
+}
+
+function isStandaloneDisplayMode() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function syncDisplayModeUi() {
+  if (typeof document === 'undefined') return;
+  document.body.classList.toggle('standalone-mode', isStandaloneDisplayMode());
+}
+
+function triggerDashboardEditorFromKey(event, mode) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  openDashboardEditor(mode);
+}
+
+function getLatestWeightLog() {
+  return weightLogs.length ? [...weightLogs].sort((a, b) => new Date(b.date) - new Date(a.date))[0] : null;
+}
+
+function getLatestTrainingLog(dateStr = TODAY()) {
+  const rows = trainingLogs
+    .filter((t) => t.date && t.date.slice(0, 10) === dateStr)
+    .sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
+  return rows[0] || null;
+}
+
+function openDashboardEditor(mode) {
+  if (mode === 'weight') {
+    const latest = getLatestWeightLog();
+    if (latest?.id) {
+      startEditWeight(latest.id);
+      return;
+    }
+    switchPage('weight');
+    window.setTimeout(() => document.getElementById('w-weight')?.focus(), 80);
+    return;
+  }
+
+  if (mode === 'training') {
+    const latest = getLatestTrainingLog();
+    if (latest?.id) {
+      startEditTraining(latest.id);
+      return;
+    }
+    switchPage('training');
+    const tDate = document.getElementById('t-date');
+    if (tDate) tDate.value = TODAY();
+    window.setTimeout(() => document.getElementById('t-type')?.focus(), 80);
+    return;
+  }
+
+  if (mode === 'meals' || mode === 'protein') {
+    switchPage('meals');
+    const today = TODAY();
+    const mealDate = document.getElementById('m-date');
+    const viewDate = document.getElementById('mealViewDate');
+    const filterDate = document.getElementById('mealFilterDate');
+    if (mealDate) mealDate.value = today;
+    if (viewDate) viewDate.value = today;
+    if (filterDate) filterDate.value = today;
+    loadMealSummary();
+    filterMeals();
+    window.setTimeout(() => {
+      document.getElementById('meal-input-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('foodSearch')?.focus();
+    }, 80);
+    return;
+  }
+}
+
+function hasCoreUserData() {
+  return Boolean(
+    weightLogs.length
+    || mealLogs.length
+    || trainingLogs.length
+    || fightGoals.length
+    || hydrationLogs.length
+    || recoveryLogs.length
+  );
+}
+
+function renderDashboardOnboarding() {
+  const card = document.getElementById('dashboardOnboardingCard');
+  if (!card) return;
+
+  if (hasCoreUserData()) {
+    card.style.display = 'none';
+    card.innerHTML = '';
+    return;
+  }
+
+  card.style.display = 'block';
+  card.classList.add('onboarding-card');
+  card.innerHTML = `
+    <div class="onboarding-head">
+      <div class="onboarding-copy">
+        <h3><i class="fas fa-compass"></i> 初回セットアップガイド</h3>
+        <p>初めて使う人でもこの順番で入れれば、ダッシュボードの数値と分析が動き始めます。まずは基本設定と最初の記録を入れてください。</p>
+      </div>
+      <div class="onboarding-badge"><i class="fas fa-shield-heart"></i> ローカル保存ですぐ開始可</div>
+    </div>
+    <div class="onboarding-steps">
+      <div class="onboarding-step">
+        <div class="onboarding-step-num">1</div>
+        <strong>マイ設定を入力</strong>
+        <p>身長、年齢、目標体重、既定 kcal を先に入れると、BMI と推奨値の精度が上がります。</p>
+      </div>
+      <div class="onboarding-step">
+        <div class="onboarding-step-num">2</div>
+        <strong>朝か夜の体重を記録</strong>
+        <p>体重は 1 日 2 枠です。まず 1 件入れると、体重推移と目標差がダッシュボードに反映されます。</p>
+      </div>
+      <div class="onboarding-step">
+        <div class="onboarding-step-num">3</div>
+        <strong>食事か練習を 1 件追加</strong>
+        <p>本日 kcal、タンパク質、練習時間の KPI が埋まり、日々の判断に使える状態になります。</p>
+      </div>
+      <div class="onboarding-step">
+        <div class="onboarding-step-num">4</div>
+        <strong>必要ならクラウド同期</strong>
+        <p>複数端末で使うなら、マイ設定から Google でログインし、この端末のデータを Supabase にマージします。</p>
+      </div>
+    </div>
+    <div class="onboarding-actions">
+      <button type="button" class="btn btn-primary" onclick="switchPage('settings')"><i class="fas fa-sliders"></i> マイ設定を開く</button>
+      <button type="button" class="btn btn-secondary" onclick="switchPage('weight')"><i class="fas fa-weight-scale"></i> 体重を記録</button>
+      <button type="button" class="btn btn-ghost" onclick="switchPage('meals')"><i class="fas fa-utensils"></i> 食事を記録</button>
+    </div>
+  `;
 }
 
 function applyAppSettings(force = false) {
@@ -981,6 +1152,16 @@ function createRecordId() {
 function sortRows(rows, params = '') {
   const sortKey = new URLSearchParams(params).get('sort');
   if (!sortKey) return [...rows];
+  if (sortKey === 'date') {
+    return [...rows].sort((a, b) => {
+      const dateCmp = String(a?.date || '').localeCompare(String(b?.date || ''));
+      if (dateCmp !== 0) return dateCmp;
+      if ('slot' in (a || {}) || 'slot' in (b || {})) {
+        return getWeightSlotOrder(a?.slot) - getWeightSlotOrder(b?.slot);
+      }
+      return 0;
+    });
+  }
   return [...rows].sort((a, b) => {
     const av = a?.[sortKey];
     const bv = b?.[sortKey];
@@ -1042,6 +1223,10 @@ function setDateInputs() {
     const el = document.getElementById(id);
     if (el) el.value = today;
   });
+  const weightSlotEl = document.getElementById('w-slot');
+  if (weightSlotEl && !weightSlotEl.value) weightSlotEl.value = 'morning';
+  const quickWeightSlotEl = document.getElementById('quickWeightSlot');
+  if (quickWeightSlotEl && !quickWeightSlotEl.value) quickWeightSlotEl.value = 'morning';
 }
 
 // ============================================================
@@ -1805,7 +1990,8 @@ async function loadAllData() {
       apiGet('hydration_logs', 'sort=date'),
       apiGet('recovery_logs', 'sort=date'),
     ]);
-    weightLogs   = (wRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
+    weightLogs   = (wRes.data || []).map(normalizeWeightLogRecord);
+    sortWeightLogsInPlace();
     mealLogs     = (mRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
     trainingLogs = (tRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
     fightGoals   = (fRes.data || []).sort((a,b) => new Date(a.fight_date) - new Date(b.fight_date));
@@ -2326,6 +2512,8 @@ function renderDashboard() {
   // Today's date
   document.getElementById('todayDate').textContent = formatDateJP(today);
 
+  renderDashboardOnboarding();
+
   // Charts
   renderDashboardWeightChart();
   renderDashboardPFCChart(todayMeals);
@@ -2609,6 +2797,7 @@ function chartOptions(unit = '') {
 // ============================================================
 async function saveWeight() {
   const date   = document.getElementById('w-date').value;
+  const slot = getWeightSlotMeta(document.getElementById('w-slot')?.value).value;
   const heightRaw = document.getElementById('w-height').value.trim();
   const weightRaw = document.getElementById('w-weight').value;
   const fatRaw    = document.getElementById('w-fat').value.trim();
@@ -2650,21 +2839,28 @@ async function saveWeight() {
     target = tChk.value;
   }
 
-  const payload = { date, height_cm: height, weight, body_fat: fat, muscle_mass: muscle, target_weight: target, note };
+  const payload = { date, slot, height_cm: height, weight, body_fat: fat, muscle_mass: muscle, target_weight: target, note };
 
   try {
-    if (editingWeightId) {
+    const sameSlotRecord = findWeightLogByDateAndSlot(date, slot);
+    if (editingWeightId && sameSlotRecord?.id && sameSlotRecord.id !== editingWeightId) {
+      showToast(`${formatDate(date)} の${getWeightSlotLabel(slot)}はすでに記録済みです。既存データを選択して更新してください`, 'info');
+      return;
+    }
+    const targetId = editingWeightId || sameSlotRecord?.id || '';
+    if (targetId) {
+      editingWeightId = targetId;
       const updated = await apiPut('weight_logs', editingWeightId, payload);
       const ix = weightLogs.findIndex(w => w.id === editingWeightId);
-      if (ix !== -1) weightLogs[ix] = { ...weightLogs[ix], ...updated };
-      weightLogs.sort((a,b) => new Date(a.date) - new Date(b.date));
-      showToast(`✅ 記録を更新しました (${weight}kg)`, 'success');
+      if (ix !== -1) weightLogs[ix] = normalizeWeightLogRecord({ ...weightLogs[ix], ...updated });
+      sortWeightLogsInPlace();
+      showToast(`✅ ${date} ${getWeightSlotLabel(slot)} の記録を更新しました (${weight}kg)`, 'success');
       cancelEditWeight();
     } else {
       const record = await apiPost('weight_logs', payload);
-      weightLogs.push(record);
-      weightLogs.sort((a,b) => new Date(a.date) - new Date(b.date));
-      showToast(`✅ ${weight}kg を記録しました`, 'success');
+      weightLogs.push(normalizeWeightLogRecord(record));
+      sortWeightLogsInPlace();
+      showToast(`✅ ${getWeightSlotLabel(slot)} の体重 ${weight}kg を記録しました`, 'success');
       clearForm(['w-weight','w-fat','w-muscle','w-note']);
     }
     renderWeightPage();
@@ -2675,6 +2871,7 @@ async function saveWeight() {
 }
 
 async function quickSaveWeight() {
+  const slot = getWeightSlotMeta(document.getElementById('quickWeightSlot')?.value).value;
   const heightRaw = document.getElementById('quickHeight').value.trim();
   const weightRaw = document.getElementById('quickWeight').value;
   const fatRaw    = document.getElementById('quickBodyFat').value.trim();
@@ -2705,17 +2902,28 @@ async function quickSaveWeight() {
   }
 
   try {
-    const record = await apiPost('weight_logs', {
-      date: TODAY(),
+    const date = TODAY();
+    const payload = {
+      date,
+      slot,
       height_cm: height,
       weight,
       body_fat: fat,
       target_weight,
       note
-    });
-    weightLogs.push(record);
-    weightLogs.sort((a,b) => new Date(a.date) - new Date(b.date));
-    showToast(`✅ ${weight}kg を記録しました`, 'success');
+    };
+    const existing = findWeightLogByDateAndSlot(date, slot);
+    if (existing?.id) {
+      const updated = await apiPut('weight_logs', existing.id, payload);
+      const ix = weightLogs.findIndex((w) => w.id === existing.id);
+      if (ix !== -1) weightLogs[ix] = normalizeWeightLogRecord({ ...weightLogs[ix], ...updated });
+      showToast(`✅ 今日の${getWeightSlotLabel(slot)}の体重を更新しました`, 'success');
+    } else {
+      const record = await apiPost('weight_logs', payload);
+      weightLogs.push(normalizeWeightLogRecord(record));
+      showToast(`✅ 今日の${getWeightSlotLabel(slot)}の体重 ${weight}kg を記録しました`, 'success');
+    }
+    sortWeightLogsInPlace();
     clearForm(['quickWeight','quickBodyFat','quickNote']);
     renderDashboard();
   } catch(e) {
@@ -2740,6 +2948,7 @@ function cancelEditWeight() {
   const today = TODAY();
   const g = (id) => document.getElementById(id);
   if (g('w-date')) g('w-date').value = today;
+  if (g('w-slot')) g('w-slot').value = 'morning';
   if (g('w-height')) {
     const h = getLatestKnownHeightCm();
     g('w-height').value = h != null ? String(h) : '';
@@ -2757,6 +2966,7 @@ function startEditWeight(id) {
   const d = w.date ? w.date.slice(0, 10) : TODAY();
   const g = (x) => document.getElementById(x);
   g('w-date').value = d;
+  g('w-slot').value = getWeightSlotMeta(w.slot).value;
   g('w-height').value = w.height_cm != null && w.height_cm !== '' ? w.height_cm : '';
   g('w-weight').value = w.weight != null ? w.weight : '';
   g('w-fat').value = w.body_fat != null && w.body_fat !== '' ? w.body_fat : '';
@@ -2776,6 +2986,7 @@ async function deleteWeightLog(id) {
     try {
       await apiDelete('weight_logs', id);
       weightLogs = weightLogs.filter(w => w.id !== id);
+      if (selectedWeightRecordId === id) selectedWeightRecordId = '';
       if (editingWeightId === id) cancelEditWeight();
       showToast('削除しました', 'info');
       renderWeightPage();
@@ -2790,6 +3001,7 @@ async function clearWeightLogs() {
       await Promise.all(weightLogs.map(w => apiDelete('weight_logs', w.id)));
       weightLogs = [];
       editingWeightId = null;
+      selectedWeightRecordId = '';
       updateWeightEditUI();
       showToast('全記録を削除しました', 'info');
       renderWeightPage();
@@ -2798,7 +3010,34 @@ async function clearWeightLogs() {
   });
 }
 
+function handleWeightRecordSelection(id) {
+  selectedWeightRecordId = id || '';
+  const selectEl = document.getElementById('weightRecordSelect');
+  if (selectEl && selectEl.value !== selectedWeightRecordId) selectEl.value = selectedWeightRecordId;
+  const rows = document.querySelectorAll('#weightTableBody tr[data-weight-id]');
+  rows.forEach((row) => {
+    row.classList.toggle('data-row-selected', row.dataset.weightId === selectedWeightRecordId);
+  });
+}
+
+function editSelectedWeightLog() {
+  if (!selectedWeightRecordId) {
+    showToast('編集する体重記録を選択してください', 'info');
+    return;
+  }
+  startEditWeight(selectedWeightRecordId);
+}
+
+function deleteSelectedWeightLog() {
+  if (!selectedWeightRecordId) {
+    showToast('削除する体重記録を選択してください', 'info');
+    return;
+  }
+  deleteWeightLog(selectedWeightRecordId);
+}
+
 function renderWeightPage() {
+  sortWeightLogsInPlace();
   // Stats
   const latest = weightLogs.length ? weightLogs[weightLogs.length-1] : null;
   const latestHeight = latest?.height_cm || getLatestKnownHeightCm();
@@ -2831,13 +3070,25 @@ function renderWeightPage() {
   }
 
   // Table
+  const selectEl = document.getElementById('weightRecordSelect');
+  if (selectEl) {
+    const options = ['<option value="">記録を選択</option>'].concat(
+      [...weightLogs].reverse().map((w) => `<option value="${w.id}">${formatDate(w.date)} / ${getWeightSlotLabel(w.slot)} / ${w.weight}kg</option>`)
+    );
+    selectEl.innerHTML = options.join('');
+    if (selectedWeightRecordId && !weightLogs.some((w) => w.id === selectedWeightRecordId)) {
+      selectedWeightRecordId = '';
+    }
+    selectEl.value = selectedWeightRecordId;
+  }
   const tbody = document.getElementById('weightTableBody');
   if (!weightLogs.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">データなし</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-cell">データなし</td></tr>';
   } else {
     tbody.innerHTML = [...weightLogs].reverse().map(w => `
-      <tr>
+      <tr class="data-row-selectable ${selectedWeightRecordId === w.id ? 'data-row-selected' : ''}" data-weight-id="${w.id}" onclick="handleWeightRecordSelection('${w.id}')">
         <td>${formatDate(w.date)}</td>
+        <td><span class="badge">${getWeightSlotLabel(w.slot)}</span></td>
         <td><strong>${w.weight} kg</strong></td>
         <td>${calculateBMI(w.weight, w.height_cm || latestHeight)?.toFixed(1) || '--'}</td>
         <td>${w.body_fat ? w.body_fat + ' %' : '--'}</td>
@@ -2845,8 +3096,8 @@ function renderWeightPage() {
         <td>${w.target_weight ? w.target_weight + ' kg' : '--'}</td>
         <td>${w.note || '--'}</td>
         <td style="white-space:nowrap">
-          <button type="button" class="btn btn-sm btn-secondary" onclick="startEditWeight('${w.id}')" title="編集"><i class="fas fa-pen"></i></button>
-          <button type="button" class="btn btn-sm btn-danger" onclick="deleteWeightLog('${w.id}')" title="削除"><i class="fas fa-trash"></i></button>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); handleWeightRecordSelection('${w.id}'); startEditWeight('${w.id}')" title="編集"><i class="fas fa-pen"></i></button>
+          <button type="button" class="btn btn-sm btn-danger" onclick="event.stopPropagation(); handleWeightRecordSelection('${w.id}'); deleteWeightLog('${w.id}')" title="削除"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `).join('');
@@ -2895,7 +3146,10 @@ function renderWeightDetailChart(days) {
   weightDetailChartInst = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: data.map(w => w.date ? w.date.slice(5) : ''),
+      labels: data.map(w => {
+        const dateLabel = w.date ? w.date.slice(5) : '';
+        return `${dateLabel} ${getWeightSlotMeta(w.slot).shortLabel}`;
+      }),
       datasets: [
         {
           label: '体重 (kg)',
@@ -2924,7 +3178,7 @@ function renderWeightDetailChart(days) {
           tension: 0, pointRadius: 0,
         },
         {
-          label: '体脂肪玁E(%)',
+          label: '体脂肪率 (%)',
           data: data.map(w => w.body_fat || null),
           borderColor: '#a78bfa',
           backgroundColor: 'transparent',
@@ -3171,7 +3425,7 @@ function updateRealtimeTotal() {
         backgroundColor: ['#e54a4a','#f5c842','#4a90e2'], borderWidth: 0 }]
     },
     options: {
-      responsive: false, maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { enabled: false } },
       cutout: '55%'
     }
@@ -3390,7 +3644,7 @@ function render7dayMealChart() {
     const totalProt = protArr.reduce((s,v)=>s+v,0);
     statsEl.innerHTML = `
       <div class="wms-item"><div class="wms-val">${avgCal}</div><div>平均kcal/日</div></div>
-      <div class="wms-item"><div class="wms-val">${totalProt}g</div><div>7日合訁E</div></div>
+      <div class="wms-item"><div class="wms-val">${totalProt}g</div><div>7日合計</div></div>
       <div class="wms-item"><div class="wms-val">${calArr.filter(v=>v>0).length}</div><div>記録日数</div></div>
     `;
   }
@@ -3401,6 +3655,11 @@ function renderMealsPage() {
   render7dayMealChart();
   filterMeals();
   updateRealtimeTotal();
+  window.requestAnimationFrame(() => {
+    mealPfcChartInst?.resize();
+    meal7dayChartInst?.resize();
+    rtPfcChartInst?.resize();
+  });
 }
 
 function filterMeals() {
@@ -3489,21 +3748,80 @@ async function saveTraining() {
   }
 
   try {
-    const record = await apiPost('training_logs', {
-      date, training_type: type, duration, intensity, calories_burned: burned,
-      rounds, opponent, theme, rating, note
-    });
-    trainingLogs.push(record);
-    trainingLogs.sort((a,b) => new Date(a.date) - new Date(b.date));
-    showToast(`✅ ${type} ${duration}分 を記録しました`, 'success');
-    clearForm(['t-duration','t-burned','t-note','t-rounds','t-opponent','t-theme']);
-    document.getElementById('t-type').value = '';
-    document.getElementById('t-rating').value = '';
+    if (editingTrainingId) {
+      const updated = await apiPut('training_logs', editingTrainingId, {
+        date, training_type: type, duration, intensity, calories_burned: burned,
+        rounds, opponent, theme, rating, note
+      });
+      const ix = trainingLogs.findIndex((t) => t.id === editingTrainingId);
+      if (ix !== -1) trainingLogs[ix] = { ...trainingLogs[ix], ...updated };
+      trainingLogs.sort((a,b) => new Date(a.date) - new Date(b.date));
+      showToast(`✅ ${type} ${duration}分 の記録を更新しました`, 'success');
+      cancelEditTraining();
+    } else {
+      const record = await apiPost('training_logs', {
+        date, training_type: type, duration, intensity, calories_burned: burned,
+        rounds, opponent, theme, rating, note
+      });
+      trainingLogs.push(record);
+      trainingLogs.sort((a,b) => new Date(a.date) - new Date(b.date));
+      showToast(`✅ ${type} ${duration}分 を記録しました`, 'success');
+      clearForm(['t-duration','t-burned','t-note','t-rounds','t-opponent','t-theme']);
+      document.getElementById('t-type').value = '';
+      document.getElementById('t-rating').value = '';
+    }
     renderTrainingPage();
     renderDashboard();
   } catch(e) {
     showToast('保存に失敗しました', 'error');
   }
+}
+
+function updateTrainingEditUI() {
+  const banner = document.getElementById('trainingEditBanner');
+  const btn = document.getElementById('trainingSaveBtn');
+  const on = Boolean(editingTrainingId);
+  if (banner) banner.style.display = on ? 'flex' : 'none';
+  if (btn) {
+    btn.innerHTML = on
+      ? '<i class="fas fa-save"></i> 変更を保存'
+      : '<i class="fas fa-save"></i> 練習を保存';
+  }
+}
+
+function cancelEditTraining() {
+  editingTrainingId = null;
+  const today = TODAY();
+  const g = (id) => document.getElementById(id);
+  if (g('t-date')) g('t-date').value = today;
+  if (g('t-type')) g('t-type').value = '';
+  if (g('t-intensity')) g('t-intensity').value = appSettings.defaultTrainingIntensity || '中';
+  if (g('t-rating')) g('t-rating').value = '';
+  clearForm(['t-duration','t-burned','t-note','t-rounds','t-opponent','t-theme']);
+  updateTrainingEditUI();
+}
+
+function startEditTraining(id) {
+  const t = trainingLogs.find((x) => x.id === id);
+  if (!t) return;
+  editingTrainingId = id;
+  const g = (x) => document.getElementById(x);
+  if (g('t-date')) g('t-date').value = t.date ? t.date.slice(0, 10) : TODAY();
+  if (g('t-type')) g('t-type').value = t.training_type || '';
+  if (g('t-duration')) g('t-duration').value = t.duration != null ? t.duration : '';
+  if (g('t-intensity')) g('t-intensity').value = t.intensity || appSettings.defaultTrainingIntensity || '中';
+  if (g('t-burned')) g('t-burned').value = t.calories_burned != null ? t.calories_burned : '';
+  if (g('t-note')) g('t-note').value = t.note || '';
+  if (g('t-rounds')) g('t-rounds').value = t.rounds != null && t.rounds !== '' ? t.rounds : '';
+  if (g('t-opponent')) g('t-opponent').value = t.opponent || '';
+  if (g('t-theme')) g('t-theme').value = t.theme || '';
+  if (g('t-rating')) g('t-rating').value = t.rating != null && t.rating !== '' ? String(t.rating) : '';
+  updateTrainingEditUI();
+  if (typeof autoCalcBurned === 'function') autoCalcBurned();
+  switchPage('training');
+  window.setTimeout(() => {
+    document.getElementById('training-record-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
 }
 
 async function quickSaveTraining() {
@@ -3564,6 +3882,7 @@ function calcCaloriesBurned() {
 }
 
 function renderTrainingPage() {
+  updateTrainingEditUI();
   renderWeeklyStats();
   renderWeeklyChart();
   renderTrainingCalendar();
@@ -3682,7 +4001,10 @@ function renderTrainingTable() {
       <td>${t.rating ? `${t.rating}/5` : '--'}</td>
       <td>${t.calories_burned || 0} kcal</td>
       <td>${t.note || '--'}</td>
-      <td><button class="btn btn-sm btn-danger" onclick="deleteTraining('${t.id}')"><i class="fas fa-trash"></i></button></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-secondary" onclick="startEditTraining('${t.id}')"><i class="fas fa-pen"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="deleteTraining('${t.id}')"><i class="fas fa-trash"></i></button>
+      </td>
     </tr>
   `).join('');
 }
@@ -4447,6 +4769,8 @@ function bindAppEventHandlers() {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  syncDisplayModeUi();
+  window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', syncDisplayModeUi);
   setStorageMode(STORAGE_MODE.CHECKING);
   appSettings = loadSettingsFromStorage();
   initNav();

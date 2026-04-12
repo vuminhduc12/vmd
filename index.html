@@ -97,7 +97,7 @@
 
     <!-- KPI Row -->
     <div class="kpi-grid" style="margin-bottom:18px">
-      <div class="kpi-card kpi-weight">
+      <div class="kpi-card kpi-weight kpi-card-editable" role="button" tabindex="0" title="体重記録を編集" onclick="openDashboardEditor('weight')" onkeydown="triggerDashboardEditorFromKey(event, 'weight')">
         <div class="kpi-icon-wrap"><i class="fas fa-weight-scale"></i></div>
         <div class="kpi-body">
           <div class="kpi-label">現在の体重</div>
@@ -105,7 +105,7 @@
           <div class="kpi-sub" id="kpi-bmi-badge"></div>
         </div>
       </div>
-      <div class="kpi-card kpi-kcal">
+      <div class="kpi-card kpi-kcal kpi-card-editable" role="button" tabindex="0" title="本日の食事記録を修正" onclick="openDashboardEditor('meals')" onkeydown="triggerDashboardEditorFromKey(event, 'meals')">
         <div class="kpi-icon-wrap"><i class="fas fa-fire-flame-curved"></i></div>
         <div class="kpi-body">
           <div class="kpi-label">本日摂取カロリー</div>
@@ -117,7 +117,7 @@
           </div>
         </div>
       </div>
-      <div class="kpi-card kpi-protein">
+      <div class="kpi-card kpi-protein kpi-card-editable" role="button" tabindex="0" title="タンパク質を含む食事記録を修正" onclick="openDashboardEditor('protein')" onkeydown="triggerDashboardEditorFromKey(event, 'protein')">
         <div class="kpi-icon-wrap"><i class="fas fa-drumstick-bite"></i></div>
         <div class="kpi-body">
           <div class="kpi-label">本日タンパク質</div>
@@ -125,7 +125,7 @@
           <div class="kpi-sub">目安 体重×2.2g</div>
         </div>
       </div>
-      <div class="kpi-card kpi-train">
+      <div class="kpi-card kpi-train kpi-card-editable" role="button" tabindex="0" title="本日の練習記録を編集" onclick="openDashboardEditor('training')" onkeydown="triggerDashboardEditorFromKey(event, 'training')">
         <div class="kpi-icon-wrap"><i class="fas fa-dumbbell"></i></div>
         <div class="kpi-body">
           <div class="kpi-label">本日の練習</div>
@@ -134,6 +134,8 @@
         </div>
       </div>
     </div>
+
+    <div id="dashboardOnboardingCard" class="section-card mt-16" style="display:none"></div>
 
     <!-- Charts Top Row -->
     <div class="dash-grid-top" style="margin-bottom:16px">
@@ -188,6 +190,10 @@
       <div class="quick-log-card">
         <div class="quick-header"><h3><i class="fas fa-bolt-lightning"></i> クイック体重記録</h3></div>
         <div class="quick-form">
+          <select id="quickWeightSlot" class="input-field">
+            <option value="morning">朝の体重</option>
+            <option value="evening">夜の体重</option>
+          </select>
           <input type="number" id="quickWeight" class="input-field" placeholder="体重 (kg)" step="0.1">
           <div class="input-row">
             <input type="number" id="quickBodyFat" class="input-field" placeholder="体脂肪率 (%)">
@@ -380,11 +386,18 @@
             <input type="date" id="w-date" class="input-field">
           </div>
           <div class="form-group">
+            <label class="form-label">記録区分</label>
+            <select id="w-slot" class="input-field">
+              <option value="morning">朝</option>
+              <option value="evening">夜</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row three-col">
+          <div class="form-group">
             <label class="form-label">身長 (cm)</label>
             <input type="number" id="w-height" class="input-field" placeholder="170" value="170">
           </div>
-        </div>
-        <div class="form-row">
           <div class="form-group">
             <label class="form-label">体重 (kg)</label>
             <input type="number" id="w-weight" class="input-field" placeholder="65.5" step="0.1">
@@ -532,16 +545,25 @@
     <!-- Weight Table -->
     <div class="section-card mt-16">
       <div class="section-card-header">
-        <h3><i class="fas fa-list"></i> 記録一覧</h3>
-        <button class="btn btn-sm btn-danger" onclick="clearWeightLogs()"><i class="fas fa-trash"></i> 全削除</button>
+        <div>
+          <h3><i class="fas fa-list"></i> 記録一覧</h3>
+          <div class="section-card-subtitle">朝・夜の記録から1件選んで編集または削除できます</div>
+        </div>
+        <div class="filter-row">
+          <select id="weightRecordSelect" class="input-field input-sm" onchange="handleWeightRecordSelection(this.value)">
+            <option value="">記録を選択</option>
+          </select>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="editSelectedWeightLog()"><i class="fas fa-pen"></i> 編集</button>
+          <button type="button" class="btn btn-sm btn-danger" onclick="deleteSelectedWeightLog()"><i class="fas fa-trash"></i> 削除</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr>
-            <th>日付</th><th>体重</th><th>BMI</th><th>体脂肪率</th>
+            <th>日付</th><th>区分</th><th>体重</th><th>BMI</th><th>体脂肪率</th>
             <th>筋肉量</th><th>目標体重</th><th>メモ</th><th>操作</th>
           </tr></thead>
-          <tbody id="weightTableBody"><tr><td colspan="8" class="empty-cell">データなし</td></tr></tbody>
+          <tbody id="weightTableBody"><tr><td colspan="9" class="empty-cell">データなし</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -638,7 +660,7 @@
         </div>
         <div class="mrt-divider"></div>
         <div class="mrt-item">
-          <div style="height:72px;width:72px"><canvas id="rtPfcMini"></canvas></div>
+          <div class="mini-chart-wrap"><canvas id="rtPfcMini"></canvas></div>
           <div class="mrt-label">PFC</div>
         </div>
       </div>
@@ -713,6 +735,10 @@
     <div class="two-col" style="margin-bottom:16px">
       <div class="form-card" id="training-record-anchor">
         <h3 class="form-title"><i class="fas fa-plus-circle"></i> 練習を記録</h3>
+        <div id="trainingEditBanner" class="weight-edit-banner" style="display:none">
+          <span><i class="fas fa-pen"></i> 既存の練習記録を編集中</span>
+          <button type="button" class="btn btn-sm btn-ghost" onclick="cancelEditTraining()">新規入力に戻す</button>
+        </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">日付</label>
@@ -782,7 +808,7 @@
             </select>
           </div>
         </div>
-        <button class="btn btn-primary btn-full" onclick="saveTraining()">
+        <button type="button" id="trainingSaveBtn" class="btn btn-primary btn-full" onclick="saveTraining()">
           <i class="fas fa-save"></i> 練習を保存       </button>
       </div>
 

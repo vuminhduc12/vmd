@@ -537,6 +537,12 @@ textarea.input-field{resize:vertical;min-height:70px}
   pointer-events:none;
 }
 .kpi-card:hover{border-color:var(--b2);transform:translateY(-3px);box-shadow:var(--sh)}
+.kpi-card-editable{cursor:pointer}
+.kpi-card-editable:focus-visible{
+  outline:none;
+  border-color:var(--red);
+  box-shadow:0 0 0 3px rgba(232,57,74,0.18), var(--sh);
+}
 .kpi-weight  {--kpi-glow:rgba(74,144,226,0.08)} .kpi-weight::before{background:linear-gradient(90deg,var(--blue),#8bc4ff)}
 .kpi-kcal    {--kpi-glow:rgba(232,57,74,0.08)}  .kpi-kcal::before{background:linear-gradient(90deg,var(--red),#ff9aaa)}
 .kpi-protein {--kpi-glow:rgba(48,208,128,0.08)} .kpi-protein::before{background:linear-gradient(90deg,var(--green),#80ffcc)}
@@ -786,6 +792,17 @@ textarea.input-field{resize:vertical;min-height:70px}
 .mrt-cal .mrt-val{color:var(--red-light);font-size:30px}
 .mrt-label{font-size:9px;color:var(--tx-3);font-weight:700;letter-spacing:.4px;margin-top:1px}
 .mrt-divider{width:1px;height:40px;background:var(--b1);align-self:center}
+.mini-chart-wrap{
+  width:72px;
+  height:72px;
+  min-width:72px;
+  position:relative;
+}
+.mini-chart-wrap canvas{
+  display:block;
+  width:100% !important;
+  height:100% !important;
+}
 
 /* Goal bar in meal */
 .calorie-goal-bar{
@@ -1113,8 +1130,12 @@ textarea.input-field{resize:vertical;min-height:70px}
 }
 .data-table tr:hover td{background:rgba(255,255,255,0.018)}
 .data-table tr:last-child td{border-bottom:none}
+.data-row-selectable{cursor:pointer}
+.data-row-selected td{background:rgba(255,82,109,0.12)}
+.data-row-selected:hover td{background:rgba(255,82,109,0.16)}
 .empty-cell{text-align:center;color:var(--tx-3);padding:40px !important;font-style:italic;font-size:13px}
 .filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.section-card-subtitle{font-size:12px;color:var(--tx-3);margin-top:4px}
 
 /* ══════════════════════════════════════════
    TOAST
@@ -1165,6 +1186,33 @@ textarea.input-field{resize:vertical;min-height:70px}
   text-align:center;color:var(--tx-3);
   padding:40px;font-size:13px;font-style:italic;
 }
+.onboarding-card{
+  padding:22px;
+  background:
+    radial-gradient(circle at top right, rgba(232,57,74,0.14), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+}
+.onboarding-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
+.onboarding-copy h3{font-size:18px;font-weight:800;color:var(--tx-1);margin-bottom:8px}
+.onboarding-copy p{font-size:13px;line-height:1.7;color:var(--tx-2)}
+.onboarding-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:999px;
+  border:1px solid rgba(48,208,128,0.24);color:var(--green);
+  background:rgba(48,208,128,0.08);font-size:11px;font-weight:800;white-space:nowrap;
+}
+.onboarding-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.onboarding-step{
+  background:var(--bg-input);border:1px solid var(--b1);border-radius:var(--rs);
+  padding:14px;min-width:0;
+}
+.onboarding-step-num{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(232,57,74,0.16);color:var(--red-light);font-weight:800;font-size:12px;margin-bottom:10px;
+}
+.onboarding-step strong{display:block;font-size:13px;color:var(--tx-1);margin-bottom:6px}
+.onboarding-step p{font-size:12px;line-height:1.6;color:var(--tx-3)}
+.onboarding-actions{display:flex;gap:10px;flex-wrap:wrap}
 
 /* ══════════════════════════════════════════
    MOBILE BOTTOM NAV
@@ -1188,6 +1236,7 @@ textarea.input-field{resize:vertical;min-height:70px}
   background:linear-gradient(180deg,rgba(232,57,74,0.18),rgba(232,57,74,0.06));
   box-shadow:inset 0 0 0 1px rgba(232,57,74,0.2);
 }
+body:not(.standalone-mode) .mobile-bottom-nav{display:none !important}
 
 /* iPhone: すばやく記録 FAB + ボトムシート */
 .mobile-record-fab{
@@ -1210,6 +1259,7 @@ textarea.input-field{resize:vertical;min-height:70px}
 .mobile-record-fab:active{transform:scale(.94)}
 .mobile-record-fab.is-open i{transform:rotate(45deg)}
 .mobile-record-fab i{transition:transform .22s var(--ease);display:inline-block}
+body:not(.standalone-mode) .mobile-record-fab{display:none !important}
 .mobile-quick-backdrop{
   display:none;
   position:fixed;inset:0;z-index:190;
@@ -1311,19 +1361,21 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .dash-grid-mid{grid-template-columns:1fr}
   .three-col-grid{grid-template-columns:1fr}
   .settings-summary-grid{grid-template-columns:1fr}
-  .mobile-bottom-nav{
+  body.standalone-mode .mobile-bottom-nav{
     display:flex;
     left:max(10px, env(safe-area-inset-left, 0px));
     right:max(10px, env(safe-area-inset-right, 0px));
     bottom:calc(10px + env(safe-area-inset-bottom, 0px));
     padding:8px 6px;
   }
-  .mobile-record-fab{display:flex}
-  .page{padding-bottom:max(176px, calc(118px + env(safe-area-inset-bottom, 0px)))}
+  body.standalone-mode .mobile-record-fab{display:flex}
+  body.standalone-mode .page{padding-bottom:max(176px, calc(118px + env(safe-area-inset-bottom, 0px)))}
+  body:not(.standalone-mode) .page{padding-bottom:84px}
   .topbar{padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-top:env(safe-area-inset-top, 0px)}
   .toast-container{bottom:max(22px, calc(22px + env(safe-area-inset-bottom, 0px)));right:max(22px, env(safe-area-inset-right, 0px))}
   .cut-plan-layout{grid-template-columns:1fr;padding:14px}
   .cut-plan-header-actions{justify-content:flex-start}
+  .onboarding-steps{grid-template-columns:1fr 1fr}
 }
 @media(max-width:540px){
   .input-field,.btn{font-size:max(16px, 0.875rem)}
@@ -1354,6 +1406,7 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .mrt-item{min-width:58px;flex:1 1 58px}
   .mrt-item:last-child{flex:0 0 72px}
   .mrt-divider{display:none}
+  .mini-chart-wrap{width:64px;height:64px;min-width:64px}
   .cgb-row{flex-wrap:wrap;align-items:flex-start}
   .cgb-track{order:3;flex-basis:100%}
   .cgb-val{margin-left:auto}
@@ -1369,6 +1422,10 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .topbar{padding:0 12px;gap:8px}
   .topbar-right{gap:8px}
   .status-chip i{display:none}
+  .onboarding-head{flex-direction:column}
+  .onboarding-steps{grid-template-columns:1fr}
+  .onboarding-actions{flex-direction:column}
+  .onboarding-actions .btn{width:100%}
 }
 @media(min-width:901px){
   .sidebar-backdrop{display:none !important}
