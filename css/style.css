@@ -434,6 +434,9 @@ textarea.input-field{resize:vertical;min-height:70px}
 .opponent-workspace{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.95fr);gap:18px;align-items:start}
 .opponent-workspace.composer-closed{grid-template-columns:minmax(0,1fr)}
 .opponent-record-view{min-width:0}
+.opponent-record-view .section-card-header{gap:14px;align-items:flex-start}
+.opponent-record-view .filter-row{justify-content:flex-end}
+.opponent-record-view .filter-row .btn{white-space:nowrap}
 .opponent-record-view #opponentSelectedEmpty,
 .opponent-record-view #opponentSelectedContent{padding:20px}
 .opponent-profile-view{display:grid;grid-template-columns:minmax(220px,320px) minmax(0,1fr);gap:20px;align-items:start}
@@ -464,6 +467,9 @@ textarea.input-field{resize:vertical;min-height:70px}
 .weight-record-view .section-card-header{gap:14px;align-items:flex-start}
 .weight-record-view .filter-row{justify-content:flex-end}
 .weight-record-view .filter-row .btn{white-space:nowrap}
+.weight-record-view .filter-row .btn-primary{min-width:104px}
+.weight-record-view .filter-row .btn-secondary,
+.weight-record-view .filter-row .btn-danger{min-width:88px}
 .weight-record-view .stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .weight-record-view .media-thumb-grid{
   grid-template-columns:repeat(auto-fit,minmax(180px,220px));
@@ -1530,14 +1536,37 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .cut-plan-layout{grid-template-columns:1fr;padding:14px}
   .cut-plan-header-actions{justify-content:flex-start}
   .opponent-workspace{grid-template-columns:1fr}
+  .opponent-record-view .section-card-header{flex-direction:column}
+  .opponent-record-view .filter-row{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+  }
+  .opponent-record-view .filter-row .btn{
+    min-width:0;
+    justify-content:center;
+    padding:8px 10px;
+    font-size:11px;
+  }
   .opponent-profile-view{grid-template-columns:minmax(200px,260px) minmax(0,1fr)}
   .opponent-profile-photo{max-width:260px;max-height:340px}
   .opponent-profile-name{font-size:34px}
   .opponent-profile-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .weight-workspace{grid-template-columns:1fr}
   .weight-record-view .section-card-header{flex-direction:column}
-  .weight-record-view .filter-row{width:100%}
-  .weight-record-view .filter-row .btn{flex:1 1 calc(33.333% - 6px);justify-content:center}
+  .weight-record-view .filter-row{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+  }
+  .weight-record-view .filter-row .btn{
+    min-width:0;
+    justify-content:center;
+    padding:8px 10px;
+    font-size:11px;
+  }
   .weight-record-hero{flex-direction:column}
   .weight-record-value{font-size:38px}
   .weight-record-meta{font-size:12px;line-height:1.6}
@@ -1598,12 +1627,31 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .status-chip i{display:none}
   .fight-section-tabs{gap:8px}
   .fight-section-tab{flex:1 1 calc(33.333% - 6px);text-align:center;padding:10px 8px}
+  .opponent-record-view .filter-row{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .opponent-record-view .filter-row .btn{
+    padding:8px 8px;
+    font-size:10.5px;
+  }
+  .opponent-record-view .filter-row .btn-danger{
+    grid-column:1 / -1;
+  }
   .opponent-profile-view{grid-template-columns:1fr}
   .opponent-profile-photo{max-width:none;width:100%;max-height:300px;aspect-ratio:4/3}
   .opponent-profile-head{flex-direction:column}
   .opponent-profile-name{font-size:30px}
   .opponent-profile-stats{grid-template-columns:1fr}
-  .weight-record-view .filter-row .btn{flex:1 1 100%}
+  .weight-record-view .filter-row{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .weight-record-view .filter-row .btn{
+    padding:8px 8px;
+    font-size:10.5px;
+  }
+  .weight-record-view .filter-row .btn-danger{
+    grid-column:1 / -1;
+  }
   .weight-record-value{font-size:34px}
   .weight-record-view .stats-grid{grid-template-columns:1fr}
   .weight-record-view .media-thumb-grid{grid-template-columns:1fr}
