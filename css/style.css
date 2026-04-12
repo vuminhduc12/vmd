@@ -375,6 +375,23 @@ textarea.input-field{resize:vertical;min-height:70px}
 }
 .opponent-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
 .opponent-chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.fight-section-tabs{
+  display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px;
+}
+.fight-section-tab{
+  appearance:none;border:1px solid var(--b1);background:rgba(255,255,255,0.03);color:var(--tx-2);
+  border-radius:999px;padding:10px 16px;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;
+  transition:all .2s ease;
+}
+.fight-section-tab:hover{color:var(--tx-1);background:rgba(255,255,255,0.05)}
+.fight-section-tab.active{
+  color:var(--tx-1);
+  border-color:rgba(232,57,74,0.35);
+  background:linear-gradient(135deg, rgba(232,57,74,0.18), rgba(255,122,0,0.08));
+  box-shadow:0 12px 24px rgba(232,57,74,0.12);
+}
+.fight-section-panel{display:none}
+.fight-section-panel.active{display:block}
 
 /* ══════════════════════════════════════════
    CARDS  Egeneric
@@ -1452,6 +1469,9 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .topbar{padding:0 12px;gap:8px}
   .topbar-right{gap:8px}
   .status-chip i{display:none}
+  .fight-section-tabs{gap:8px}
+  .fight-section-tab{flex:1 1 calc(33.333% - 6px);text-align:center;padding:10px 8px}
+  .media-thumb-grid{grid-template-columns:1fr}
   .onboarding-head{flex-direction:column}
   .onboarding-steps{grid-template-columns:1fr}
   .onboarding-actions{flex-direction:column}

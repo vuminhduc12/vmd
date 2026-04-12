@@ -1100,6 +1100,13 @@
       <p class="page-subtitle">次の試合に向けたカウントダウンと減量進捗</p>
     </div>
 
+    <div class="fight-section-tabs" role="tablist" aria-label="試合管理セクション切替">
+      <button class="fight-section-tab active" id="fightSectionTabNext" type="button" onclick="switchFightSectionTab('next', true)" aria-selected="true">次の試合</button>
+      <button class="fight-section-tab" id="fightSectionTabOpponents" type="button" onclick="switchFightSectionTab('opponents', true)" aria-selected="false">対戦相手</button>
+      <button class="fight-section-tab" id="fightSectionTabHistory" type="button" onclick="switchFightSectionTab('history', true)" aria-selected="false">過去試合</button>
+    </div>
+
+    <div class="fight-section-panel active" id="fightSectionPanelNext">
     <div class="two-col" style="margin-bottom:16px">
       <div class="form-card">
         <h3 class="form-title"><i class="fas fa-plus-circle"></i> 試合目標を登録</h3>
@@ -1312,7 +1319,9 @@
         <div class="empty-state">試合カードが登録されていません</div>
       </div>
     </div>
+    </div>
 
+    <div class="fight-section-panel" id="fightSectionPanelOpponents">
     <div class="two-col mt-16">
       <div class="form-card">
         <h3 class="form-title"><i class="fas fa-user-shield"></i> 対戦相手プロフィール</h3>
@@ -1389,93 +1398,95 @@
           <i class="fas fa-save"></i> 対戦相手を保存
         </button>
       </div>
-
-      <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-medal"></i> 過去試合管理</h3>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">試合日</label>
-            <input type="date" id="fh-date" class="input-field">
-          </div>
-          <div class="form-group">
-            <label class="form-label">対戦相手プロフィール</label>
-            <select id="fh-opponent-id" class="input-field">
-              <option value="">対戦相手を選択</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">対戦相手名（未登録時）</label>
-          <input type="text" id="fh-opponent-name" class="input-field" placeholder="未登録なら直接入力">
-        </div>
-        <div class="form-row four-col">
-          <div class="form-group">
-            <label class="form-label">結果</label>
-            <select id="fh-result" class="input-field">
-              <option>勝ち</option>
-              <option>負け</option>
-              <option>引き分け</option>
-              <option>中止</option>
-              <option>無効試合</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">決着</label>
-            <select id="fh-method" class="input-field">
-              <option>判定</option>
-              <option>KO</option>
-              <option>TKO</option>
-              <option>RSC</option>
-              <option>棄権</option>
-              <option>その他</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">R</label>
-            <input type="number" id="fh-round" class="input-field" placeholder="8">
-          </div>
-          <div class="form-group">
-            <label class="form-label">階級</label>
-            <input type="text" id="fh-class" class="input-field" placeholder="バンタム級">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">大会名</label>
-            <input type="text" id="fh-event" class="input-field" placeholder="大会名">
-          </div>
-          <div class="form-group">
-            <label class="form-label">会場</label>
-            <input type="text" id="fh-venue" class="input-field" placeholder="会場">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">映像URL</label>
-          <input type="url" id="fh-video" class="input-field" placeholder="https://...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">試合メモ</label>
-          <textarea id="fh-memo" class="input-field" rows="3" placeholder="勝因、修正点、相手の癖など"></textarea>
-        </div>
-        <button class="btn btn-primary btn-full" onclick="saveFightHistoryEntry()">
-          <i class="fas fa-save"></i> 過去試合を保存
-        </button>
-      </div>
     </div>
 
-    <div class="two-col mt-16">
-      <div class="section-card">
-        <div class="section-card-header"><h3><i class="fas fa-address-card"></i> 対戦相手一覧</h3></div>
-        <div class="fight-cards-grid" id="opponentCardsList">
-          <div class="empty-state">対戦相手プロフィールがまだありません</div>
+    <div class="section-card mt-16">
+      <div class="section-card-header"><h3><i class="fas fa-address-card"></i> 対戦相手一覧</h3></div>
+      <div class="fight-cards-grid" id="opponentCardsList">
+        <div class="empty-state">対戦相手プロフィールがまだありません</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="fight-section-panel" id="fightSectionPanelHistory">
+    <div class="form-card mt-16">
+      <h3 class="form-title"><i class="fas fa-medal"></i> 過去試合管理</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">試合日</label>
+          <input type="date" id="fh-date" class="input-field">
+        </div>
+        <div class="form-group">
+          <label class="form-label">対戦相手プロフィール</label>
+          <select id="fh-opponent-id" class="input-field">
+            <option value="">対戦相手を選択</option>
+          </select>
         </div>
       </div>
-      <div class="section-card">
-        <div class="section-card-header"><h3><i class="fas fa-clock-rotate-left"></i> 過去試合一覧</h3></div>
-        <div class="fight-cards-grid" id="fightHistoryList">
-          <div class="empty-state">過去試合データがまだありません</div>
+      <div class="form-group">
+        <label class="form-label">対戦相手名（未登録時）</label>
+        <input type="text" id="fh-opponent-name" class="input-field" placeholder="未登録なら直接入力">
+      </div>
+      <div class="form-row four-col">
+        <div class="form-group">
+          <label class="form-label">結果</label>
+          <select id="fh-result" class="input-field">
+            <option>勝ち</option>
+            <option>負け</option>
+            <option>引き分け</option>
+            <option>中止</option>
+            <option>無効試合</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">決着</label>
+          <select id="fh-method" class="input-field">
+            <option>判定</option>
+            <option>KO</option>
+            <option>TKO</option>
+            <option>RSC</option>
+            <option>棄権</option>
+            <option>その他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">R</label>
+          <input type="number" id="fh-round" class="input-field" placeholder="8">
+        </div>
+        <div class="form-group">
+          <label class="form-label">階級</label>
+          <input type="text" id="fh-class" class="input-field" placeholder="バンタム級">
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">大会名</label>
+          <input type="text" id="fh-event" class="input-field" placeholder="大会名">
+        </div>
+        <div class="form-group">
+          <label class="form-label">会場</label>
+          <input type="text" id="fh-venue" class="input-field" placeholder="会場">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">映像URL</label>
+        <input type="url" id="fh-video" class="input-field" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">試合メモ</label>
+        <textarea id="fh-memo" class="input-field" rows="3" placeholder="勝因、修正点、相手の癖など"></textarea>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="saveFightHistoryEntry()">
+        <i class="fas fa-save"></i> 過去試合を保存
+      </button>
+    </div>
+
+    <div class="section-card mt-16">
+      <div class="section-card-header"><h3><i class="fas fa-clock-rotate-left"></i> 過去試合一覧</h3></div>
+      <div class="fight-cards-grid" id="fightHistoryList">
+        <div class="empty-state">過去試合データがまだありません</div>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -1731,6 +1742,12 @@
 
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
-<script src="js/app.js?v=12"></script>
+<script src="js/core/navigation.js?v=13"></script>
+<script src="js/services/storage.js?v=13"></script>
+<script src="js/pages/weight.js?v=13"></script>
+<script src="js/pages/fight.js?v=13"></script>
+<script src="js/core/helpers.js?v=13"></script>
+<script src="js/core/init.js?v=13"></script>
+<script src="js/app.js?v=13"></script>
 </body>
 </html>
