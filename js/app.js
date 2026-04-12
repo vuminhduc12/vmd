@@ -405,6 +405,16 @@ function safeStorageSetItem(key, value, options = {}) {
   }
 }
 
+function safeStorageRemoveItem(key) {
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch (error) {
+    console.error(`Storage remove failed: ${key}`, error);
+    return false;
+  }
+}
+
 function parseCsvLine(line) {
   const cols = [];
   let current = '';

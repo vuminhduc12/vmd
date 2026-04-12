@@ -84,11 +84,24 @@ async function getSupabaseClient() {
         throw new Error('Supabase createClient is unavailable');
       }
       const cfg = window.BOXER_PRO_CONFIG;
+      const storageAdapter = {
+        getItem(key) {
+          return safeStorageGetItem(key);
+        },
+        setItem(key, value) {
+          safeStorageSetItem(key, value, { silent: true, context: 'Supabase セッション保存' });
+        },
+        removeItem(key) {
+          safeStorageRemoveItem(key);
+        },
+      };
       return createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
         auth: {
+          storage: storageAdapter,
+          storageKey: 'boxerpro.supabase.auth',
           persistSession: true,
           autoRefreshToken: true,
-          detectSessionInUrl: true,
+          detectSessionInUrl: false,
         },
       });
     } catch (err) {
