@@ -2,7 +2,7 @@
 // FIGHT GOALS PAGE
 // ============================================================
 function resetPendingOpponentPhoto() {
-  if (pendingOpponentPhotoPreviewUrl) {
+  if (pendingOpponentPhotoPreviewUrl && pendingOpponentPhotoPreviewUrl.startsWith('blob:')) {
     URL.revokeObjectURL(pendingOpponentPhotoPreviewUrl);
   }
   pendingOpponentPhotoFile = null;
@@ -46,7 +46,7 @@ function renderOpponentPhotoPreview(photoUrl = getOpponentPhotoPreviewUrl()) {
   if (!preview || !meta) return;
 
   preview.innerHTML = photoUrl
-    ? `<img src="${escapeHtml(photoUrl)}" alt="対戦相手プロフィール写真">`
+    ? `<img src="${escapeHtml(photoUrl)}" alt="対戦相手プロフィール写真" onerror="this.closest('.opponent-photo-preview').innerHTML='<div class=&quot;opponent-photo-fallback&quot;><i class=&quot;fas fa-user&quot;></i></div>'">`
     : '<div class="opponent-photo-fallback"><i class="fas fa-user"></i></div>';
 
   if (pendingOpponentPhotoFile) {
@@ -68,7 +68,16 @@ function renderOpponentPhotoPreview(photoUrl = getOpponentPhotoPreviewUrl()) {
     : '';
 }
 
-function handleOpponentPhotoInput(event) {
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('画像ファイルを読み込めませんでした'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleOpponentPhotoInput(event) {
   const [file] = Array.from(event.target.files || []).filter((row) => row.type.startsWith('image/'));
   if (!file) {
     resetPendingOpponentPhoto();
@@ -80,11 +89,22 @@ function handleOpponentPhotoInput(event) {
     return;
   }
   if (pendingOpponentPhotoPreviewUrl) {
-    URL.revokeObjectURL(pendingOpponentPhotoPreviewUrl);
+    if (pendingOpponentPhotoPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(pendingOpponentPhotoPreviewUrl);
+    }
   }
-  pendingOpponentPhotoFile = file;
-  pendingOpponentPhotoPreviewUrl = URL.createObjectURL(file);
-  renderOpponentPhotoPreview();
+  try {
+    pendingOpponentPhotoFile = file;
+    pendingOpponentPhotoPreviewUrl = await readFileAsDataUrl(file);
+    renderOpponentPhotoPreview();
+  } catch (err) {
+    console.error(err);
+    pendingOpponentPhotoFile = null;
+    pendingOpponentPhotoPreviewUrl = '';
+    event.target.value = '';
+    renderOpponentPhotoPreview();
+    showToast('画像プレビューの生成に失敗しました。別の画像で再度お試しください', 'error');
+  }
 }
 
 async function populateOpponentFormForEdit(id) {

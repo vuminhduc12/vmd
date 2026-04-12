@@ -415,7 +415,12 @@ async function getOpponentPhotoSignedUrl(storagePath) {
   const { data, error } = await sb.storage.from(OPPONENT_PHOTO_BUCKET).createSignedUrl(storagePath, 60 * 30);
   if (error) {
     console.error('BOXER PRO: createSignedUrl failed', error);
-    return '';
+    const downloadRes = await sb.storage.from(OPPONENT_PHOTO_BUCKET).download(storagePath);
+    if (downloadRes.error) {
+      console.error('BOXER PRO: opponent photo download failed', downloadRes.error);
+      return '';
+    }
+    return URL.createObjectURL(downloadRes.data);
   }
   return data?.signedUrl || '';
 }
