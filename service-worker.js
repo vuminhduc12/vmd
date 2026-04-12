@@ -1,10 +1,16 @@
-const CACHE_NAME = 'boxer-pro-v12';
+const CACHE_NAME = 'boxer-pro-v13';
 const CORE_ASSETS = [
   './',
   './index.html',
   './css/style.css',
   './js/config.js',
   './js/app.js',
+  './js/core/helpers.js',
+  './js/core/navigation.js',
+  './js/core/init.js',
+  './js/services/storage.js',
+  './js/pages/weight.js',
+  './js/pages/fight.js',
   './manifest.webmanifest',
   './icons/app-icon.svg',
   './data/weight-cut-plan.csv',
@@ -32,7 +38,16 @@ function shouldFetchNetworkFirst(url, request) {
   if (request.mode === 'navigate') return true;
   try {
     const p = new URL(url).pathname;
-    return p.endsWith('/js/config.js') || p.endsWith('/js/app.js') || p.endsWith('/css/style.css') || p.endsWith('/index.html');
+    return p.endsWith('/js/config.js')
+      || p.endsWith('/js/app.js')
+      || p.endsWith('/js/core/helpers.js')
+      || p.endsWith('/js/core/navigation.js')
+      || p.endsWith('/js/core/init.js')
+      || p.endsWith('/js/services/storage.js')
+      || p.endsWith('/js/pages/weight.js')
+      || p.endsWith('/js/pages/fight.js')
+      || p.endsWith('/css/style.css')
+      || p.endsWith('/index.html');
   } catch (e) {
     return false;
   }
@@ -83,4 +98,3 @@ self.addEventListener('fetch', event => {
     })
   );
 });
-
