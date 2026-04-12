@@ -42,11 +42,18 @@ const LOCAL_TABLE_PREFIX = 'boxerpro.table.';
 const SETTINGS_KEY = 'boxerpro.settings';
 const APP_SCHEMA_VERSION = 1;
 const CUTTING_PLAN_URL = 'data/weight-cut-plan.csv';
-const DATA_TABLES = ['weight_logs', 'meals', 'training_logs', 'fight_goals', 'hydration_logs', 'recovery_logs'];
+const DATA_TABLES = ['weight_logs', 'weight_log_photos', 'meals', 'training_logs', 'fight_goals', 'opponents', 'fight_history', 'hydration_logs', 'recovery_logs'];
 const WEIGHT_LOG_SLOTS = [
   { value: 'morning', label: '朝', shortLabel: '朝' },
   { value: 'evening', label: '夜', shortLabel: '夜' },
 ];
+const WEIGHT_PHOTO_BUCKET = 'weight-photos';
+const WEIGHT_PHOTO_MAX_FILES = 3;
+const IMAGE_MAX_EDGE = 1600;
+const IMAGE_MAX_SIZE_BYTES = 850 * 1024;
+const OPPONENT_STANCES = ['オーソドックス', 'サウスポー', 'スイッチ', '不明'];
+const FIGHT_RESULTS = ['勝ち', '負け', '引き分け', '中止', '無効試合'];
+const FIGHT_METHODS = ['判定', 'KO', 'TKO', 'RSC', '棄権', 'その他'];
 const STORAGE_MODE = {
   CHECKING: 'checking',
   API: 'api',
@@ -243,6 +250,9 @@ let weightLogs = [];
 let mealLogs = [];
 let trainingLogs = [];
 let fightGoals = [];
+let opponents = [];
+let fightHistory = [];
+let weightLogPhotos = [];
 let hydrationLogs = [];
 let recoveryLogs = [];
 let cuttingPlanRows = [];
@@ -269,6 +279,7 @@ let trainingWeightRecoveryChartInst = null;
 let editingWeightId = null;
 let editingTrainingId = null;
 let selectedWeightRecordId = '';
+let pendingWeightPhotoFiles = [];
 
 // ============================================================
 // UTILITIES
@@ -277,6 +288,15 @@ function formatDate(dateStr) {
   if (!dateStr) return '--';
   const d = new Date(dateStr);
   return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 function formatDateJP(dateStr) {
@@ -323,6 +343,22 @@ function sortWeightLogsInPlace() {
 
 function findWeightLogByDateAndSlot(date, slot) {
   return weightLogs.find((row) => row.date === date && row.slot === slot) || null;
+}
+
+function getOpponentNameById(opponentId, fallback = '') {
+  const row = opponents.find((item) => item.id === opponentId);
+  return row?.name || fallback || '相手未登録';
+}
+
+function getOpponentsForSelectOptions(selectedId = '') {
+  const options = ['<option value="">対戦相手を選択</option>'];
+  opponents
+    .slice()
+    .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')))
+    .forEach((op) => {
+      options.push(`<option value="${escapeHtml(op.id)}"${selectedId === op.id ? ' selected' : ''}>${escapeHtml(op.name)}${op.gym ? ` / ${escapeHtml(op.gym)}` : ''}</option>`);
+    });
+  return options.join('');
 }
 
 function safeStorageGetItem(key) {
@@ -893,7 +929,7 @@ function getStorageModeLabel() {
 }
 
 function getTotalRecordCount() {
-  return weightLogs.length + mealLogs.length + trainingLogs.length + fightGoals.length + hydrationLogs.length + recoveryLogs.length;
+  return weightLogs.length + weightLogPhotos.length + mealLogs.length + trainingLogs.length + fightGoals.length + opponents.length + fightHistory.length + hydrationLogs.length + recoveryLogs.length;
 }
 
 function getDailyHydration(dateStr) {
@@ -1219,7 +1255,7 @@ function updateLocalRecord(table, id, data) {
 
 function setDateInputs() {
   const today = TODAY();
-  ['w-date','m-date','t-date','mealViewDate','mealFilterDate','h-date','r-date'].forEach(id => {
+  ['w-date','m-date','t-date','mealViewDate','mealFilterDate','h-date','r-date','fh-date','f-date'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = today;
   });
@@ -1451,9 +1487,12 @@ function switchPage(pageName) {
 // ============================================================
 const BOXER_SUPABASE_TABLES = {
   weight_logs: 'boxer_weight_logs',
+  weight_log_photos: 'boxer_weight_log_photos',
   meals: 'boxer_meals',
   training_logs: 'boxer_training_logs',
   fight_goals: 'boxer_fight_goals',
+  opponents: 'boxer_opponents',
+  fight_history: 'boxer_fight_history',
   hydration_logs: 'boxer_hydration_logs',
   recovery_logs: 'boxer_recovery_logs',
 };
@@ -1736,6 +1775,101 @@ async function mergeLocalDataToSupabase() {
   showToast(`ローカルデータを反映しました（${n} 件処理）`, 'success');
 }
 
+function canUseCloudMedia() {
+  return activeStorageMode === STORAGE_MODE.SUPABASE;
+}
+
+function getWeightPhotosByLogId(weightLogId) {
+  return weightLogPhotos
+    .filter((row) => row.weight_log_id === weightLogId)
+    .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+}
+
+async function compressImageFile(file) {
+  if (!(file instanceof File)) throw new Error('画像ファイルが不正です');
+  if (!file.type.startsWith('image/')) return file;
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('画像を読み込めませんでした'));
+    reader.readAsDataURL(file);
+  });
+  const img = await new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('画像を開けませんでした'));
+    image.src = dataUrl;
+  });
+  const maxEdge = IMAGE_MAX_EDGE;
+  const scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.width * scale));
+  canvas.height = Math.max(1, Math.round(img.height * scale));
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  let quality = 0.88;
+  let blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+  while (blob && blob.size > IMAGE_MAX_SIZE_BYTES && quality > 0.52) {
+    quality -= 0.08;
+    blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+  }
+  if (!blob) throw new Error('画像を圧縮できませんでした');
+  return new File([blob], `${file.name.replace(/\.[^.]+$/, '') || 'photo'}.jpg`, { type: 'image/jpeg' });
+}
+
+async function uploadWeightPhotoFile(file, weightLogId, sortOrder = 0) {
+  const sb = await getSupabaseClient();
+  if (!sb || !canUseCloudMedia()) throw new Error('クラウドログイン時のみ画像を保存できます');
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) throw new Error('ログインが必要です');
+
+  const compressed = await compressImageFile(file);
+  const photoId = createRecordId();
+  const storagePath = `${user.id}/weight_logs/${weightLogId}/${photoId}.jpg`;
+  const upload = await sb.storage.from(WEIGHT_PHOTO_BUCKET).upload(storagePath, compressed, {
+    cacheControl: '3600',
+    contentType: 'image/jpeg',
+    upsert: true,
+  });
+  if (upload.error) throw upload.error;
+
+  const meta = await apiPost('weight_log_photos', {
+    weight_log_id: weightLogId,
+    storage_path: storagePath,
+    file_name: compressed.name,
+    content_type: compressed.type,
+    file_size: compressed.size,
+    caption: '',
+    shot_type: 'progress',
+    sort_order: sortOrder,
+  });
+  return meta;
+}
+
+async function getWeightPhotoSignedUrl(storagePath) {
+  const sb = await getSupabaseClient();
+  if (!sb || !storagePath) return '';
+  const { data, error } = await sb.storage.from(WEIGHT_PHOTO_BUCKET).createSignedUrl(storagePath, 60 * 30);
+  if (error) {
+    console.error('BOXER PRO: createSignedUrl failed', error);
+    return '';
+  }
+  return data?.signedUrl || '';
+}
+
+async function deleteWeightPhoto(photoId) {
+  const row = weightLogPhotos.find((item) => item.id === photoId);
+  if (!row) return;
+  const sb = await getSupabaseClient();
+  if (sb && row.storage_path) {
+    const { error } = await sb.storage.from(WEIGHT_PHOTO_BUCKET).remove([row.storage_path]);
+    if (error) console.error('BOXER PRO: remove weight photo storage', error);
+  }
+  await apiDelete('weight_log_photos', photoId);
+  weightLogPhotos = weightLogPhotos.filter((item) => item.id !== photoId);
+}
+
 if (typeof window !== 'undefined') {
   window.signInWithGoogle = signInWithGoogle;
   window.signOutSupabase = signOutSupabase;
@@ -1982,19 +2116,25 @@ async function apiPut(table, id, data) {
 async function loadAllData() {
   hasInitialDataLoaded = false;
   try {
-    const [wRes, mRes, tRes, fRes, hRes, rRes] = await Promise.all([
+    const [wRes, wpRes, mRes, tRes, fRes, oRes, fhRes, hRes, rRes] = await Promise.all([
       apiGet('weight_logs', 'sort=date'),
+      apiGet('weight_log_photos', 'sort=created_at'),
       apiGet('meals', 'sort=date'),
       apiGet('training_logs', 'sort=date'),
       apiGet('fight_goals', 'sort=fight_date'),
+      apiGet('opponents', 'sort=name'),
+      apiGet('fight_history', 'sort=fight_date'),
       apiGet('hydration_logs', 'sort=date'),
       apiGet('recovery_logs', 'sort=date'),
     ]);
     weightLogs   = (wRes.data || []).map(normalizeWeightLogRecord);
     sortWeightLogsInPlace();
+    weightLogPhotos = (wpRes.data || []).sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
     mealLogs     = (mRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
     trainingLogs = (tRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
     fightGoals   = (fRes.data || []).sort((a,b) => new Date(a.fight_date) - new Date(b.fight_date));
+    opponents    = (oRes.data || []).sort((a,b) => String(a.name || '').localeCompare(String(b.name || '')));
+    fightHistory = (fhRes.data || []).sort((a,b) => new Date(a.fight_date) - new Date(b.fight_date));
     hydrationLogs = (hRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
     recoveryLogs  = (rRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
     hasInitialDataLoaded = true;
@@ -2795,6 +2935,111 @@ function chartOptions(unit = '') {
 // ============================================================
 // WEIGHT PAGE
 // ============================================================
+function resetPendingWeightPhotos() {
+  pendingWeightPhotoFiles = [];
+  const input = document.getElementById('weightPhotoInput');
+  if (input) input.value = '';
+  renderPendingWeightPhotoPreview();
+}
+
+function getEditingWeightPhotos() {
+  if (!editingWeightId) return [];
+  return getWeightPhotosByLogId(editingWeightId);
+}
+
+async function renderWeightPhotoGallery(weightLogId = editingWeightId) {
+  const gallery = document.getElementById('weightPhotoGallery');
+  const hint = document.getElementById('weightPhotoHint');
+  if (!gallery || !hint) return;
+
+  if (!weightLogId) {
+    gallery.innerHTML = '';
+    hint.textContent = canUseCloudMedia()
+      ? '保存後にこの記録へ最大3枚まで写真を追加できます。'
+      : '写真アップロードは Supabase ログイン時のみ利用できます。';
+    return;
+  }
+
+  const photos = getWeightPhotosByLogId(weightLogId);
+  if (!photos.length) {
+    gallery.innerHTML = '';
+    hint.textContent = canUseCloudMedia()
+      ? 'この記録にはまだ写真がありません。'
+      : '写真はクラウドログイン時のみ追加できます。';
+    return;
+  }
+
+  hint.textContent = `この記録の写真 ${photos.length} / ${WEIGHT_PHOTO_MAX_FILES}`;
+  const cards = await Promise.all(photos.map(async (photo) => {
+    const url = await getWeightPhotoSignedUrl(photo.storage_path);
+    return `
+      <div class="media-thumb-card">
+        ${url ? `<img src="${escapeHtml(url)}" alt="体重写真">` : '<div class="media-thumb-fallback"><i class="fas fa-image"></i></div>'}
+        <div class="media-thumb-meta">
+          <strong>${escapeHtml(getWeightSlotLabel(weightLogs.find((w) => w.id === weightLogId)?.slot))}</strong>
+          <span>${escapeHtml(photo.file_name || 'photo.jpg')}</span>
+        </div>
+        <button type="button" class="btn btn-sm btn-danger media-thumb-delete" onclick="removeWeightPhoto('${photo.id}')"><i class="fas fa-trash"></i></button>
+      </div>
+    `;
+  }));
+  gallery.innerHTML = cards.join('');
+}
+
+function renderPendingWeightPhotoPreview() {
+  const preview = document.getElementById('weightPhotoPending');
+  const count = document.getElementById('weightPhotoCount');
+  if (!preview || !count) return;
+  count.textContent = `${pendingWeightPhotoFiles.length}/${WEIGHT_PHOTO_MAX_FILES}`;
+  if (!pendingWeightPhotoFiles.length) {
+    preview.innerHTML = '';
+    return;
+  }
+  preview.innerHTML = pendingWeightPhotoFiles.map((file, index) => `
+    <div class="media-chip">
+      <span><i class="fas fa-image"></i> ${escapeHtml(file.name)}</span>
+      <button type="button" class="btn-icon" onclick="removePendingWeightPhoto(${index})" aria-label="削除"><i class="fas fa-times"></i></button>
+    </div>
+  `).join('');
+}
+
+function removePendingWeightPhoto(index) {
+  pendingWeightPhotoFiles.splice(index, 1);
+  renderPendingWeightPhotoPreview();
+}
+
+function handleWeightPhotoInput(event) {
+  const files = Array.from(event.target.files || []).filter((file) => file.type.startsWith('image/'));
+  if (!canUseCloudMedia()) {
+    showToast('写真アップロードはクラウドログイン時のみ利用できます', 'info');
+    event.target.value = '';
+    return;
+  }
+  const remain = Math.max(0, WEIGHT_PHOTO_MAX_FILES - getEditingWeightPhotos().length - pendingWeightPhotoFiles.length);
+  if (!remain) {
+    showToast(`写真は最大 ${WEIGHT_PHOTO_MAX_FILES} 枚までです`, 'info');
+    event.target.value = '';
+    return;
+  }
+  pendingWeightPhotoFiles.push(...files.slice(0, remain));
+  renderPendingWeightPhotoPreview();
+  event.target.value = '';
+}
+
+async function removeWeightPhoto(photoId) {
+  showModal('写真を削除', 'この体重写真を削除しますか？', async () => {
+    try {
+      await deleteWeightPhoto(photoId);
+      await renderWeightPhotoGallery();
+      renderWeightPage();
+      showToast('写真を削除しました', 'info');
+    } catch (err) {
+      console.error(err);
+      showToast('写真削除に失敗しました', 'error');
+    }
+  });
+}
+
 async function saveWeight() {
   const date   = document.getElementById('w-date').value;
   const slot = getWeightSlotMeta(document.getElementById('w-slot')?.value).value;
@@ -2865,7 +3110,20 @@ async function saveWeight() {
     }
     renderWeightPage();
     renderDashboard();
+    if (pendingWeightPhotoFiles.length) {
+      const targetWeightLog = targetId ? weightLogs.find((item) => item.id === targetId) : weightLogs[weightLogs.length - 1];
+      const currentCount = targetWeightLog ? getWeightPhotosByLogId(targetWeightLog.id).length : 0;
+      const uploadQueue = pendingWeightPhotoFiles.slice(0, Math.max(0, WEIGHT_PHOTO_MAX_FILES - currentCount));
+      for (let i = 0; i < uploadQueue.length; i++) {
+        const photoMeta = await uploadWeightPhotoFile(uploadQueue[i], targetWeightLog.id, currentCount + i);
+        weightLogPhotos.push(photoMeta);
+      }
+      resetPendingWeightPhotos();
+      await renderWeightPhotoGallery(targetWeightLog?.id);
+      showToast('写真をアップロードしました', 'success');
+    }
   } catch(e) {
+    console.error(e);
     showToast('保存に失敗しました', 'error');
   }
 }
@@ -2955,7 +3213,9 @@ function cancelEditWeight() {
   }
   clearForm(['w-weight','w-fat','w-muscle','w-note']);
   if (g('w-target')) g('w-target').value = '';
+  resetPendingWeightPhotos();
   updateWeightEditUI();
+  void renderWeightPhotoGallery();
   if (typeof updateWeightBmiPreview === 'function') updateWeightBmiPreview();
 }
 
@@ -2973,7 +3233,9 @@ function startEditWeight(id) {
   g('w-muscle').value = w.muscle_mass != null && w.muscle_mass !== '' ? w.muscle_mass : '';
   g('w-target').value = w.target_weight != null && w.target_weight !== '' ? w.target_weight : '';
   g('w-note').value = w.note || '';
+  resetPendingWeightPhotos();
   updateWeightEditUI();
+  void renderWeightPhotoGallery(id);
   if (typeof updateWeightBmiPreview === 'function') updateWeightBmiPreview();
   switchPage('weight');
   window.setTimeout(() => {
@@ -2984,6 +3246,10 @@ function startEditWeight(id) {
 async function deleteWeightLog(id) {
   showModal('体重記録を削除', 'この記録を削除しますか？', async () => {
     try {
+      const relatedPhotos = getWeightPhotosByLogId(id);
+      for (const photo of relatedPhotos) {
+        await deleteWeightPhoto(photo.id);
+      }
       await apiDelete('weight_logs', id);
       weightLogs = weightLogs.filter(w => w.id !== id);
       if (selectedWeightRecordId === id) selectedWeightRecordId = '';
@@ -2998,6 +3264,9 @@ async function deleteWeightLog(id) {
 async function clearWeightLogs() {
   showModal('全データを削除', '体重記録をすべて削除しますか？この操作は元に戻せません。', async () => {
     try {
+      for (const photo of [...weightLogPhotos]) {
+        await deleteWeightPhoto(photo.id);
+      }
       await Promise.all(weightLogs.map(w => apiDelete('weight_logs', w.id)));
       weightLogs = [];
       editingWeightId = null;
@@ -3082,6 +3351,10 @@ function renderWeightPage() {
     selectEl.value = selectedWeightRecordId;
   }
   const tbody = document.getElementById('weightTableBody');
+  const photoCountMap = new Map();
+  weightLogPhotos.forEach((photo) => {
+    photoCountMap.set(photo.weight_log_id, (photoCountMap.get(photo.weight_log_id) || 0) + 1);
+  });
   if (!weightLogs.length) {
     tbody.innerHTML = '<tr><td colspan="9" class="empty-cell">データなし</td></tr>';
   } else {
@@ -3094,7 +3367,7 @@ function renderWeightPage() {
         <td>${w.body_fat ? w.body_fat + ' %' : '--'}</td>
         <td>${w.muscle_mass ? w.muscle_mass + ' kg' : '--'}</td>
         <td>${w.target_weight ? w.target_weight + ' kg' : '--'}</td>
-        <td>${w.note || '--'}</td>
+        <td>${w.note || '--'}${photoCountMap.get(w.id) ? `<div class="table-subnote">📷 ${photoCountMap.get(w.id)}枚</div>` : ''}</td>
         <td style="white-space:nowrap">
           <button type="button" class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); handleWeightRecordSelection('${w.id}'); startEditWeight('${w.id}')" title="編集"><i class="fas fa-pen"></i></button>
           <button type="button" class="btn btn-sm btn-danger" onclick="event.stopPropagation(); handleWeightRecordSelection('${w.id}'); deleteWeightLog('${w.id}')" title="削除"><i class="fas fa-trash"></i></button>
@@ -3104,6 +3377,8 @@ function renderWeightPage() {
   }
 
   updateWeightEditUI();
+  renderPendingWeightPhotoPreview();
+  void renderWeightPhotoGallery();
 
   // Chart
   renderWeightDetailChart(7);
@@ -4396,9 +4671,146 @@ function renderTrainingWeightRecoveryCorrelation() {
 // ============================================================
 // FIGHT GOALS PAGE
 // ============================================================
+function syncFightOpponentSelect(selectedId = '') {
+  const selectEl = document.getElementById('f-opponent-id');
+  const historySelectEl = document.getElementById('fh-opponent-id');
+  if (selectEl) selectEl.innerHTML = getOpponentsForSelectOptions(selectedId);
+  if (historySelectEl) historySelectEl.innerHTML = getOpponentsForSelectOptions(historySelectEl.value || '');
+}
+
+function handleFightOpponentSelection(opponentId) {
+  const textEl = document.getElementById('f-opponent');
+  const row = opponents.find((item) => item.id === opponentId);
+  if (textEl && row) textEl.value = row.name || '';
+}
+
+async function saveOpponentProfile() {
+  const name = document.getElementById('o-name')?.value.trim();
+  if (!name) {
+    showToast('対戦相手名を入力してください', 'error');
+    return;
+  }
+  const payload = {
+    name,
+    ring_name: document.getElementById('o-ring-name')?.value.trim() || '',
+    gym: document.getElementById('o-gym')?.value.trim() || '',
+    nationality: document.getElementById('o-nationality')?.value.trim() || '',
+    stance: document.getElementById('o-stance')?.value || '',
+    height_cm: Number(document.getElementById('o-height')?.value) || null,
+    reach_cm: Number(document.getElementById('o-reach')?.value) || null,
+    wins: Number(document.getElementById('o-wins')?.value) || 0,
+    losses: Number(document.getElementById('o-losses')?.value) || 0,
+    draws: Number(document.getElementById('o-draws')?.value) || 0,
+    kos: Number(document.getElementById('o-kos')?.value) || 0,
+    strengths: document.getElementById('o-strengths')?.value.trim() || '',
+    weaknesses: document.getElementById('o-weaknesses')?.value.trim() || '',
+    notes: document.getElementById('o-notes')?.value.trim() || '',
+  };
+  try {
+    const record = await apiPost('opponents', payload);
+    opponents.push(record);
+    opponents.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+    syncFightOpponentSelect(record.id);
+    clearForm(['o-name', 'o-ring-name', 'o-gym', 'o-nationality', 'o-height', 'o-reach', 'o-wins', 'o-losses', 'o-draws', 'o-kos', 'o-strengths', 'o-weaknesses', 'o-notes']);
+    const stance = document.getElementById('o-stance');
+    if (stance) stance.value = OPPONENT_STANCES[0];
+    showToast('対戦相手プロフィールを保存しました', 'success');
+    renderFightPage();
+  } catch (err) {
+    console.error(err);
+    showToast('対戦相手の保存に失敗しました', 'error');
+  }
+}
+
+async function deleteOpponentProfile(id) {
+  showModal('対戦相手を削除', 'この相手プロフィールを削除しますか？過去試合との紐付けは解除されます。', async () => {
+    try {
+      const relatedGoals = fightGoals.filter((goal) => goal.opponent_id === id);
+      for (const goal of relatedGoals) {
+        const updated = await apiPut('fight_goals', goal.id, { opponent_id: '' });
+        const idx = fightGoals.findIndex((item) => item.id === goal.id);
+        if (idx !== -1) fightGoals[idx] = updated;
+      }
+      const relatedHistory = fightHistory.filter((row) => row.opponent_id === id);
+      for (const row of relatedHistory) {
+        const updated = await apiPut('fight_history', row.id, { opponent_id: '' });
+        const idx = fightHistory.findIndex((item) => item.id === row.id);
+        if (idx !== -1) fightHistory[idx] = updated;
+      }
+      await apiDelete('opponents', id);
+      opponents = opponents.filter((row) => row.id !== id);
+      syncFightOpponentSelect();
+      renderFightPage();
+      showToast('対戦相手を削除しました', 'info');
+    } catch (err) {
+      console.error(err);
+      showToast('削除に失敗しました', 'error');
+    }
+  });
+}
+
+async function saveFightHistoryEntry() {
+  const fightDate = document.getElementById('fh-date')?.value;
+  if (!isIsoDateString(fightDate)) {
+    showToast('試合日を正しく選択してください', 'error');
+    return;
+  }
+  const opponentId = document.getElementById('fh-opponent-id')?.value || '';
+  const opponentName = getOpponentNameById(opponentId, document.getElementById('fh-opponent-name')?.value.trim() || '');
+  if (!opponentName) {
+    showToast('対戦相手を入力または選択してください', 'error');
+    return;
+  }
+  const payload = {
+    fight_date: fightDate,
+    opponent_id: opponentId,
+    opponent_name: opponentName,
+    result: document.getElementById('fh-result')?.value || '',
+    method: document.getElementById('fh-method')?.value || '',
+    event_name: document.getElementById('fh-event')?.value.trim() || '',
+    venue: document.getElementById('fh-venue')?.value.trim() || '',
+    weight_class: document.getElementById('fh-class')?.value.trim() || '',
+    round: Number(document.getElementById('fh-round')?.value) || null,
+    memo: document.getElementById('fh-memo')?.value.trim() || '',
+    video_url: document.getElementById('fh-video')?.value.trim() || '',
+  };
+  try {
+    const record = await apiPost('fight_history', payload);
+    fightHistory.push(record);
+    fightHistory.sort((a, b) => new Date(a.fight_date) - new Date(b.fight_date));
+    clearForm(['fh-date', 'fh-opponent-name', 'fh-event', 'fh-venue', 'fh-class', 'fh-round', 'fh-memo', 'fh-video']);
+    const opponentSelect = document.getElementById('fh-opponent-id');
+    if (opponentSelect) opponentSelect.value = '';
+    const resultEl = document.getElementById('fh-result');
+    if (resultEl) resultEl.value = FIGHT_RESULTS[0];
+    const methodEl = document.getElementById('fh-method');
+    if (methodEl) methodEl.value = FIGHT_METHODS[0];
+    showToast('過去試合を保存しました', 'success');
+    renderFightPage();
+  } catch (err) {
+    console.error(err);
+    showToast('過去試合の保存に失敗しました', 'error');
+  }
+}
+
+async function deleteFightHistoryEntry(id) {
+  showModal('過去試合を削除', 'この過去試合データを削除しますか？', async () => {
+    try {
+      await apiDelete('fight_history', id);
+      fightHistory = fightHistory.filter((row) => row.id !== id);
+      renderFightPage();
+      showToast('過去試合を削除しました', 'info');
+    } catch (err) {
+      console.error(err);
+      showToast('削除に失敗しました', 'error');
+    }
+  });
+}
+
 async function saveFightGoal() {
   const date     = document.getElementById('f-date').value;
-  const opponent = document.getElementById('f-opponent').value.trim();
+  const opponentId = document.getElementById('f-opponent-id')?.value || '';
+  const opponent = getOpponentNameById(opponentId, document.getElementById('f-opponent').value.trim());
   const wclass   = document.getElementById('f-class').value;
   const targetRaw = document.getElementById('f-target').value.trim();
   const venue    = document.getElementById('f-venue').value.trim();
@@ -4418,13 +4830,15 @@ async function saveFightGoal() {
 
   try {
     const record = await apiPost('fight_goals', {
-      fight_date: date, opponent, weight_class: wclass, target_weight: target,
+      fight_date: date, opponent_id: opponentId, opponent, weight_class: wclass, target_weight: target,
       current_weight: latestWeight, venue, status, note
     });
     fightGoals.push(record);
     fightGoals.sort((a,b) => new Date(a.fight_date) - new Date(b.fight_date));
     showToast(`✅ 試合目標を登録しました！`, 'success');
     clearForm(['f-opponent','f-target','f-venue','f-note']);
+    const opponentSelect = document.getElementById('f-opponent-id');
+    if (opponentSelect) opponentSelect.value = '';
     renderFightPage();
     renderDashboard();
   } catch(e) {
@@ -4445,13 +4859,14 @@ async function deleteFightGoal(id) {
 }
 
 function renderFightPage() {
+  syncFightOpponentSelect(document.getElementById('f-opponent-id')?.value || '');
   const activeFights = fightGoals.filter(f => f.status === '準備中' && f.fight_date);
   const nextFight = activeFights.sort((a,b) => new Date(a.fight_date)-new Date(b.fight_date))[0];
 
   if (nextFight) {
     const days = getDaysUntil(nextFight.fight_date);
     document.getElementById('countdown-days').textContent = days;
-    document.getElementById('fi-opponent').textContent = `vs ${nextFight.opponent || '相手未定'}`;
+    document.getElementById('fi-opponent').textContent = `vs ${getOpponentNameById(nextFight.opponent_id, nextFight.opponent) || '相手未定'}`;
     document.getElementById('fi-date').textContent = formatDateJP(nextFight.fight_date);
     document.getElementById('fi-venue').textContent = nextFight.venue || '--';
     document.getElementById('fi-target').textContent = `目標体重: ${nextFight.target_weight || '--'} kg`;
@@ -4510,6 +4925,14 @@ function renderFightPage() {
     }
   } else {
     document.getElementById('countdown-days').textContent = '--';
+    document.getElementById('fi-opponent').textContent = '-- vs --';
+    document.getElementById('fi-date').textContent = '----/--/--';
+    document.getElementById('fi-venue').textContent = '--';
+    document.getElementById('fi-target').textContent = '目標体重: -- kg';
+    document.getElementById('wcp-current').textContent = '現在: -- kg';
+    document.getElementById('wcp-target').textContent = '目標: -- kg';
+    document.getElementById('wcp-remain').textContent = '残り -- kg';
+    document.getElementById('fightWeightProgressFill').style.width = '0%';
     setText('fdWeeks', '--');
     setText('fdTrainDays', '--');
     setText('fdCutPerDay', '--');
@@ -4533,33 +4956,88 @@ function renderFightPage() {
   const container = document.getElementById('fightCardsList');
   if (!fightGoals.length) {
     container.innerHTML = '<div class="empty-state">試合目標が登録されていません</div>';
-    return;
+  } else {
+    container.innerHTML = [...fightGoals].reverse().map(f => {
+      const days = getDaysUntil(f.fight_date);
+      return `
+        <div class="fight-card">
+          <div class="fight-card-header">
+            <div class="fight-card-date">${formatDate(f.fight_date)}</div>
+            <span class="fight-card-status status-${f.status}">${f.status}</span>
+          </div>
+          <div class="fight-card-info">
+            ${(f.opponent || f.opponent_id) ? `🥊 vs <strong>${escapeHtml(getOpponentNameById(f.opponent_id, f.opponent))}</strong><br>` : ''}
+            ${f.weight_class ? `⚖️ ${f.weight_class}<br>` : ''}
+            ${f.target_weight ? `🎯 目標体重: <strong>${f.target_weight} kg</strong><br>` : ''}
+            ${f.venue ? `📍 ${f.venue}<br>` : ''}
+            ${f.status === '準備中' && days !== null ? `⏱️ <strong style="color:var(--red-light)">${days}日後</strong>` : ''}
+            ${f.note ? `<br>📝 ${f.note}` : ''}
+          </div>
+          <div class="fight-card-actions">
+            <button class="btn btn-sm btn-danger" onclick="deleteFightGoal('${f.id}')">
+              <i class="fas fa-trash"></i> 削除
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
-  container.innerHTML = [...fightGoals].reverse().map(f => {
-    const days = getDaysUntil(f.fight_date);
-    return `
-      <div class="fight-card">
-        <div class="fight-card-header">
-          <div class="fight-card-date">${formatDate(f.fight_date)}</div>
-          <span class="fight-card-status status-${f.status}">${f.status}</span>
+  const opponentContainer = document.getElementById('opponentCardsList');
+  if (opponentContainer) {
+    if (!opponents.length) {
+      opponentContainer.innerHTML = '<div class="empty-state">対戦相手プロフィールがまだありません</div>';
+    } else {
+      opponentContainer.innerHTML = opponents.slice().reverse().map((op) => `
+        <div class="opponent-card">
+          <div class="opponent-card-head">
+            <div>
+              <strong>${escapeHtml(op.name)}</strong>
+              <div class="table-subnote">${escapeHtml(op.gym || '所属未設定')} / ${escapeHtml(op.stance || '構え未設定')}</div>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteOpponentProfile('${op.id}')"><i class="fas fa-trash"></i></button>
+          </div>
+          <div class="opponent-chip-row">
+            <span class="badge">${escapeHtml(op.nationality || '国籍未設定')}</span>
+            <span class="badge">身長 ${op.height_cm || '--'} cm</span>
+            <span class="badge">リーチ ${op.reach_cm || '--'} cm</span>
+            <span class="badge">${op.wins || 0}-${op.losses || 0}-${op.draws || 0} / KO ${op.kos || 0}</span>
+          </div>
+          ${op.strengths ? `<p class="settings-note"><strong>強み:</strong> ${escapeHtml(op.strengths)}</p>` : ''}
+          ${op.weaknesses ? `<p class="settings-note"><strong>弱み:</strong> ${escapeHtml(op.weaknesses)}</p>` : ''}
+          ${op.notes ? `<p class="settings-note">${escapeHtml(op.notes)}</p>` : ''}
         </div>
-        <div class="fight-card-info">
-          ${f.opponent ? `🥊 vs <strong>${f.opponent}</strong><br>` : ''}
-          ${f.weight_class ? `⚖️ ${f.weight_class}<br>` : ''}
-          ${f.target_weight ? `🎯 目標体重: <strong>${f.target_weight} kg</strong><br>` : ''}
-          ${f.venue ? `📍 ${f.venue}<br>` : ''}
-          ${f.status === '準備中' && days !== null ? `⏱️ <strong style="color:var(--red-light)">${days}日後</strong>` : ''}
-          ${f.note ? `<br>📝 ${f.note}` : ''}
+      `).join('');
+    }
+  }
+
+  const fightHistoryContainer = document.getElementById('fightHistoryList');
+  if (fightHistoryContainer) {
+    if (!fightHistory.length) {
+      fightHistoryContainer.innerHTML = '<div class="empty-state">過去試合データがまだありません</div>';
+    } else {
+      fightHistoryContainer.innerHTML = fightHistory.slice().reverse().map((row) => `
+        <div class="fight-history-card">
+          <div class="fight-card-header">
+            <div class="fight-card-date">${formatDate(row.fight_date)}</div>
+            <span class="fight-card-status status-${row.result || '準備中'}">${escapeHtml(row.result || '未設定')}</span>
+          </div>
+          <div class="fight-card-info">
+            🥊 <strong>${escapeHtml(getOpponentNameById(row.opponent_id, row.opponent_name))}</strong><br>
+            ${row.method ? `🏁 ${escapeHtml(row.method)}${row.round ? ` / ${row.round}R` : ''}<br>` : ''}
+            ${row.weight_class ? `⚖️ ${escapeHtml(row.weight_class)}<br>` : ''}
+            ${row.event_name ? `🎫 ${escapeHtml(row.event_name)}<br>` : ''}
+            ${row.venue ? `📍 ${escapeHtml(row.venue)}<br>` : ''}
+            ${row.video_url ? `🎥 <a href="${escapeHtml(row.video_url)}" target="_blank" rel="noopener noreferrer">映像リンク</a><br>` : ''}
+            ${row.memo ? `📝 ${escapeHtml(row.memo)}` : ''}
+          </div>
+          <div class="fight-card-actions">
+            <button class="btn btn-sm btn-danger" onclick="deleteFightHistoryEntry('${row.id}')"><i class="fas fa-trash"></i> 削除</button>
+          </div>
         </div>
-        <div class="fight-card-actions">
-          <button class="btn btn-sm btn-danger" onclick="deleteFightGoal('${f.id}')">
-            <i class="fas fa-trash"></i> 削除
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
+      `).join('');
+    }
+  }
 }
 
 function renderCuttingPlanSection() {
