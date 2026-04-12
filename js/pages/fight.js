@@ -16,6 +16,12 @@ function getEditingOpponentRecord() {
   return editingOpponentId ? opponents.find((row) => row.id === editingOpponentId) || null : null;
 }
 
+function getSelectedOpponentRecord() {
+  return selectedOpponentId
+    ? opponents.find((row) => row.id === selectedOpponentId) || null
+    : opponents[0] || null;
+}
+
 function getOpponentPhotoPreviewUrl() {
   return pendingOpponentPhotoPreviewUrl || editingOpponentPhotoUrl || '';
 }
@@ -24,7 +30,11 @@ function updateOpponentFormModeUi() {
   const note = document.getElementById('opponentFormModeNote');
   const saveBtn = document.getElementById('saveOpponentBtn');
   const cancelBtn = document.getElementById('cancelOpponentEditBtn');
+  const composer = document.getElementById('opponentComposerCard');
+  const workspace = document.getElementById('opponentWorkspace');
   const editingRow = getEditingOpponentRecord();
+  if (composer) composer.style.display = isOpponentComposerOpen ? 'block' : 'none';
+  if (workspace) workspace.classList.toggle('composer-closed', !isOpponentComposerOpen);
   if (note) {
     note.textContent = editingRow
       ? `「${editingRow.name}」を編集中です。保存するとプロフィールと写真を更新します。`
@@ -36,7 +46,7 @@ function updateOpponentFormModeUi() {
       : '<i class="fas fa-save"></i> 対戦相手を保存';
   }
   if (cancelBtn) {
-    cancelBtn.style.display = editingRow ? 'inline-flex' : 'none';
+    cancelBtn.style.display = isOpponentComposerOpen ? 'inline-flex' : 'none';
   }
 }
 
@@ -113,7 +123,9 @@ async function populateOpponentFormForEdit(id) {
     showToast('対戦相手データが見つかりません', 'error');
     return;
   }
+  selectedOpponentId = row.id;
   editingOpponentId = row.id;
+  isOpponentComposerOpen = true;
   editingOpponentPhotoStoragePath = row.photo_storage_path || '';
   editingOpponentPhotoUrl = row.photo_storage_path ? await getOpponentPhotoSignedUrl(row.photo_storage_path) : '';
 
@@ -156,6 +168,43 @@ function resetOpponentForm() {
   updateOpponentFormModeUi();
 }
 
+function closeOpponentComposer() {
+  editingOpponentId = null;
+  isOpponentComposerOpen = false;
+  editingOpponentPhotoStoragePath = '';
+  editingOpponentPhotoUrl = '';
+  resetPendingOpponentPhoto();
+  updateOpponentFormModeUi();
+}
+
+function openNewOpponentComposer() {
+  resetOpponentForm();
+  isOpponentComposerOpen = true;
+  updateOpponentFormModeUi();
+  document.getElementById('o-name')?.focus();
+}
+
+function selectOpponentProfile(id) {
+  selectedOpponentId = id || '';
+  void renderFightPage();
+}
+
+function editSelectedOpponentProfile() {
+  if (!selectedOpponentId) {
+    showToast('編集する対戦相手を選択してください', 'info');
+    return;
+  }
+  void populateOpponentFormForEdit(selectedOpponentId);
+}
+
+function deleteSelectedOpponentProfile() {
+  if (!selectedOpponentId) {
+    showToast('削除する対戦相手を選択してください', 'info');
+    return;
+  }
+  void deleteOpponentProfile(selectedOpponentId);
+}
+
 function syncFightOpponentSelect(selectedId = '') {
   const selectEl = document.getElementById('f-opponent-id');
   const historySelectEl = document.getElementById('fh-opponent-id');
@@ -167,6 +216,7 @@ function handleFightOpponentSelection(opponentId) {
   const textEl = document.getElementById('f-opponent');
   const row = opponents.find((item) => item.id === opponentId);
   if (textEl && row) textEl.value = row.name || '';
+  if (row?.id) selectedOpponentId = row.id;
 }
 
 async function saveOpponentProfile() {
@@ -250,11 +300,13 @@ async function saveOpponentProfile() {
     if (existingIdx === -1) opponents.push(record);
     else opponents[existingIdx] = record;
     opponents.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+    selectedOpponentId = record.id;
     syncFightOpponentSelect(record.id);
     editingOpponentId = record.id;
     editingOpponentPhotoStoragePath = record.photo_storage_path || '';
     editingOpponentPhotoUrl = record.photo_storage_path ? await getOpponentPhotoSignedUrl(record.photo_storage_path) : '';
     resetPendingOpponentPhoto();
+    isOpponentComposerOpen = false;
     updateOpponentFormModeUi();
     showToast(wasEditing ? '対戦相手プロフィールを更新しました' : '対戦相手プロフィールを保存しました', 'success');
     await renderFightPage();
@@ -286,10 +338,12 @@ async function deleteOpponentProfile(id) {
       }
       await apiDelete('opponents', id);
       opponents = opponents.filter((row) => row.id !== id);
+      if (selectedOpponentId === id) selectedOpponentId = '';
       if (editingOpponentId === id) {
         editingOpponentId = null;
         editingOpponentPhotoStoragePath = '';
         editingOpponentPhotoUrl = '';
+        isOpponentComposerOpen = false;
         resetPendingOpponentPhoto();
         updateOpponentFormModeUi();
       }
@@ -511,6 +565,49 @@ async function renderFightPage() {
   renderCuttingPlanSection();
   renderFightPlanComparison(nextFight);
 
+  if (!selectedOpponentId && nextFight?.opponent_id && opponents.some((row) => row.id === nextFight.opponent_id)) {
+    selectedOpponentId = nextFight.opponent_id;
+  } else if (!selectedOpponentId && opponents.length) {
+    selectedOpponentId = opponents[0].id;
+  }
+
+  const selectedOpponent = getSelectedOpponentRecord();
+  const selectedEmpty = document.getElementById('opponentSelectedEmpty');
+  const selectedContent = document.getElementById('opponentSelectedContent');
+  const selectedStats = document.getElementById('selectedOpponentStats');
+  const selectedPhoto = document.getElementById('selectedOpponentPhoto');
+  if (selectedOpponent) {
+    if (selectedEmpty) selectedEmpty.style.display = 'none';
+    if (selectedContent) selectedContent.style.display = 'block';
+    setText('selectedOpponentSubline', selectedOpponent.gym || '所属未設定');
+    setText('selectedOpponentName', selectedOpponent.name || '--');
+    setText('selectedOpponentMeta', [selectedOpponent.ring_name, selectedOpponent.nationality].filter(Boolean).join(' / ') || 'リングネーム・国籍未設定');
+    setText('selectedOpponentStance', selectedOpponent.stance || '構え未設定');
+    setText(
+      'selectedOpponentNotes',
+      [selectedOpponent.strengths && `強み: ${selectedOpponent.strengths}`, selectedOpponent.weaknesses && `弱み: ${selectedOpponent.weaknesses}`, selectedOpponent.notes]
+        .filter(Boolean)
+        .join(' / ') || 'メモはありません。'
+    );
+    if (selectedStats) {
+      selectedStats.innerHTML = `
+        <div class="opponent-card-stat"><span>身長</span><strong>${selectedOpponent.height_cm || '--'} cm</strong></div>
+        <div class="opponent-card-stat"><span>リーチ</span><strong>${selectedOpponent.reach_cm || '--'} cm</strong></div>
+        <div class="opponent-card-stat"><span>戦績</span><strong>${selectedOpponent.wins || 0}-${selectedOpponent.losses || 0}-${selectedOpponent.draws || 0}</strong></div>
+        <div class="opponent-card-stat"><span>KO</span><strong>${selectedOpponent.kos || 0}</strong></div>
+      `;
+    }
+    if (selectedPhoto) {
+      const photoUrl = selectedOpponent.photo_storage_path ? await getOpponentPhotoSignedUrl(selectedOpponent.photo_storage_path) : '';
+      selectedPhoto.innerHTML = photoUrl
+        ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(selectedOpponent.name || '対戦相手')}">`
+        : '<div class="opponent-photo-fallback"><i class="fas fa-user"></i></div>';
+    }
+  } else {
+    if (selectedEmpty) selectedEmpty.style.display = 'block';
+    if (selectedContent) selectedContent.style.display = 'none';
+  }
+
   // Fight cards list
   const container = document.getElementById('fightCardsList');
   if (!fightGoals.length) {
@@ -557,7 +654,7 @@ async function renderFightPage() {
               <div class="table-subnote">${escapeHtml(op.ring_name || 'リングネーム未設定')}</div>
             </div>
             <div class="opponent-chip-row">
-              <button type="button" class="btn btn-sm btn-secondary" onclick="populateOpponentFormForEdit('${op.id}')"><i class="fas fa-pen"></i> 編集</button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="selectOpponentProfile('${op.id}')"><i class="fas fa-eye"></i> 表示</button>
               <button type="button" class="btn btn-sm btn-danger" onclick="deleteOpponentProfile('${op.id}')"><i class="fas fa-trash"></i></button>
             </div>
           </div>
@@ -730,4 +827,22 @@ function switchCutPlanTab(tabName, shouldScroll = false) {
   if (shouldScroll) {
     (isCard ? cardPanel : tablePanel).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
+}
+
+function toggleCollapseSection(sectionId, buttonEl) {
+  const section = document.getElementById(sectionId);
+  if (!section) return;
+  const collapsed = section.classList.toggle('is-collapsed');
+  if (buttonEl) {
+    buttonEl.textContent = collapsed ? '開く' : '折りたたむ';
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.toggleCollapseSection = toggleCollapseSection;
+  window.openNewOpponentComposer = openNewOpponentComposer;
+  window.closeOpponentComposer = closeOpponentComposer;
+  window.selectOpponentProfile = selectOpponentProfile;
+  window.editSelectedOpponentProfile = editSelectedOpponentProfile;
+  window.deleteSelectedOpponentProfile = deleteSelectedOpponentProfile;
 }

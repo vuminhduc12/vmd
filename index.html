@@ -369,157 +369,151 @@
   <div class="page" id="page-weight">
     <div class="page-header">
       <h1><i class="fas fa-weight-scale" style="color:var(--blue);font-size:24px"></i> 体重管理</h1>
-      <p class="page-subtitle">体重・体脂肪率・BMIの記録と推移グラフ</p>
+      <p class="page-subtitle">記録の確認と、必要なときだけ編集</p>
     </div>
 
-    <div class="two-col" style="margin-bottom:16px">
-      <!-- Form -->
-      <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-plus-circle"></i> 体重を記録</h3>
-        <div id="weightEditBanner" class="weight-edit-banner" style="display:none">
-          <span><i class="fas fa-pen"></i> この行を編集中です。保存で反映されます。</span>
-          <button type="button" class="btn btn-sm btn-secondary" onclick="cancelEditWeight()">キャンセル</button>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">日付</label>
-            <input type="date" id="w-date" class="input-field">
-          </div>
-          <div class="form-group">
-            <label class="form-label">記録区分</label>
-            <select id="w-slot" class="input-field">
-              <option value="morning">朝</option>
-              <option value="evening">夜</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row three-col">
-          <div class="form-group">
-            <label class="form-label">身長 (cm)</label>
-            <input type="number" id="w-height" class="input-field" placeholder="170" value="170">
-          </div>
-          <div class="form-group">
-            <label class="form-label">体重 (kg)</label>
-            <input type="number" id="w-weight" class="input-field" placeholder="65.5" step="0.1">
-          </div>
-          <div class="form-group">
-            <label class="form-label">体脂肪率(%)</label>
-            <input type="number" id="w-fat" class="input-field" placeholder="12.5" step="0.1">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">筋肉量(kg)</label>
-            <input type="number" id="w-muscle" class="input-field" placeholder="55.0" step="0.1">
-          </div>
-          <div class="form-group">
-            <label class="form-label">目標体重 (kg)</label>
-            <input type="number" id="w-target" class="input-field" placeholder="63.5" step="0.1">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">減量時体調・コンディション</label>
-          <input type="text" id="w-note" class="input-field" placeholder="減量調整・脚の重さなど...">
-        </div>
-        <div class="form-group">
-          <div class="media-upload-head">
-            <label class="form-label">体重写真</label>
-            <span class="table-subnote" id="weightPhotoCount">0/3</span>
-          </div>
-          <label class="media-upload-drop" for="weightPhotoInput">
-            <input type="file" id="weightPhotoInput" accept="image/*" multiple hidden onchange="handleWeightPhotoInput(event)">
-            <i class="fas fa-camera"></i>
-            <span>写真を追加</span>
-            <small id="weightPhotoHint">写真アップロードは Supabase ログイン時のみ利用できます。</small>
-          </label>
-          <div id="weightPhotoPending" class="media-chip-row"></div>
-          <div id="weightPhotoGallery" class="media-thumb-grid"></div>
-        </div>
-        <button type="button" id="weightSaveBtn" class="btn btn-primary btn-full" onclick="saveWeight()">
-          <i class="fas fa-save"></i> 体重を保存       </button>
-        <!-- BMI Preview -->
-        <div id="bmiPreview" style="margin-top:14px;display:none">
-          <div style="background:var(--bg-input);border-radius:var(--rs);padding:12px;text-align:center;border:1px solid var(--b1)">
-            <div style="font-size:11px;color:var(--tx-3);margin-bottom:4px">BMI プレビュー</div>
-            <div style="font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:var(--tx-1)" id="bmiPreviewVal">--</div>
-            <div id="bmiPreviewBadge"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stats Panel -->
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div class="form-card" style="padding:18px">
-          <h3 class="form-title" style="margin-bottom:14px"><i class="fas fa-chart-simple"></i> 直近サマリー</h3>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-label">最新体重</div>
-              <div class="stat-val" id="latest-weight">-- kg</div>
-              <div class="stat-sub" id="weight-delta-display"></div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">目標体重</div>
-              <div class="stat-val" id="target-weight-display">-- kg</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">残り減量</div>
-              <div class="stat-val" id="weight-remain">-- kg</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">体脂肪率</div>
-              <div class="stat-val" id="latest-fat">-- %</div>
-            </div>
-          </div>
-          <!-- BMI card -->
-          <div class="stat-card mt-16" style="grid-column:1/-1;text-align:center">
-            <div class="stat-label">BMI</div>
-            <div class="stat-val" id="bmi-display">--</div>
-            <div id="bmi-badge-display"></div>
-          </div>
-          <!-- Progress -->
-          <div class="progress-wrap mt-16">
-            <div class="progress-bar-row">
-              <span>減量達成度</span>
-              <span id="weight-progress-pct">0%</span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-fill pf-red" id="weightProgressFill" style="width:0%"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Muscle & Fat rings -->
-        <div class="form-card" style="padding:16px">
-          <h3 class="form-title" style="margin-bottom:12px"><i class="fas fa-circle-half-stroke"></i> 体組成リング</h3>
-          <div style="display:flex;justify-content:space-around;padding:8px 0">
-            <div class="ring-wrap">
-              <svg class="ring-svg" width="90" height="90" viewBox="0 0 90 90">
-                <circle class="ring-track" cx="45" cy="45" r="36" stroke-width="9"/>
-                <circle class="ring-fill" id="ringFatFill" cx="45" cy="45" r="36"
-                  stroke="#f0c040" stroke-width="9"
-                  stroke-dasharray="226" stroke-dashoffset="226"/>
-              </svg>
-              <div class="ring-center">
-                <div class="ring-val" id="ringFatVal">--%</div>
-                <div class="ring-unit">体脂肪</div>
-              </div>
-            </div>
-            <div class="ring-wrap">
-              <svg class="ring-svg" width="90" height="90" viewBox="0 0 90 90">
-                <circle class="ring-track" cx="45" cy="45" r="36" stroke-width="9"/>
-                <circle class="ring-fill" id="ringMuscleFill" cx="45" cy="45" r="36"
-                  stroke="#30d080" stroke-width="9"
-                  stroke-dasharray="226" stroke-dashoffset="226"/>
-              </svg>
-              <div class="ring-center">
-                <div class="ring-val" id="ringMuscleVal">-- kg</div>
-                <div class="ring-unit">筋肉量</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+	    <div class="weight-workspace" style="margin-bottom:16px">
+	      <div class="section-card weight-record-view">
+	        <div class="section-card-header">
+	          <div>
+	            <h3><i class="fas fa-clipboard-list"></i> 記録詳細</h3>
+	          </div>
+	          <div class="filter-row">
+	            <button type="button" class="btn btn-sm btn-primary" onclick="openNewWeightComposer()"><i class="fas fa-plus"></i> 新規記録</button>
+	            <button type="button" class="btn btn-sm btn-secondary" onclick="editSelectedWeightLog()"><i class="fas fa-pen"></i> 編集</button>
+	            <button type="button" class="btn btn-sm btn-danger" onclick="deleteSelectedWeightLog()"><i class="fas fa-trash"></i> 削除</button>
+	          </div>
+	        </div>
+	        <div id="weightSelectedEmpty" class="empty-state">まだ体重記録がありません。必要なら新規記録から追加してください。</div>
+	        <div id="weightSelectedContent" style="display:none">
+	          <div class="weight-record-hero">
+	            <div>
+	              <div class="weight-record-date" id="weightSelectedDate">--</div>
+	              <div class="weight-record-value" id="weightSelectedValue">-- kg</div>
+	              <div class="weight-record-meta" id="weightSelectedMeta">--</div>
+	            </div>
+	            <div class="weight-record-note-chip" id="weightSelectedSlot">--</div>
+	          </div>
+	          <div class="stats-grid">
+	            <div class="stat-card">
+	              <div class="stat-label">目標体重</div>
+	              <div class="stat-val" id="target-weight-display">-- kg</div>
+	            </div>
+	            <div class="stat-card">
+	              <div class="stat-label">残り減量</div>
+	              <div class="stat-val" id="weight-remain">-- kg</div>
+	            </div>
+	            <div class="stat-card">
+	              <div class="stat-label">体脂肪率</div>
+	              <div class="stat-val" id="latest-fat">-- %</div>
+	            </div>
+	            <div class="stat-card">
+	              <div class="stat-label">BMI</div>
+	              <div class="stat-val" id="bmi-display">--</div>
+	              <div id="bmi-badge-display"></div>
+	            </div>
+	            <div class="stat-card">
+	              <div class="stat-label">筋肉量</div>
+	              <div class="stat-val" id="ringMuscleVal">-- kg</div>
+	            </div>
+	          </div>
+	          <div class="progress-wrap mt-16">
+	            <div class="progress-bar-row">
+	              <span>減量達成度</span>
+	              <span id="weight-progress-pct">0%</span>
+	            </div>
+	            <div class="progress-track">
+	              <div class="progress-fill pf-red" id="weightProgressFill" style="width:0%"></div>
+	            </div>
+	          </div>
+	          <div class="settings-note" id="weightSelectedNote">メモはありません。</div>
+	          <div class="form-group mt-16">
+	            <div class="media-upload-head">
+	              <label class="form-label">記録写真</label>
+	              <span class="table-subnote" id="weightGalleryHint">この記録の写真はありません。</span>
+	            </div>
+	            <div id="weightPhotoGallery" class="media-thumb-grid"></div>
+	          </div>
+	        </div>
+	      </div>
+	
+	      <div class="form-card" id="weightComposerCard" style="display:none">
+	        <h3 class="form-title" id="weightComposerTitle"><i class="fas fa-plus-circle"></i> 体重を記録</h3>
+	        <div id="weightEditBanner" class="weight-edit-banner" style="display:none">
+	          <span><i class="fas fa-pen"></i> この行を編集中です。保存で反映されます。</span>
+	          <button type="button" class="btn btn-sm btn-secondary" onclick="closeWeightComposer()">キャンセル</button>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label class="form-label">日付</label>
+	            <input type="date" id="w-date" class="input-field">
+	          </div>
+	          <div class="form-group">
+	            <label class="form-label">記録区分</label>
+	            <select id="w-slot" class="input-field">
+	              <option value="morning">朝</option>
+	              <option value="evening">夜</option>
+	            </select>
+	          </div>
+	        </div>
+	        <div class="form-row three-col">
+	          <div class="form-group">
+	            <label class="form-label">身長 (cm)</label>
+	            <input type="number" id="w-height" class="input-field" placeholder="170" value="170">
+	          </div>
+	          <div class="form-group">
+	            <label class="form-label">体重 (kg)</label>
+	            <input type="number" id="w-weight" class="input-field" placeholder="65.5" step="0.1">
+	          </div>
+	          <div class="form-group">
+	            <label class="form-label">体脂肪率(%)</label>
+	            <input type="number" id="w-fat" class="input-field" placeholder="12.5" step="0.1">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label class="form-label">筋肉量(kg)</label>
+	            <input type="number" id="w-muscle" class="input-field" placeholder="55.0" step="0.1">
+	          </div>
+	          <div class="form-group">
+	            <label class="form-label">目標体重 (kg)</label>
+	            <input type="number" id="w-target" class="input-field" placeholder="63.5" step="0.1">
+	          </div>
+	        </div>
+	        <div class="form-group">
+	          <label class="form-label">減量時体調・コンディション</label>
+	          <input type="text" id="w-note" class="input-field" placeholder="減量調整・脚の重さなど...">
+	        </div>
+	        <div class="form-group">
+	          <div class="media-upload-head">
+	            <label class="form-label">追加する写真</label>
+	            <span class="table-subnote" id="weightPhotoCount">0/3</span>
+	          </div>
+	          <label class="media-upload-drop" for="weightPhotoInput">
+	            <input type="file" id="weightPhotoInput" accept="image/*" multiple hidden onchange="handleWeightPhotoInput(event)">
+	            <i class="fas fa-camera"></i>
+	            <span>写真を追加</span>
+	            <small id="weightPhotoHint">写真アップロードは Supabase ログイン時のみ利用できます。</small>
+	          </label>
+	          <div id="weightPhotoPending" class="media-chip-row"></div>
+	        </div>
+	        <div class="form-row">
+	          <button type="button" id="weightSaveBtn" class="btn btn-primary btn-full" onclick="saveWeight()">
+	            <i class="fas fa-save"></i> 体重を保存
+	          </button>
+	          <button type="button" class="btn btn-ghost btn-full" onclick="closeWeightComposer()">
+	            <i class="fas fa-xmark"></i> 閉じる
+	          </button>
+	        </div>
+	        <div id="bmiPreview" style="margin-top:14px;display:none">
+	          <div style="background:var(--bg-input);border-radius:var(--rs);padding:12px;text-align:center;border:1px solid var(--b1)">
+	            <div style="font-size:11px;color:var(--tx-3);margin-bottom:4px">BMI プレビュー</div>
+	            <div style="font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:var(--tx-1)" id="bmiPreviewVal">--</div>
+	            <div id="bmiPreviewBadge"></div>
+	          </div>
+	        </div>
+	      </div>
+	    </div>
 
     <!-- Weight Chart -->
     <div class="chart-card mt-16">
@@ -559,25 +553,14 @@
     <!-- Weight Table -->
     <div class="section-card mt-16">
       <div class="section-card-header">
-        <div>
-          <h3><i class="fas fa-list"></i> 記録一覧</h3>
-          <div class="section-card-subtitle">朝・夜の記録から1件選んで編集または削除できます</div>
-        </div>
-        <div class="filter-row">
-          <select id="weightRecordSelect" class="input-field input-sm" onchange="handleWeightRecordSelection(this.value)">
-            <option value="">記録を選択</option>
-          </select>
-          <button type="button" class="btn btn-sm btn-secondary" onclick="editSelectedWeightLog()"><i class="fas fa-pen"></i> 編集</button>
-          <button type="button" class="btn btn-sm btn-danger" onclick="deleteSelectedWeightLog()"><i class="fas fa-trash"></i> 削除</button>
-        </div>
+        <h3><i class="fas fa-list"></i> 記録一覧</h3>
       </div>
       <div class="table-wrap">
-        <table class="data-table">
+        <table class="data-table weight-data-table">
           <thead><tr>
-            <th>日付</th><th>区分</th><th>体重</th><th>BMI</th><th>体脂肪率</th>
-            <th>筋肉量</th><th>目標体重</th><th>メモ</th><th>操作</th>
+            <th>日付</th><th>区分</th><th>体重</th><th>BMI</th><th>体脂肪率</th><th>メモ</th>
           </tr></thead>
-          <tbody id="weightTableBody"><tr><td colspan="9" class="empty-cell">データなし</td></tr></tbody>
+          <tbody id="weightTableBody"><tr><td colspan="6" class="empty-cell">データなし</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -1108,9 +1091,13 @@
 
     <div class="fight-section-panel active" id="fightSectionPanelNext">
     <div class="two-col" style="margin-bottom:16px">
-      <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-plus-circle"></i> 試合目標を登録</h3>
-        <div class="form-row">
+	      <div class="form-card">
+	        <div class="collapsible-head form-title-row">
+	          <h3 class="form-title"><i class="fas fa-plus-circle"></i> 試合目標を登録</h3>
+	          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('fightGoalFormBody', this)">折りたたむ</button>
+	        </div>
+	        <div id="fightGoalFormBody">
+	        <div class="form-row">
           <div class="form-group">
             <label class="form-label">対戦相手プロフィール</label>
             <select id="f-opponent-id" class="input-field" onchange="handleFightOpponentSelection(this.value)">
@@ -1168,9 +1155,10 @@
           <label class="form-label">備考メモ・目標</label>
           <textarea id="f-note" class="input-field" rows="3" placeholder="備考・目標スタイルなど..."></textarea>
         </div>
-        <button class="btn btn-primary btn-full" onclick="saveFightGoal()">
-          <i class="fas fa-save"></i> 試合目標を保存       </button>
-      </div>
+	        <button class="btn btn-primary btn-full" onclick="saveFightGoal()">
+	          <i class="fas fa-save"></i> 試合目標を保存       </button>
+	        </div>
+	      </div>
 
       <div class="fight-countdown-panel">
         <div class="countdown-display">
@@ -1234,18 +1222,19 @@
     </div>
 
     <!-- Fight list -->
-    <div class="section-card mt-16">
-      <div class="section-card-header">
-        <h3><i class="fas fa-clipboard-list"></i> 減量食事プラン</h3>
-        <div class="cut-plan-header-actions">
-          <span id="cutPlanSummary" style="font-size:11px;color:var(--tx-3)"></span>
-          <div class="cut-plan-tabs" role="tablist" aria-label="減量食事プランの表示切替">
+	    <div class="section-card mt-16">
+	      <div class="section-card-header">
+	        <h3><i class="fas fa-clipboard-list"></i> 減量食事プラン</h3>
+	        <div class="cut-plan-header-actions">
+	          <span id="cutPlanSummary" style="font-size:11px;color:var(--tx-3)"></span>
+	          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('cutPlanSectionBody', this)">折りたたむ</button>
+	          <div class="cut-plan-tabs" role="tablist" aria-label="減量食事プランの表示切替">
             <button class="cut-plan-tab active" id="cutPlanTabCard" type="button" onclick="switchCutPlanTab('card')">今日/次戦</button>
             <button class="cut-plan-tab" id="cutPlanTabTable" type="button" onclick="switchCutPlanTab('table')">全期間一覧</button>
           </div>
         </div>
       </div>
-      <div class="cut-plan-layout">
+	      <div class="cut-plan-layout" id="cutPlanSectionBody">
         <div class="cut-plan-panel active" id="cutPlanPanelCard">
           <div class="cut-plan-card" id="todayCutPlanCard">
             <div class="empty-state">プランを読み込み中...</div>
@@ -1266,12 +1255,15 @@
       </div>
     </div>
 
-    <div class="section-card mt-16">
-      <div class="section-card-header">
-        <h3><i class="fas fa-crosshairs"></i> 計画 vs 実績</h3>
-        <span class="trend-badge" id="planCompareBadge">比較待ち</span>
-      </div>
-      <div class="plan-compare-layout">
+	    <div class="section-card mt-16">
+	      <div class="section-card-header">
+	        <h3><i class="fas fa-crosshairs"></i> 計画 vs 実績</h3>
+	        <div class="filter-row">
+	          <span class="trend-badge" id="planCompareBadge">比較待ち</span>
+	          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('planCompareBody', this)">折りたたむ</button>
+	        </div>
+	      </div>
+	      <div class="plan-compare-layout" id="planCompareBody">
         <div class="plan-compare-grid">
           <div class="plan-compare-card">
             <span>対戦プラン日</span>
@@ -1313,28 +1305,60 @@
       </div>
     </div>
 
-    <div class="section-card">
-      <div class="section-card-header"><h3><i class="fas fa-list"></i> 試合リスト</h3></div>
-      <div class="fight-cards-grid" id="fightCardsList">
+	    <div class="section-card">
+	      <div class="section-card-header">
+	        <h3><i class="fas fa-list"></i> 試合リスト</h3>
+	        <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('fightCardsList', this)">折りたたむ</button>
+	      </div>
+	      <div class="fight-cards-grid" id="fightCardsList">
         <div class="empty-state">試合カードが登録されていません</div>
       </div>
     </div>
     </div>
 
 	    <div class="fight-section-panel" id="fightSectionPanelOpponents">
-	    <div class="mt-16">
-	      <div class="form-card">
-	        <h3 class="form-title"><i class="fas fa-user-shield"></i> 対戦相手プロフィール</h3>
-	        <div class="opponent-editor-shell">
+	    <div class="mt-16 opponent-workspace" id="opponentWorkspace">
+	      <div class="section-card opponent-record-view">
+	        <div class="section-card-header">
+	          <h3><i class="fas fa-user-shield"></i> 次の相手</h3>
+	          <div class="filter-row">
+	            <button class="btn btn-sm btn-primary" type="button" onclick="openNewOpponentComposer()"><i class="fas fa-plus"></i> 新規登録</button>
+	            <button class="btn btn-sm btn-secondary" type="button" onclick="editSelectedOpponentProfile()"><i class="fas fa-pen"></i> 編集</button>
+	            <button class="btn btn-sm btn-danger" type="button" onclick="deleteSelectedOpponentProfile()"><i class="fas fa-trash"></i> 削除</button>
+	          </div>
+	        </div>
+	        <div id="opponentSelectedEmpty" class="empty-state">対戦相手プロフィールがまだありません。</div>
+	        <div id="opponentSelectedContent" style="display:none">
+	          <div class="opponent-profile-view">
+	            <div class="opponent-profile-photo-shell">
+	              <div class="opponent-profile-photo" id="selectedOpponentPhoto">
+	                <div class="opponent-photo-fallback"><i class="fas fa-user"></i></div>
+	              </div>
+	            </div>
+	            <div class="opponent-profile-main">
+	              <div class="opponent-profile-head">
+	                <div>
+	                  <div class="weight-record-date" id="selectedOpponentSubline">--</div>
+	                  <div class="weight-record-value opponent-profile-name" id="selectedOpponentName">--</div>
+	                  <div class="weight-record-meta" id="selectedOpponentMeta">--</div>
+	                </div>
+	                <div class="weight-record-note-chip" id="selectedOpponentStance">--</div>
+	              </div>
+	              <div class="opponent-profile-stats" id="selectedOpponentStats"></div>
+	              <div class="settings-note" id="selectedOpponentNotes">メモはありません。</div>
+	            </div>
+	          </div>
+	        </div>
+	      </div>
+
+	      <div class="form-card" id="opponentComposerCard" style="display:none">
+	        <div class="collapsible-head form-title-row">
+	          <h3 class="form-title"><i class="fas fa-user-shield"></i> 対戦相手プロフィールを編集</h3>
+	          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('opponentComposerBody', this)">折りたたむ</button>
+	        </div>
+	        <div class="opponent-editor-shell" id="opponentComposerBody">
 	          <div class="opponent-editor-main">
 	            <div class="opponent-editor-section">
-	              <div class="opponent-editor-headline">
-	                <div>
-	                  <div class="opponent-editor-kicker">基本プロフィール</div>
-	                  <h4>次戦登録に使うコア情報</h4>
-	                </div>
-	                <p>名前、構え、戦績を先に揃えると、試合目標や過去試合で再利用しやすくなります。</p>
-	              </div>
 	              <div class="form-row">
 	                <div class="form-group">
 	                  <label class="form-label">名前</label>
@@ -1392,14 +1416,6 @@
 	                  <input type="number" id="o-draws" class="input-field" placeholder="0" min="0" max="300" step="1">
 	                </div>
 	              </div>
-	            </div>
-	            <div class="opponent-editor-section">
-	              <div class="opponent-editor-headline compact">
-	                <div>
-	                  <div class="opponent-editor-kicker">分析メモ</div>
-	                  <h4>試合作戦に使う補足情報</h4>
-	                </div>
-	              </div>
 	              <div class="form-group">
 	                <label class="form-label">強み</label>
 	                <textarea id="o-strengths" class="input-field" rows="2" placeholder="前進圧、ボディ、ジャブなど"></textarea>
@@ -1430,23 +1446,14 @@
 	              </label>
 	              <div class="media-chip-row" id="opponentPhotoMeta"></div>
 	            </div>
-	            <div class="opponent-editor-panel opponent-editor-summary">
-	              <div class="opponent-editor-kicker">プロフィール準備</div>
-	              <h4>登録前に揃えると良い項目</h4>
-	              <ul class="opponent-checklist">
-	                <li>名前と構えを入れる</li>
-	                <li>戦績と KO 数を入力する</li>
-	                <li>写真か分析メモを最低 1 つ残す</li>
-	              </ul>
-	            </div>
 	            <div class="opponent-editor-panel opponent-editor-actions">
 	              <div class="settings-note opponent-form-mode-note" id="opponentFormModeNote">新規の対戦相手プロフィールを登録します。</div>
 	              <div class="opponent-action-stack">
 	                <button class="btn btn-primary btn-full" id="saveOpponentBtn" onclick="saveOpponentProfile()">
 	                  <i class="fas fa-save"></i> 対戦相手を保存
 	                </button>
-	                <button class="btn btn-secondary btn-full" id="cancelOpponentEditBtn" onclick="resetOpponentForm()" style="display:none">
-	                  <i class="fas fa-rotate-left"></i> 編集をやめる
+	                <button class="btn btn-secondary btn-full" id="cancelOpponentEditBtn" onclick="closeOpponentComposer()">
+	                  <i class="fas fa-xmark"></i> 閉じる
 	                </button>
 	              </div>
 	            </div>
@@ -1455,18 +1462,25 @@
 	      </div>
 	    </div>
 
-    <div class="section-card mt-16">
-      <div class="section-card-header"><h3><i class="fas fa-address-card"></i> 対戦相手一覧</h3></div>
-      <div class="fight-cards-grid" id="opponentCardsList">
+	    <div class="section-card mt-16">
+	      <div class="section-card-header">
+	        <h3><i class="fas fa-address-card"></i> 対戦相手一覧</h3>
+	        <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('opponentCardsList', this)">折りたたむ</button>
+	      </div>
+	      <div class="fight-cards-grid" id="opponentCardsList">
         <div class="empty-state">対戦相手プロフィールがまだありません</div>
       </div>
     </div>
     </div>
 
     <div class="fight-section-panel" id="fightSectionPanelHistory">
-    <div class="form-card mt-16">
-      <h3 class="form-title"><i class="fas fa-medal"></i> 過去試合管理</h3>
-      <div class="form-row">
+	    <div class="form-card mt-16">
+	      <div class="collapsible-head form-title-row">
+	        <h3 class="form-title"><i class="fas fa-medal"></i> 過去試合管理</h3>
+	        <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('fightHistoryFormBody', this)">折りたたむ</button>
+	      </div>
+	      <div id="fightHistoryFormBody">
+	      <div class="form-row">
         <div class="form-group">
           <label class="form-label">試合日</label>
           <input type="date" id="fh-date" class="input-field">
@@ -1531,14 +1545,18 @@
         <label class="form-label">試合メモ</label>
         <textarea id="fh-memo" class="input-field" rows="3" placeholder="勝因、修正点、相手の癖など"></textarea>
       </div>
-      <button class="btn btn-primary btn-full" onclick="saveFightHistoryEntry()">
-        <i class="fas fa-save"></i> 過去試合を保存
-      </button>
-    </div>
+	      <button class="btn btn-primary btn-full" onclick="saveFightHistoryEntry()">
+	        <i class="fas fa-save"></i> 過去試合を保存
+	      </button>
+	      </div>
+	    </div>
 
-    <div class="section-card mt-16">
-      <div class="section-card-header"><h3><i class="fas fa-clock-rotate-left"></i> 過去試合一覧</h3></div>
-      <div class="fight-cards-grid" id="fightHistoryList">
+	    <div class="section-card mt-16">
+	      <div class="section-card-header">
+	        <h3><i class="fas fa-clock-rotate-left"></i> 過去試合一覧</h3>
+	        <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('fightHistoryList', this)">折りたたむ</button>
+	      </div>
+	      <div class="fight-cards-grid" id="fightHistoryList">
         <div class="empty-state">過去試合データがまだありません</div>
       </div>
     </div>

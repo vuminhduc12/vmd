@@ -12,6 +12,13 @@ function getActiveWeightPhotoRecordId() {
   return editingWeightId || selectedWeightRecordId || '';
 }
 
+function getSelectedWeightLog() {
+  if (selectedWeightRecordId) {
+    return weightLogs.find((row) => row.id === selectedWeightRecordId) || null;
+  }
+  return weightLogs.length ? weightLogs[weightLogs.length - 1] : null;
+}
+
 function getEditingWeightPhotos() {
   if (!editingWeightId) return [];
   return getWeightPhotosByLogId(editingWeightId);
@@ -19,14 +26,14 @@ function getEditingWeightPhotos() {
 
 async function renderWeightPhotoGallery(weightLogId = getActiveWeightPhotoRecordId()) {
   const gallery = document.getElementById('weightPhotoGallery');
-  const hint = document.getElementById('weightPhotoHint');
+  const hint = document.getElementById('weightGalleryHint');
   if (!gallery || !hint) return;
 
   if (!weightLogId) {
     gallery.innerHTML = '';
     hint.textContent = canUseCloudMedia()
-      ? '保存後にこの記録へ最大3枚まで写真を追加できます。'
-      : '写真アップロードは Supabase ログイン時のみ利用できます。';
+      ? 'この記録の写真はまだありません。'
+      : '写真はクラウドログイン時のみ表示できます。';
     return;
   }
 
@@ -192,12 +199,7 @@ async function saveWeight() {
       showToast('写真をアップロードしました', 'success');
     }
     selectedWeightRecordId = targetWeightLog?.id || targetId || selectedWeightRecordId;
-    if (editingWeightId) {
-      cancelEditWeight();
-    } else {
-      updateWeightEditUI();
-      renderPendingWeightPhotoPreview();
-    }
+    closeWeightComposer();
     renderWeightPage();
     renderDashboard();
     await renderWeightPhotoGallery(selectedWeightRecordId);
@@ -271,8 +273,20 @@ async function quickSaveWeight() {
 function updateWeightEditUI() {
   const banner = document.getElementById('weightEditBanner');
   const btn = document.getElementById('weightSaveBtn');
+  const card = document.getElementById('weightComposerCard');
+  const title = document.getElementById('weightComposerTitle');
+  const workspace = document.querySelector('.weight-workspace');
   const on = Boolean(editingWeightId);
+  if (card) card.style.display = isWeightComposerOpen ? 'block' : 'none';
+  if (workspace) {
+    workspace.classList.toggle('composer-closed', !isWeightComposerOpen);
+  }
   if (banner) banner.style.display = on ? 'flex' : 'none';
+  if (title) {
+    title.innerHTML = on
+      ? '<i class="fas fa-pen"></i> 体重記録を編集'
+      : '<i class="fas fa-plus-circle"></i> 新しく記録する';
+  }
   if (btn) {
     btn.innerHTML = on
       ? '<i class="fas fa-save"></i> 変更を保存'
@@ -280,8 +294,7 @@ function updateWeightEditUI() {
   }
 }
 
-function cancelEditWeight() {
-  editingWeightId = null;
+function resetWeightComposerForm() {
   const today = TODAY();
   const g = (id) => document.getElementById(id);
   if (g('w-date')) g('w-date').value = today;
@@ -293,15 +306,34 @@ function cancelEditWeight() {
   clearForm(['w-weight','w-fat','w-muscle','w-note']);
   if (g('w-target')) g('w-target').value = '';
   resetPendingWeightPhotos();
+  if (typeof updateWeightBmiPreview === 'function') updateWeightBmiPreview();
+}
+
+function closeWeightComposer() {
+  editingWeightId = null;
+  isWeightComposerOpen = false;
+  resetWeightComposerForm();
   updateWeightEditUI();
   void renderWeightPhotoGallery();
-  if (typeof updateWeightBmiPreview === 'function') updateWeightBmiPreview();
+}
+
+function cancelEditWeight() {
+  closeWeightComposer();
+}
+
+function openNewWeightComposer() {
+  editingWeightId = null;
+  isWeightComposerOpen = true;
+  resetWeightComposerForm();
+  updateWeightEditUI();
+  window.setTimeout(() => document.getElementById('w-weight')?.focus(), 80);
 }
 
 function startEditWeight(id) {
   const w = weightLogs.find(x => x.id === id);
   if (!w) return;
   editingWeightId = id;
+  isWeightComposerOpen = true;
   const d = w.date ? w.date.slice(0, 10) : TODAY();
   const g = (x) => document.getElementById(x);
   g('w-date').value = d;
@@ -349,6 +381,7 @@ async function clearWeightLogs() {
       await Promise.all(weightLogs.map(w => apiDelete('weight_logs', w.id)));
       weightLogs = [];
       editingWeightId = null;
+      isWeightComposerOpen = false;
       selectedWeightRecordId = '';
       updateWeightEditUI();
       showToast('全記録を削除しました', 'info');
@@ -360,12 +393,11 @@ async function clearWeightLogs() {
 
 function handleWeightRecordSelection(id) {
   selectedWeightRecordId = id || '';
-  const selectEl = document.getElementById('weightRecordSelect');
-  if (selectEl && selectEl.value !== selectedWeightRecordId) selectEl.value = selectedWeightRecordId;
   const rows = document.querySelectorAll('#weightTableBody tr[data-weight-id]');
   rows.forEach((row) => {
     row.classList.toggle('data-row-selected', row.dataset.weightId === selectedWeightRecordId);
   });
+  renderWeightPage();
   void renderWeightPhotoGallery(selectedWeightRecordId);
 }
 
@@ -387,71 +419,67 @@ function deleteSelectedWeightLog() {
 
 function renderWeightPage() {
   sortWeightLogsInPlace();
-  // Stats
-  const latest = weightLogs.length ? weightLogs[weightLogs.length-1] : null;
-  const latestHeight = latest?.height_cm || getLatestKnownHeightCm();
-  const bmi = latest ? calculateBMI(latest.weight, latestHeight) : null;
-  document.getElementById('latest-weight').textContent = latest ? `${latest.weight} kg` : '-- kg';
-  document.getElementById('latest-fat').textContent    = latest?.body_fat ? `${latest.body_fat} %` : '-- %';
-  document.getElementById('ringFatVal').textContent = latest?.body_fat ? `${latest.body_fat} %` : '--%';
-  document.getElementById('ringMuscleVal').textContent = latest?.muscle_mass ? `${latest.muscle_mass} kg` : '-- kg';
-  document.getElementById('bmi-display').textContent = bmi ? bmi.toFixed(1) : '--';
-  document.getElementById('bmi-badge-display').innerHTML = getBmiBadgeHtml(bmi);
-
-  const fatPct = latest?.body_fat ? Math.min(100, latest.body_fat) : 0;
-  const musclePct = latest?.muscle_mass && latest?.weight ? Math.min(100, Math.round((latest.muscle_mass / latest.weight) * 100)) : 0;
-  document.getElementById('ringFatFill').style.strokeDashoffset = `${226 - (226 * fatPct / 100)}`;
-  document.getElementById('ringMuscleFill').style.strokeDashoffset = `${226 - (226 * musclePct / 100)}`;
-
-  const lastTarget = [...weightLogs].reverse().find(w => w.target_weight);
-  const targetW = lastTarget?.target_weight;
+  if (!selectedWeightRecordId && weightLogs.length) {
+    selectedWeightRecordId = weightLogs[weightLogs.length - 1].id;
+  }
+  const latest = weightLogs.length ? weightLogs[weightLogs.length - 1] : null;
+  const selected = getSelectedWeightLog();
+  const active = selected || latest;
+  const activeHeight = active?.height_cm || getLatestKnownHeightCm();
+  const activeBmi = active ? calculateBMI(active.weight, activeHeight) : null;
+  const targetW = active?.target_weight ?? null;
+  document.getElementById('latest-fat').textContent = active?.body_fat ? `${active.body_fat} %` : '-- %';
+  document.getElementById('ringMuscleVal').textContent = active?.muscle_mass ? `${active.muscle_mass} kg` : '-- kg';
+  document.getElementById('bmi-display').textContent = activeBmi ? activeBmi.toFixed(1) : '--';
+  document.getElementById('bmi-badge-display').innerHTML = getBmiBadgeHtml(activeBmi);
   document.getElementById('target-weight-display').textContent = targetW ? `${targetW} kg` : '-- kg';
 
-  if (latest && targetW) {
-    const remain = (latest.weight - targetW).toFixed(1);
+  if (active && targetW) {
+    const remain = (active.weight - targetW).toFixed(1);
     document.getElementById('weight-remain').textContent = `${remain > 0 ? '-' : '+'}${Math.abs(remain)} kg`;
 
-    // Progress: assume starting from heaviest logged weight
     const maxW = Math.max(...weightLogs.map(w => w.weight));
-    const pct = maxW > targetW ? Math.min(100, Math.round(((maxW - latest.weight) / (maxW - targetW)) * 100)) : 100;
+    const pct = maxW > targetW ? Math.min(100, Math.round(((maxW - active.weight) / (maxW - targetW)) * 100)) : 100;
     document.getElementById('weight-progress-pct').textContent = `${pct}%`;
     document.getElementById('weightProgressFill').style.width = `${pct}%`;
+  } else {
+    document.getElementById('weight-remain').textContent = '-- kg';
+    document.getElementById('weight-progress-pct').textContent = '0%';
+    document.getElementById('weightProgressFill').style.width = '0%';
   }
 
-  // Table
-  const selectEl = document.getElementById('weightRecordSelect');
-  if (selectEl) {
-    const options = ['<option value="">記録を選択</option>'].concat(
-      [...weightLogs].reverse().map((w) => `<option value="${w.id}">${formatDate(w.date)} / ${getWeightSlotLabel(w.slot)} / ${w.weight}kg</option>`)
-    );
-    selectEl.innerHTML = options.join('');
-    if (selectedWeightRecordId && !weightLogs.some((w) => w.id === selectedWeightRecordId)) {
-      selectedWeightRecordId = '';
-    }
-    selectEl.value = selectedWeightRecordId;
+  const selectedEmpty = document.getElementById('weightSelectedEmpty');
+  const selectedContent = document.getElementById('weightSelectedContent');
+  if (selected) {
+    if (selectedEmpty) selectedEmpty.style.display = 'none';
+    if (selectedContent) selectedContent.style.display = 'block';
+    const selectedBmi = calculateBMI(selected.weight, selected.height_cm || activeHeight);
+    setText('weightSelectedDate', formatDateJP(selected.date));
+    setText('weightSelectedValue', `${selected.weight} kg`);
+    setText('weightSelectedMeta', `BMI ${selectedBmi ? selectedBmi.toFixed(1) : '--'} ・ ${selected.body_fat ? `${selected.body_fat}%` : '体脂肪未入力'}`);
+    setText('weightSelectedSlot', getWeightSlotLabel(selected.slot));
+    setText('weightSelectedNote', selected.note || 'メモはありません。');
+  } else {
+    if (selectedEmpty) selectedEmpty.style.display = 'block';
+    if (selectedContent) selectedContent.style.display = 'none';
   }
+
   const tbody = document.getElementById('weightTableBody');
   const photoCountMap = new Map();
   weightLogPhotos.forEach((photo) => {
     photoCountMap.set(photo.weight_log_id, (photoCountMap.get(photo.weight_log_id) || 0) + 1);
   });
   if (!weightLogs.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty-cell">データなし</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">データなし</td></tr>';
   } else {
     tbody.innerHTML = [...weightLogs].reverse().map(w => `
       <tr class="data-row-selectable ${selectedWeightRecordId === w.id ? 'data-row-selected' : ''}" data-weight-id="${w.id}" onclick="handleWeightRecordSelection('${w.id}')">
         <td>${formatDate(w.date)}</td>
         <td><span class="badge">${getWeightSlotLabel(w.slot)}</span></td>
         <td><strong>${w.weight} kg</strong></td>
-        <td>${calculateBMI(w.weight, w.height_cm || latestHeight)?.toFixed(1) || '--'}</td>
+        <td>${calculateBMI(w.weight, w.height_cm || activeHeight)?.toFixed(1) || '--'}</td>
         <td>${w.body_fat ? w.body_fat + ' %' : '--'}</td>
-        <td>${w.muscle_mass ? w.muscle_mass + ' kg' : '--'}</td>
-        <td>${w.target_weight ? w.target_weight + ' kg' : '--'}</td>
         <td>${w.note || '--'}${photoCountMap.get(w.id) ? `<div class="table-subnote">📷 ${photoCountMap.get(w.id)}枚</div>` : ''}</td>
-        <td style="white-space:nowrap">
-          <button type="button" class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); handleWeightRecordSelection('${w.id}'); startEditWeight('${w.id}')" title="編集"><i class="fas fa-pen"></i></button>
-          <button type="button" class="btn btn-sm btn-danger" onclick="event.stopPropagation(); handleWeightRecordSelection('${w.id}'); deleteWeightLog('${w.id}')" title="削除"><i class="fas fa-trash"></i></button>
-        </td>
       </tr>
     `).join('');
   }
@@ -576,4 +604,3 @@ function renderWeightDetailChart(days) {
     },
   });
 }
-

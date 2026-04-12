@@ -283,7 +283,10 @@ let editingTrainingId = null;
 let editingOpponentId = null;
 let editingOpponentPhotoStoragePath = '';
 let editingOpponentPhotoUrl = '';
+let isWeightComposerOpen = false;
+let isOpponentComposerOpen = false;
 let selectedWeightRecordId = '';
+let selectedOpponentId = '';
 let pendingWeightPhotoFiles = [];
 let pendingOpponentPhotoFile = null;
 let pendingOpponentPhotoPreviewUrl = '';
@@ -542,11 +545,11 @@ function openDashboardEditor(mode) {
   if (mode === 'weight') {
     const latest = getLatestWeightLog();
     if (latest?.id) {
-      startEditWeight(latest.id);
+      switchPage('weight');
+      handleWeightRecordSelection(latest.id);
       return;
     }
     switchPage('weight');
-    window.setTimeout(() => document.getElementById('w-weight')?.focus(), 80);
     return;
   }
 
