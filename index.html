@@ -1345,6 +1345,7 @@
             名前・リングネーム・構え・戦績・写真を先に揃えると、次戦登録や過去試合管理から再利用しやすくなります。
           </div>
         </div>
+        <div class="settings-note" id="opponentFormModeNote">新規の対戦相手プロフィールを登録します。</div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">名前</label>
@@ -1414,9 +1415,14 @@
           <label class="form-label">分析メモ</label>
           <textarea id="o-notes" class="input-field" rows="2" placeholder="過去映像や警戒点など"></textarea>
         </div>
-        <button class="btn btn-primary btn-full" onclick="saveOpponentProfile()">
-          <i class="fas fa-save"></i> 対戦相手を保存
-        </button>
+        <div class="form-row">
+          <button class="btn btn-primary btn-full" id="saveOpponentBtn" onclick="saveOpponentProfile()">
+            <i class="fas fa-save"></i> 対戦相手を保存
+          </button>
+          <button class="btn btn-secondary btn-full" id="cancelOpponentEditBtn" onclick="resetOpponentForm()" style="display:none">
+            <i class="fas fa-rotate-left"></i> 編集をやめる
+          </button>
+        </div>
       </div>
     </div>
 

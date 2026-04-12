@@ -12,7 +12,35 @@ function resetPendingOpponentPhoto() {
   renderOpponentPhotoPreview();
 }
 
-function renderOpponentPhotoPreview(photoUrl = pendingOpponentPhotoPreviewUrl) {
+function getEditingOpponentRecord() {
+  return editingOpponentId ? opponents.find((row) => row.id === editingOpponentId) || null : null;
+}
+
+function getOpponentPhotoPreviewUrl() {
+  return pendingOpponentPhotoPreviewUrl || editingOpponentPhotoUrl || '';
+}
+
+function updateOpponentFormModeUi() {
+  const note = document.getElementById('opponentFormModeNote');
+  const saveBtn = document.getElementById('saveOpponentBtn');
+  const cancelBtn = document.getElementById('cancelOpponentEditBtn');
+  const editingRow = getEditingOpponentRecord();
+  if (note) {
+    note.textContent = editingRow
+      ? `「${editingRow.name}」を編集中です。保存するとプロフィールと写真を更新します。`
+      : '新規の対戦相手プロフィールを登録します。';
+  }
+  if (saveBtn) {
+    saveBtn.innerHTML = editingRow
+      ? '<i class="fas fa-save"></i> 対戦相手を更新'
+      : '<i class="fas fa-save"></i> 対戦相手を保存';
+  }
+  if (cancelBtn) {
+    cancelBtn.style.display = editingRow ? 'inline-flex' : 'none';
+  }
+}
+
+function renderOpponentPhotoPreview(photoUrl = getOpponentPhotoPreviewUrl()) {
   const preview = document.getElementById('opponentPhotoPreview');
   const meta = document.getElementById('opponentPhotoMeta');
   if (!preview || !meta) return;
@@ -21,11 +49,20 @@ function renderOpponentPhotoPreview(photoUrl = pendingOpponentPhotoPreviewUrl) {
     ? `<img src="${escapeHtml(photoUrl)}" alt="対戦相手プロフィール写真">`
     : '<div class="opponent-photo-fallback"><i class="fas fa-user"></i></div>';
 
-  meta.innerHTML = pendingOpponentPhotoFile
-    ? `
+  if (pendingOpponentPhotoFile) {
+    meta.innerHTML = `
       <div class="media-chip">
         <span><i class="fas fa-image"></i> ${escapeHtml(pendingOpponentPhotoFile.name)}</span>
         <button type="button" class="btn-icon" onclick="resetPendingOpponentPhoto()" aria-label="削除"><i class="fas fa-times"></i></button>
+      </div>
+    `;
+    return;
+  }
+
+  meta.innerHTML = editingOpponentPhotoStoragePath
+    ? `
+      <div class="media-chip">
+        <span><i class="fas fa-cloud"></i> 保存済みプロフィール写真</span>
       </div>
     `
     : '';
@@ -48,6 +85,55 @@ function handleOpponentPhotoInput(event) {
   pendingOpponentPhotoFile = file;
   pendingOpponentPhotoPreviewUrl = URL.createObjectURL(file);
   renderOpponentPhotoPreview();
+}
+
+async function populateOpponentFormForEdit(id) {
+  const row = opponents.find((item) => item.id === id);
+  if (!row) {
+    showToast('対戦相手データが見つかりません', 'error');
+    return;
+  }
+  editingOpponentId = row.id;
+  editingOpponentPhotoStoragePath = row.photo_storage_path || '';
+  editingOpponentPhotoUrl = row.photo_storage_path ? await getOpponentPhotoSignedUrl(row.photo_storage_path) : '';
+
+  const fieldMap = {
+    'o-name': row.name || '',
+    'o-ring-name': row.ring_name || '',
+    'o-gym': row.gym || '',
+    'o-nationality': row.nationality || '',
+    'o-height': row.height_cm ?? '',
+    'o-reach': row.reach_cm ?? '',
+    'o-wins': row.wins ?? 0,
+    'o-losses': row.losses ?? 0,
+    'o-draws': row.draws ?? 0,
+    'o-kos': row.kos ?? 0,
+    'o-strengths': row.strengths || '',
+    'o-weaknesses': row.weaknesses || '',
+    'o-notes': row.notes || '',
+  };
+  Object.entries(fieldMap).forEach(([fieldId, value]) => {
+    const el = document.getElementById(fieldId);
+    if (el) el.value = value;
+  });
+  const stance = document.getElementById('o-stance');
+  if (stance) stance.value = row.stance || OPPONENT_STANCES[0];
+
+  resetPendingOpponentPhoto();
+  updateOpponentFormModeUi();
+  switchFightSectionTab('opponents', true);
+  document.getElementById('o-name')?.focus();
+}
+
+function resetOpponentForm() {
+  clearForm(['o-name', 'o-ring-name', 'o-gym', 'o-nationality', 'o-height', 'o-reach', 'o-wins', 'o-losses', 'o-draws', 'o-kos', 'o-strengths', 'o-weaknesses', 'o-notes']);
+  const stance = document.getElementById('o-stance');
+  if (stance) stance.value = OPPONENT_STANCES[0];
+  editingOpponentId = null;
+  editingOpponentPhotoStoragePath = '';
+  editingOpponentPhotoUrl = '';
+  resetPendingOpponentPhoto();
+  updateOpponentFormModeUi();
 }
 
 function syncFightOpponentSelect(selectedId = '') {
@@ -118,10 +204,17 @@ async function saveOpponentProfile() {
     notes: document.getElementById('o-notes')?.value.trim() || '',
   };
   try {
-    let record = await apiPost('opponents', payload);
+    const wasEditing = !!editingOpponentId;
+    const previousPhotoPath = editingOpponentPhotoStoragePath;
+    let record = wasEditing
+      ? await apiPut('opponents', editingOpponentId, payload)
+      : await apiPost('opponents', payload);
     if (pendingOpponentPhotoFile) {
       try {
         const photoMeta = await uploadOpponentPhotoFile(pendingOpponentPhotoFile, record.id);
+        if (wasEditing && previousPhotoPath && previousPhotoPath !== photoMeta.storage_path) {
+          await deleteOpponentPhotoStorage(previousPhotoPath);
+        }
         record = await apiPut('opponents', record.id, {
           photo_storage_path: photoMeta.storage_path,
           photo_file_name: photoMeta.file_name,
@@ -133,14 +226,17 @@ async function saveOpponentProfile() {
         showToast('プロフィールは保存しましたが、写真の保存に失敗しました', 'info');
       }
     }
-    opponents.push(record);
+    const existingIdx = opponents.findIndex((row) => row.id === record.id);
+    if (existingIdx === -1) opponents.push(record);
+    else opponents[existingIdx] = record;
     opponents.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
     syncFightOpponentSelect(record.id);
-    clearForm(['o-name', 'o-ring-name', 'o-gym', 'o-nationality', 'o-height', 'o-reach', 'o-wins', 'o-losses', 'o-draws', 'o-kos', 'o-strengths', 'o-weaknesses', 'o-notes']);
-    const stance = document.getElementById('o-stance');
-    if (stance) stance.value = OPPONENT_STANCES[0];
+    editingOpponentId = record.id;
+    editingOpponentPhotoStoragePath = record.photo_storage_path || '';
+    editingOpponentPhotoUrl = record.photo_storage_path ? await getOpponentPhotoSignedUrl(record.photo_storage_path) : '';
     resetPendingOpponentPhoto();
-    showToast('対戦相手プロフィールを保存しました', 'success');
+    updateOpponentFormModeUi();
+    showToast(wasEditing ? '対戦相手プロフィールを更新しました' : '対戦相手プロフィールを保存しました', 'success');
     await renderFightPage();
     switchFightSectionTab('opponents');
   } catch (err) {
@@ -170,6 +266,13 @@ async function deleteOpponentProfile(id) {
       }
       await apiDelete('opponents', id);
       opponents = opponents.filter((row) => row.id !== id);
+      if (editingOpponentId === id) {
+        editingOpponentId = null;
+        editingOpponentPhotoStoragePath = '';
+        editingOpponentPhotoUrl = '';
+        resetPendingOpponentPhoto();
+        updateOpponentFormModeUi();
+      }
       syncFightOpponentSelect();
       await renderFightPage();
       showToast('対戦相手を削除しました', 'info');
@@ -294,6 +397,7 @@ async function deleteFightGoal(id) {
 async function renderFightPage() {
   switchFightSectionTab(currentFightSectionTab, false);
   syncFightOpponentSelect(document.getElementById('f-opponent-id')?.value || '');
+  updateOpponentFormModeUi();
   renderOpponentPhotoPreview();
   const activeFights = fightGoals.filter(f => f.status === '準備中' && f.fight_date);
   const nextFight = activeFights.sort((a,b) => new Date(a.fight_date)-new Date(b.fight_date))[0];
@@ -432,7 +536,10 @@ async function renderFightPage() {
               <strong>${escapeHtml(op.name)}</strong>
               <div class="table-subnote">${escapeHtml(op.ring_name || 'リングネーム未設定')}</div>
             </div>
-            <button type="button" class="btn btn-sm btn-danger" onclick="deleteOpponentProfile('${op.id}')"><i class="fas fa-trash"></i></button>
+            <div class="opponent-chip-row">
+              <button type="button" class="btn btn-sm btn-secondary" onclick="populateOpponentFormForEdit('${op.id}')"><i class="fas fa-pen"></i> 編集</button>
+              <button type="button" class="btn btn-sm btn-danger" onclick="deleteOpponentProfile('${op.id}')"><i class="fas fa-trash"></i></button>
+            </div>
           </div>
           <div class="opponent-card-body">
             <div class="opponent-card-photo">
@@ -491,6 +598,11 @@ async function renderFightPage() {
       `).join('');
     }
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.populateOpponentFormForEdit = populateOpponentFormForEdit;
+  window.resetOpponentForm = resetOpponentForm;
 }
 
 function switchFightSectionTab(tabName, shouldScroll = false) {
