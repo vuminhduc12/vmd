@@ -16,6 +16,8 @@ const SUPABASE_LAST_SEEN_SYNC_KEY = 'boxerpro.supabase.lastSeenSyncAt';
 const SUPABASE_LAST_SEEN_INTERVAL_MS = 30 * 60 * 1000;
 const SUPABASE_AUTH_TIMEOUT_MS = 8000;
 let supabaseLastSeenBindingDone = false;
+let supabaseSessionRequest = null;
+let supabaseSessionSnapshot = null;
 
 function withTimeout(promise, ms, label = 'operation') {
   return Promise.race([
@@ -27,16 +29,24 @@ function withTimeout(promise, ms, label = 'operation') {
 }
 
 async function getSupabaseSessionSafe(sb) {
+  if (supabaseSessionRequest) return supabaseSessionRequest;
+  supabaseSessionRequest = (async () => {
   try {
     const result = await withTimeout(sb.auth.getSession(), SUPABASE_AUTH_TIMEOUT_MS, 'getSession');
-    return result?.data?.session || null;
+    supabaseSessionSnapshot = result?.data?.session || null;
+    return supabaseSessionSnapshot;
   } catch (error) {
     console.error('BOXER PRO: Supabase session restore failed', error);
-    return null;
+    return supabaseSessionSnapshot;
+  } finally {
+    supabaseSessionRequest = null;
   }
+  })();
+  return supabaseSessionRequest;
 }
 
 async function getSupabaseUserSafe(sb) {
+  if (supabaseSessionSnapshot?.user) return supabaseSessionSnapshot.user;
   try {
     const result = await withTimeout(sb.auth.getUser(), SUPABASE_AUTH_TIMEOUT_MS, 'getUser');
     return result?.data?.user || null;
@@ -279,6 +289,7 @@ async function initSupabaseAuth() {
     supabaseAuthListenerBound = true;
     sb.auth.onAuthStateChange(async (event, sess) => {
       if (event === 'SIGNED_IN' && sess?.user) {
+        supabaseSessionSnapshot = sess;
         setStorageMode(STORAGE_MODE.SUPABASE);
         await loadAppSettingsFromSupabase();
         await touchSupabaseLastSeen(true);
@@ -288,6 +299,7 @@ async function initSupabaseAuth() {
         syncSupabaseUi();
         if (typeof renderDashboard === 'function') renderDashboard();
       } else if (event === 'SIGNED_OUT') {
+        supabaseSessionSnapshot = null;
         setStorageMode(STORAGE_MODE.LOCAL);
         safeStorageSetItem(SUPABASE_LAST_SEEN_SYNC_KEY, '0', { context: 'last seen reset' });
         appSettings = loadSettingsFromStorage();
