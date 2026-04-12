@@ -1734,11 +1734,57 @@ function renderFightPlanComparison(nextFight = null) {
   badge.textContent = compareState;
 }
 
+function getDashboardCalorieJudge(snapshot) {
+  if (snapshot.calories <= 0) {
+    return { text: '判定: 食事記録待ち', state: '' };
+  }
+
+  const targetKcal = Number(snapshot.planRow?.totalKcalTarget) || Number(appSettings.dailyCalorieGoal) || 0;
+  if (!targetKcal) {
+    return { text: '判定: 目標kcal未設定', state: '' };
+  }
+
+  const kcalGap = Math.round(snapshot.calories - targetKcal);
+  const weightGap = snapshot.weightGap;
+  const hasFightPlan = Boolean(snapshot.activeFight && snapshot.planRow?.totalKcalTarget);
+
+  if (hasFightPlan) {
+    if (kcalGap < -500) {
+      return { text: `判定: 落としすぎ（予定比 ${kcalGap}kcal）`, state: 'down' };
+    }
+    if (kcalGap > 250) {
+      return { text: `判定: オーバー（予定比 +${kcalGap}kcal）`, state: 'down' };
+    }
+    if (weightGap !== null && weightGap > 0.3 && kcalGap <= 0) {
+      return { text: `判定: 順調（絞り優先・予定比 ${kcalGap}kcal）`, state: 'up' };
+    }
+    if (weightGap !== null && weightGap < -0.3 && kcalGap < -250) {
+      return { text: `判定: 下げすぎ（体重先行・予定比 ${kcalGap}kcal）`, state: 'down' };
+    }
+    if ((weightGap === null || Math.abs(weightGap) <= 0.3) && Math.abs(kcalGap) <= 150) {
+      return { text: `判定: 順調（予定比 ${kcalGap > 0 ? '+' : ''}${kcalGap}kcal）`, state: 'up' };
+    }
+    return { text: `判定: 調整中（予定比 ${kcalGap > 0 ? '+' : ''}${kcalGap}kcal）`, state: 'flat' };
+  }
+
+  if (Math.abs(kcalGap) <= 150) {
+    return { text: `判定: 目標内（基準比 ${kcalGap > 0 ? '+' : ''}${kcalGap}kcal）`, state: 'up' };
+  }
+  if (kcalGap < -500) {
+    return { text: `判定: 少なめ（基準比 ${kcalGap}kcal）`, state: 'down' };
+  }
+  if (kcalGap > 250) {
+    return { text: `判定: 多め（基準比 +${kcalGap}kcal）`, state: 'down' };
+  }
+  return { text: `判定: 調整中（基準比 ${kcalGap > 0 ? '+' : ''}${kcalGap}kcal）`, state: 'flat' };
+}
+
 // ============================================================
 // DASHBOARD
 // ============================================================
 function renderDashboard() {
   const today = TODAY();
+  const snapshot = getDailyPerformanceSnapshot(today);
 
   // Today's weight
   const todayWeights = weightLogs.filter(w => w.date && w.date.slice(0,10) === today);
@@ -1770,6 +1816,13 @@ function renderDashboard() {
   const todayProtein = todayMeals.reduce((s,m) => s + (parseFloat(m.protein)||0), 0);
   document.getElementById('kpi-today-calories').textContent = `${Math.round(todayCal)} kcal`;
   document.getElementById('kpi-today-protein').textContent = `${Math.round(todayProtein)} g`;
+  const calorieJudge = getDashboardCalorieJudge(snapshot);
+  const calorieJudgeEl = document.getElementById('kpi-calorie-judge');
+  if (calorieJudgeEl) {
+    calorieJudgeEl.textContent = calorieJudge.text;
+    calorieJudgeEl.classList.remove('up', 'flat', 'down');
+    if (calorieJudge.state) calorieJudgeEl.classList.add(calorieJudge.state);
+  }
 
   // Today's training
   const todayTraining = trainingLogs.filter(t => t.date && t.date.slice(0,10) === today);

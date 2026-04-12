@@ -720,6 +720,10 @@ textarea.input-field{resize:vertical;min-height:70px}
 .kpi-label{font-size:11px;color:var(--tx-2);font-weight:600;letter-spacing:.3px}
 .kpi-value{font-family:'Oswald',sans-serif;font-size:26px;font-weight:700;color:var(--tx-1);line-height:1.1;margin:2px 0}
 .kpi-sub{font-size:11px;color:var(--tx-3)}
+.kpi-judge{margin-top:4px;font-weight:700}
+.kpi-judge.up{color:#9bf2bf}
+.kpi-judge.flat{color:#ffe18f}
+.kpi-judge.down{color:#ff9aa5}
 .kpi-bmi-line{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px}
 .kpi-bmi-line .badge{font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700}
 .kpi-delta{font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px;display:inline-block;margin-top:2px}
