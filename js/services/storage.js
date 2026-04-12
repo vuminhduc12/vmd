@@ -14,7 +14,37 @@ const BOXER_SUPABASE_TABLES = {
 };
 const SUPABASE_LAST_SEEN_SYNC_KEY = 'boxerpro.supabase.lastSeenSyncAt';
 const SUPABASE_LAST_SEEN_INTERVAL_MS = 30 * 60 * 1000;
+const SUPABASE_AUTH_TIMEOUT_MS = 8000;
 let supabaseLastSeenBindingDone = false;
+
+function withTimeout(promise, ms, label = 'operation') {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      window.setTimeout(() => reject(new Error(`Supabase ${label} timed out after ${ms}ms`)), ms);
+    }),
+  ]);
+}
+
+async function getSupabaseSessionSafe(sb) {
+  try {
+    const result = await withTimeout(sb.auth.getSession(), SUPABASE_AUTH_TIMEOUT_MS, 'getSession');
+    return result?.data?.session || null;
+  } catch (error) {
+    console.error('BOXER PRO: Supabase session restore failed', error);
+    return null;
+  }
+}
+
+async function getSupabaseUserSafe(sb) {
+  try {
+    const result = await withTimeout(sb.auth.getUser(), SUPABASE_AUTH_TIMEOUT_MS, 'getUser');
+    return result?.data?.user || null;
+  } catch (error) {
+    console.error('BOXER PRO: Supabase user fetch failed', error);
+    return null;
+  }
+}
 
 function isSupabaseConfigured() {
   const c = typeof window !== 'undefined' ? window.BOXER_PRO_CONFIG : null;
@@ -88,7 +118,7 @@ function syncSupabaseUi() {
 async function touchSupabaseLastSeen(force = false) {
   const sb = await getSupabaseClient();
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return false;
-  const { data: { user } } = await sb.auth.getUser();
+  const user = await getSupabaseUserSafe(sb);
   if (!user) return false;
 
   const now = Date.now();
@@ -151,7 +181,7 @@ async function boxerSupabaseApiPost(table, data) {
   const sb = await getSupabaseClient();
   const tn = BOXER_SUPABASE_TABLES[table];
   if (!sb || !tn) throw new Error('Supabase not available');
-  const { data: { user } } = await sb.auth.getUser();
+  const user = await getSupabaseUserSafe(sb);
   if (!user) throw new Error('Not signed in');
   const id = data.id || createRecordId();
   const createdAt = data.created_at || new Date().toISOString();
@@ -198,7 +228,7 @@ async function boxerSupabaseApiPut(table, id, data) {
 async function loadAppSettingsFromSupabase() {
   const sb = await getSupabaseClient();
   if (!sb) return;
-  const { data: { user } } = await sb.auth.getUser();
+  const user = await getSupabaseUserSafe(sb);
   if (!user) return;
   const { data, error } = await sb.from('boxer_profiles').select('settings').eq('user_id', user.id).maybeSingle();
   if (error || !data?.settings) return;
@@ -209,7 +239,7 @@ async function loadAppSettingsFromSupabase() {
 async function persistAppSettingsToSupabase() {
   const sb = await getSupabaseClient();
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return;
-  const { data: { user } } = await sb.auth.getUser();
+  const user = await getSupabaseUserSafe(sb);
   if (!user) return;
   const { error } = await sb.from('boxer_profiles').upsert({
     user_id: user.id,
@@ -233,12 +263,12 @@ async function initSupabaseAuth() {
     return;
   }
 
-  const { data: { session } } = await sb.auth.getSession();
+  cleanupSupabaseAuthRedirectUrl();
+  const session = await getSupabaseSessionSafe(sb);
   if (session?.user) {
     setStorageMode(STORAGE_MODE.SUPABASE);
     await loadAppSettingsFromSupabase();
     await touchSupabaseLastSeen(true);
-    cleanupSupabaseAuthRedirectUrl();
   } else {
     setStorageMode(STORAGE_MODE.LOCAL);
   }
@@ -314,7 +344,7 @@ async function mergeLocalDataToSupabase() {
     return;
   }
   const sb = await getSupabaseClient();
-  const { data: { user } } = await sb.auth.getUser();
+  const user = await getSupabaseUserSafe(sb);
   if (!user) {
     showToast('ログインが必要です', 'error');
     return;
@@ -387,7 +417,7 @@ async function compressImageFile(file) {
 async function uploadWeightPhotoFile(file, weightLogId, sortOrder = 0) {
   const sb = await getSupabaseClient();
   if (!sb || !canUseCloudMedia()) throw new Error('クラウドログイン時のみ画像を保存できます');
-  const { data: { user } } = await sb.auth.getUser();
+  const user = await getSupabaseUserSafe(sb);
   if (!user) throw new Error('ログインが必要です');
 
   const compressed = await compressImageFile(file);
@@ -439,7 +469,7 @@ async function deleteWeightPhoto(photoId) {
 async function uploadOpponentPhotoFile(file, opponentId) {
   const sb = await getSupabaseClient();
   if (!sb || !canUseCloudMedia()) throw new Error('クラウドログイン時のみ画像を保存できます');
-  const { data: { user } } = await sb.auth.getUser();
+  const user = await getSupabaseUserSafe(sb);
   if (!user) throw new Error('ログインが必要です');
 
   const compressed = await compressImageFile(file);
@@ -505,7 +535,7 @@ function resetAdminStatsUi() {
 async function fetchAdminStats() {
   const sb = await getSupabaseClient();
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return null;
-  const { data: { session } } = await sb.auth.getSession();
+  const session = await getSupabaseSessionSafe(sb);
   const accessToken = session?.access_token;
   if (!accessToken) return null;
 
@@ -581,7 +611,7 @@ function updateSupabaseAuthUI() {
       resetAdminStatsUi();
       return;
     }
-    const { data: { session } } = await sb.auth.getSession();
+    const session = await getSupabaseSessionSafe(sb);
     const email = session?.user?.email || '';
     emailEl.textContent = email || '未ログイン';
     const inCloud = activeStorageMode === STORAGE_MODE.SUPABASE && !!session;
