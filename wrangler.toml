@@ -2,6 +2,7 @@
 # ダッシュボードのプロジェクト名と一致させる（vmd のままならこのまま）
 name = "vmd"
 compatibility_date = "2025-04-01"
+main = "worker.js"
 
 [assets]
 directory = "."

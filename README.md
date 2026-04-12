@@ -55,6 +55,29 @@ python3 -m http.server 5500
 - `supabaseAnonKey` には Secret key ではなく Publishable / anon key を使います
 - Supabase 未設定でもローカル保存で動作します
 
+### 4. 管理者だけが登録ユーザー数を見る場合
+
+この機能は `Cloudflare Worker` 側で `service_role key` を使って集計します。  
+`service_role key` を `js/config.js` に置いてはいけません。
+
+必要な Worker 環境変数:
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_EMAILS`
+
+例:
+
+```bash
+wrangler secret put SUPABASE_URL
+wrangler secret put SUPABASE_ANON_KEY
+wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+wrangler secret put ADMIN_EMAILS
+```
+
+`ADMIN_EMAILS` には、管理者にしたい Google メールアドレスをカンマ区切りまたは改行区切りで入れます。  
+設定後、対象メールでログインしたユーザーにだけ `マイ設定 > 管理者統計` カードが表示されます。
+
 ---
 
 ## 他人に使ってもらうときの前提

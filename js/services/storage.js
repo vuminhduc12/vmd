@@ -434,6 +434,63 @@ if (typeof window !== 'undefined') {
   window.mergeLocalDataToSupabase = mergeLocalDataToSupabase;
 }
 
+function resetAdminStatsUi() {
+  const card = document.getElementById('admin-stats-card');
+  const totalEl = document.getElementById('admin-total-users');
+  const emailEl = document.getElementById('admin-stats-email');
+  const updatedEl = document.getElementById('admin-stats-updated');
+  if (card) card.hidden = true;
+  if (totalEl) totalEl.textContent = '--';
+  if (emailEl) emailEl.textContent = '--';
+  if (updatedEl) updatedEl.textContent = '--';
+}
+
+async function fetchAdminStats() {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return null;
+  const { data: { session } } = await sb.auth.getSession();
+  const accessToken = session?.access_token;
+  if (!accessToken) return null;
+
+  const res = await fetch('/api/admin/stats', {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (res.status === 401 || res.status === 403) return null;
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Admin stats failed: ${res.status} ${body}`);
+  }
+  return res.json();
+}
+
+async function updateAdminStatsUi() {
+  const card = document.getElementById('admin-stats-card');
+  const totalEl = document.getElementById('admin-total-users');
+  const emailEl = document.getElementById('admin-stats-email');
+  const updatedEl = document.getElementById('admin-stats-updated');
+  if (!card || !totalEl || !emailEl || !updatedEl) return;
+
+  resetAdminStatsUi();
+  if (!isSupabaseConfigured()) return;
+
+  try {
+    const data = await fetchAdminStats();
+    if (!data) return;
+    card.hidden = false;
+    totalEl.textContent = String(data.total_users ?? '--');
+    emailEl.textContent = data.admin_email || '--';
+    updatedEl.textContent = data.measured_at
+      ? `取得: ${formatDateTimeJP(data.measured_at)}`
+      : '取得済み';
+  } catch (err) {
+    console.error('BOXER PRO: updateAdminStatsUi', err);
+    resetAdminStatsUi();
+  }
+}
+
 function updateSupabaseAuthUI() {
   const hint = document.getElementById('supabase-config-hint');
   const emailEl = document.getElementById('supabase-auth-email');
@@ -451,6 +508,7 @@ function updateSupabaseAuthUI() {
     loginBtn.style.display = 'none';
     logoutBtn.style.display = 'none';
     mergeBtn.style.display = 'none';
+    resetAdminStatsUi();
     return;
   }
 
@@ -461,6 +519,7 @@ function updateSupabaseAuthUI() {
       loginBtn.style.display = 'inline-flex';
       logoutBtn.style.display = 'none';
       mergeBtn.style.display = 'none';
+      resetAdminStatsUi();
       return;
     }
     const { data: { session } } = await sb.auth.getSession();
@@ -471,6 +530,8 @@ function updateSupabaseAuthUI() {
     loginBtn.style.display = inCloud ? 'none' : 'inline-flex';
     logoutBtn.style.display = inCloud ? 'inline-flex' : 'none';
     mergeBtn.style.display = inCloud ? 'inline-flex' : 'none';
+    if (inCloud) await updateAdminStatsUi();
+    else resetAdminStatsUi();
   }).catch((err) => {
     console.error('BOXER PRO: updateSupabaseAuthUI', err);
     emailEl.textContent = '接続エラー（Console を確認）';
@@ -478,6 +539,7 @@ function updateSupabaseAuthUI() {
     loginBtn.style.display = 'inline-flex';
     logoutBtn.style.display = 'none';
     mergeBtn.style.display = 'none';
+    resetAdminStatsUi();
   });
 }
 

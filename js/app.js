@@ -312,6 +312,13 @@ function formatDateJP(dateStr) {
   return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
 }
 
+function formatDateTimeJP(dateStr) {
+  if (!dateStr) return '--';
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return '--';
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 function normalizeSlashDate(dateStr) {
   if (!dateStr) return '';
   const [year, month, day] = dateStr.split('/').map(Number);
