@@ -209,67 +209,6 @@ async function saveWeight() {
   }
 }
 
-async function quickSaveWeight() {
-  const slot = getWeightSlotMeta(document.getElementById('quickWeightSlot')?.value).value;
-  const heightRaw = document.getElementById('quickHeight').value.trim();
-  const weightRaw = document.getElementById('quickWeight').value;
-  const fatRaw    = document.getElementById('quickBodyFat').value.trim();
-  const note   = document.getElementById('quickNote').value.trim();
-
-  const wChk = parseRequiredBounded(weightRaw, INPUT_BOUNDS.weightKg, '体重');
-  if (!wChk.ok) { showToast(wChk.msg, 'error'); return; }
-  const weight = wChk.value;
-
-  let height = getLatestKnownHeightCm();
-  if (heightRaw) {
-    const hChk = parseRequiredBounded(heightRaw, INPUT_BOUNDS.heightCm, '身長');
-    if (!hChk.ok) { showToast(hChk.msg, 'error'); return; }
-    height = hChk.value;
-  }
-
-  let fat = null;
-  if (fatRaw) {
-    const fChk = parseRequiredBounded(fatRaw, INPUT_BOUNDS.bodyFatPct, '体脂肪率');
-    if (!fChk.ok) { showToast(fChk.msg, 'error'); return; }
-    fat = fChk.value;
-  }
-
-  let target_weight = null;
-  if (appSettings.targetWeight) {
-    const twChk = parseRequiredBounded(String(appSettings.targetWeight), INPUT_BOUNDS.targetWeightKg, '設定の目標体重');
-    if (twChk.ok) target_weight = twChk.value;
-  }
-
-  try {
-    const date = TODAY();
-    const payload = {
-      date,
-      slot,
-      height_cm: height,
-      weight,
-      body_fat: fat,
-      target_weight,
-      note
-    };
-    const existing = findWeightLogByDateAndSlot(date, slot);
-    if (existing?.id) {
-      const updated = await apiPut('weight_logs', existing.id, payload);
-      const ix = weightLogs.findIndex((w) => w.id === existing.id);
-      if (ix !== -1) weightLogs[ix] = normalizeWeightLogRecord({ ...weightLogs[ix], ...updated });
-      showToast(`✅ 今日の${getWeightSlotLabel(slot)}の体重を更新しました`, 'success');
-    } else {
-      const record = await apiPost('weight_logs', payload);
-      weightLogs.push(normalizeWeightLogRecord(record));
-      showToast(`✅ 今日の${getWeightSlotLabel(slot)}の体重 ${weight}kg を記録しました`, 'success');
-    }
-    sortWeightLogsInPlace();
-    clearForm(['quickWeight','quickBodyFat','quickNote']);
-    renderDashboard();
-  } catch(e) {
-    showToast('保存に失敗しました', 'error');
-  }
-}
-
 function updateWeightEditUI() {
   const banner = document.getElementById('weightEditBanner');
   const btn = document.getElementById('weightSaveBtn');

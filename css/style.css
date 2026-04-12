@@ -764,6 +764,9 @@ textarea.input-field{resize:vertical;min-height:70px}
 .quick-header h3{font-size:13px;font-weight:700;color:var(--tx-1);display:flex;align-items:center;gap:8px}
 .quick-header h3 i{color:var(--gold)}
 .quick-form{display:flex;flex-direction:column;gap:9px}
+.dashboard-focus-card{grid-column:1 / -1}
+.dashboard-focus-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.dashboard-focus-actions .btn{min-width:160px}
 .input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
 /* Activity */
@@ -1506,6 +1509,7 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .chart-stat-grid{grid-template-columns:repeat(2,1fr)}
   .performance-stat-grid,.plan-compare-grid{grid-template-columns:repeat(2,1fr)}
   .quick-log-row{grid-template-columns:1fr}
+  .dashboard-focus-actions .btn{min-width:0;flex:1 1 100%}
   .health-kpi-grid{grid-template-columns:repeat(2,1fr)}
   .form-row,.form-row.three-col,.form-row.four-col{grid-template-columns:1fr}
   .week-stats{grid-template-columns:repeat(3,1fr)}

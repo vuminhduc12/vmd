@@ -185,53 +185,20 @@
       </div>
     </div>
 
-    <!-- Mid Row: Streak + Quick Weight + Quick Training + Fight -->
     <div class="quick-log-row" id="dash-quick-anchor" style="margin-bottom:16px">
-      <div class="quick-log-card">
-        <div class="quick-header"><h3><i class="fas fa-bolt-lightning"></i> クイック体重記録</h3></div>
-        <div class="quick-form">
-          <select id="quickWeightSlot" class="input-field">
-            <option value="morning">朝の体重</option>
-            <option value="evening">夜の体重</option>
-          </select>
-          <input type="number" id="quickWeight" class="input-field" placeholder="体重 (kg)" step="0.1">
-          <div class="input-row">
-            <input type="number" id="quickBodyFat" class="input-field" placeholder="体脂肪率 (%)">
-            <input type="number" id="quickHeight" class="input-field" placeholder="身長 (cm)" value="170">
-          </div>
-          <textarea id="quickNote" class="input-field" placeholder="メモ・体調など" rows="2"></textarea>
-          <button class="btn btn-primary btn-full" onclick="quickSaveWeight()">
-            <i class="fas fa-save"></i> 今日の体重を記録
-          </button>
-        </div>
-      </div>
-
-      <div class="quick-log-card">
-        <div class="quick-header"><h3><i class="fas fa-stopwatch"></i> 今日の練習を記録</h3></div>
-        <div class="quick-form">
-          <select id="quickTrainingType" class="input-field">
-            <option value="">種目を選択</option>
-            <option>シャドーボクシング</option><option>サンドバッグ</option>
-            <option>ミット打ち</option><option>スパーリング</option>
-            <option>ロードワーク</option><option>筋トレ</option>
-            <option>縄跳び</option><option>ストレッチ</option>
-          </select>
-          <div class="input-row">
-            <input type="number" id="quickDuration" class="input-field" placeholder="時間 (分)">
-            <select id="quickIntensity" class="input-field">
-              <option value="">強度</option>
-              <option>低</option><option>中</option><option>高</option><option>最大</option>
-            </select>
-          </div>
-          <div id="quickBurnEstimate" style="font-size:11px;color:var(--tx-2);text-align:center"></div>
-          <button class="btn btn-gold btn-full" onclick="quickSaveTraining()">
-            <i class="fas fa-save"></i> 練習を記録
-          </button>
-        </div>
-      </div>
-
-      <div class="quick-log-card">
+      <div class="quick-log-card dashboard-focus-card">
         <div class="quick-header"><h3><i class="fas fa-trophy"></i> 次の試合</h3></div>
+        <div class="dashboard-focus-actions">
+          <button type="button" class="btn btn-secondary" onclick="switchPage('weight')">
+            <i class="fas fa-weight-scale"></i> 体重管理へ
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="switchPage('training')">
+            <i class="fas fa-dumbbell"></i> 練習記録へ
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="switchPage('meals')">
+            <i class="fas fa-bowl-food"></i> 食事管理へ
+          </button>
+        </div>
         <div id="fightGoalCard" class="fight-goal-display">
           <div class="no-fight-msg">試合目標が未登録<br><small>「試合目標」タブから追加</small></div>
         </div>

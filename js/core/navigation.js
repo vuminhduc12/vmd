@@ -130,7 +130,7 @@ function initMobileQuickUI() {
   if (closeBtn) closeBtn.addEventListener('click', closeMobileQuickSheet);
 
   const actions = {
-    'dash-weight': () => mobileNavigateTo('dashboard', '#dash-quick-anchor', 'quickWeight'),
+    'dash-weight': () => mobileNavigateTo('weight', '#weight-record-list-anchor', null),
     meals: () => mobileNavigateTo('meals', '#meal-input-anchor', 'foodSearch'),
     training: () => mobileNavigateTo('training', '#training-record-anchor', 't-type'),
     hydration: () => mobileNavigateTo('calories', '#cal-anchor-hydration', 'h-water'),

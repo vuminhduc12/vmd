@@ -648,14 +648,12 @@ function renderDashboardOnboarding() {
 
 function applyAppSettings(force = false) {
   renderProfileCard();
-  setFieldValue('quickHeight', appSettings.heightCm, force);
   setFieldValue('w-height', appSettings.heightCm, force);
   setFieldValue('calc-height', appSettings.heightCm, force);
   setFieldValue('calc-age', appSettings.age, force);
   setFieldValue('calc-gender', appSettings.gender, force);
   setFieldValue('caloricGoalInput', appSettings.dailyCalorieGoal, force);
   setFieldValue('m-type', appSettings.defaultMealType, force);
-  setFieldValue('quickIntensity', appSettings.defaultTrainingIntensity, force);
   setFieldValue('t-intensity', appSettings.defaultTrainingIntensity, force);
 
   if (appSettings.targetWeight) {
@@ -1280,8 +1278,6 @@ function setDateInputs() {
   });
   const weightSlotEl = document.getElementById('w-slot');
   if (weightSlotEl && !weightSlotEl.value) weightSlotEl.value = 'morning';
-  const quickWeightSlotEl = document.getElementById('quickWeightSlot');
-  if (quickWeightSlotEl && !quickWeightSlotEl.value) quickWeightSlotEl.value = 'morning';
 }
 
 // Navigation moved to js/core/navigation.js
@@ -2676,33 +2672,6 @@ function startEditTraining(id) {
   window.setTimeout(() => {
     document.getElementById('training-record-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 50);
-}
-
-async function quickSaveTraining() {
-  const type     = document.getElementById('quickTrainingType').value;
-  const intensity = document.getElementById('quickIntensity').value;
-
-  if (!type) { showToast('練習種目を選択してください', 'error'); return; }
-  if (!TRAINING_INTENSITIES.includes(intensity)) { showToast('強度を選択してください', 'error'); return; }
-  const durChk = parseRequiredBounded(document.getElementById('quickDuration').value, INPUT_BOUNDS.trainingMinutes, '練習時間');
-  if (!durChk.ok) { showToast(durChk.msg, 'error'); return; }
-  const duration = durChk.value;
-  const burned = calcBurnedByType(type, intensity, duration);
-
-  try {
-    const record = await apiPost('training_logs', {
-      date: TODAY(), training_type: type, duration, intensity, calories_burned: burned
-    });
-    trainingLogs.push(record);
-    trainingLogs.sort((a,b) => new Date(a.date) - new Date(b.date));
-    showToast(`✅ ${type} ${duration}分 を記録しました`, 'success');
-    clearForm(['quickDuration']);
-    document.getElementById('quickTrainingType').value = '';
-    document.getElementById('quickIntensity').value = '';
-    renderDashboard();
-  } catch(e) {
-    showToast('保存に失敗しました', 'error');
-  }
 }
 
 async function deleteTraining(id) {
