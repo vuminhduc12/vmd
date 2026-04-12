@@ -13,8 +13,12 @@
 create table if not exists public.boxer_profiles (
   user_id uuid primary key references auth.users (id) on delete cascade,
   settings jsonb not null default '{}'::jsonb,
+  last_seen_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.boxer_profiles
+  add column if not exists last_seen_at timestamptz not null default now();
 
 -- ---------------------------------------------------------------------------
 -- Log tables: one row per record; full fields stored in payload jsonb

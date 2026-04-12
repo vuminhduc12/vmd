@@ -385,6 +385,7 @@ textarea.input-field{resize:vertical;min-height:70px}
 .form-row.three-col{grid-template-columns:1fr 1fr 1fr}
 .form-row.four-col{grid-template-columns:repeat(4,1fr)}
 .settings-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.admin-stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .settings-actions{display:flex;flex-direction:column;gap:10px}
 .settings-note{
   margin-top:14px;padding:12px 14px;border-radius:12px;

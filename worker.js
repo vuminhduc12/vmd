@@ -54,6 +54,31 @@ async function countAuthUsers(env) {
   return total;
 }
 
+async function countRecentActiveUsers(env, days = 7) {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const url = new URL(`${env.SUPABASE_URL}/rest/v1/boxer_profiles`);
+  url.searchParams.set('select', 'user_id');
+  url.searchParams.set('last_seen_at', `gte.${since}`);
+
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      Prefer: 'count=exact',
+      Range: '0-0',
+    },
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Recent active users failed: ${res.status} ${body}`);
+  }
+
+  const contentRange = res.headers.get('content-range') || '';
+  const match = contentRange.match(/\/(\d+)$/);
+  return match ? Number(match[1]) : 0;
+}
+
 async function handleAdminStats(request, env) {
   if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY || !env.SUPABASE_SERVICE_ROLE_KEY) {
     return json({ error: 'Server auth env is not configured' }, 500);
@@ -78,8 +103,10 @@ async function handleAdminStats(request, env) {
   }
 
   const totalUsers = await countAuthUsers(env);
+  const activeUsers7d = await countRecentActiveUsers(env, 7);
   return json({
     total_users: totalUsers,
+    active_users_7d: activeUsers7d,
     admin_email: email,
     measured_at: new Date().toISOString(),
   });

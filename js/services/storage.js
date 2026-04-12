@@ -12,6 +12,9 @@ const BOXER_SUPABASE_TABLES = {
   hydration_logs: 'boxer_hydration_logs',
   recovery_logs: 'boxer_recovery_logs',
 };
+const SUPABASE_LAST_SEEN_SYNC_KEY = 'boxerpro.supabase.lastSeenSyncAt';
+const SUPABASE_LAST_SEEN_INTERVAL_MS = 30 * 60 * 1000;
+let supabaseLastSeenBindingDone = false;
 
 function isSupabaseConfigured() {
   const c = typeof window !== 'undefined' ? window.BOXER_PRO_CONFIG : null;
@@ -81,6 +84,48 @@ function syncSupabaseUi() {
   updateSupabaseAuthUI();
   renderSettingsPage();
 }
+
+async function touchSupabaseLastSeen(force = false) {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return false;
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return false;
+
+  const now = Date.now();
+  const lastSyncAt = Number(safeStorageGetItem(SUPABASE_LAST_SEEN_SYNC_KEY) || 0);
+  if (!force && lastSyncAt && now - lastSyncAt < SUPABASE_LAST_SEEN_INTERVAL_MS) {
+    return false;
+  }
+
+  const timestamp = new Date(now).toISOString();
+  const { error } = await sb.from('boxer_profiles').upsert({
+    user_id: user.id,
+    settings: appSettings,
+    last_seen_at: timestamp,
+    updated_at: timestamp,
+  }, { onConflict: 'user_id' });
+  if (error) {
+    console.error('Supabase last seen save:', error);
+    return false;
+  }
+  safeStorageSetItem(SUPABASE_LAST_SEEN_SYNC_KEY, String(now), { context: 'last seen sync' });
+  return true;
+}
+
+function bindSupabaseLastSeenTracking() {
+  if (supabaseLastSeenBindingDone || typeof document === 'undefined' || typeof window === 'undefined') return;
+  supabaseLastSeenBindingDone = true;
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      touchSupabaseLastSeen().catch((err) => console.error('BOXER PRO: last seen visibility', err));
+    }
+  });
+  window.addEventListener('focus', () => {
+    touchSupabaseLastSeen().catch((err) => console.error('BOXER PRO: last seen focus', err));
+  });
+}
+
 function boxerRowToRecord(row) {
   if (!row) return null;
   const p = row.payload && typeof row.payload === 'object' ? row.payload : {};
@@ -169,6 +214,7 @@ async function persistAppSettingsToSupabase() {
   const { error } = await sb.from('boxer_profiles').upsert({
     user_id: user.id,
     settings: appSettings,
+    last_seen_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id' });
   if (error) console.error('Supabase settings save:', error);
@@ -191,10 +237,12 @@ async function initSupabaseAuth() {
   if (session?.user) {
     setStorageMode(STORAGE_MODE.SUPABASE);
     await loadAppSettingsFromSupabase();
+    await touchSupabaseLastSeen(true);
     cleanupSupabaseAuthRedirectUrl();
   } else {
     setStorageMode(STORAGE_MODE.LOCAL);
   }
+  bindSupabaseLastSeenTracking();
   syncSupabaseUi();
 
   if (!supabaseAuthListenerBound) {
@@ -203,6 +251,7 @@ async function initSupabaseAuth() {
       if (event === 'SIGNED_IN' && sess?.user) {
         setStorageMode(STORAGE_MODE.SUPABASE);
         await loadAppSettingsFromSupabase();
+        await touchSupabaseLastSeen(true);
         cleanupSupabaseAuthRedirectUrl();
         applyAppSettings(true);
         await loadAllData();
@@ -210,6 +259,7 @@ async function initSupabaseAuth() {
         if (typeof renderDashboard === 'function') renderDashboard();
       } else if (event === 'SIGNED_OUT') {
         setStorageMode(STORAGE_MODE.LOCAL);
+        safeStorageSetItem(SUPABASE_LAST_SEEN_SYNC_KEY, '0', { context: 'last seen reset' });
         appSettings = loadSettingsFromStorage();
         applyAppSettings(true);
         await loadAllData();
@@ -442,10 +492,12 @@ if (typeof window !== 'undefined') {
 function resetAdminStatsUi() {
   const card = document.getElementById('admin-stats-card');
   const totalEl = document.getElementById('admin-total-users');
+  const activeEl = document.getElementById('admin-active-users');
   const emailEl = document.getElementById('admin-stats-email');
   const updatedEl = document.getElementById('admin-stats-updated');
   if (card) card.hidden = true;
   if (totalEl) totalEl.textContent = '--';
+  if (activeEl) activeEl.textContent = '--';
   if (emailEl) emailEl.textContent = '--';
   if (updatedEl) updatedEl.textContent = '--';
 }
@@ -474,9 +526,10 @@ async function fetchAdminStats() {
 async function updateAdminStatsUi() {
   const card = document.getElementById('admin-stats-card');
   const totalEl = document.getElementById('admin-total-users');
+  const activeEl = document.getElementById('admin-active-users');
   const emailEl = document.getElementById('admin-stats-email');
   const updatedEl = document.getElementById('admin-stats-updated');
-  if (!card || !totalEl || !emailEl || !updatedEl) return;
+  if (!card || !totalEl || !activeEl || !emailEl || !updatedEl) return;
 
   resetAdminStatsUi();
   if (!isSupabaseConfigured()) return;
@@ -486,6 +539,7 @@ async function updateAdminStatsUi() {
     if (!data) return;
     card.hidden = false;
     totalEl.textContent = String(data.total_users ?? '--');
+    activeEl.textContent = String(data.active_users_7d ?? '--');
     emailEl.textContent = data.admin_email || '--';
     updatedEl.textContent = data.measured_at
       ? `取得: ${formatDateTimeJP(data.measured_at)}`

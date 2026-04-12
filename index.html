@@ -1616,7 +1616,7 @@
       <div style="display:flex;flex-direction:column;gap:14px">
         <div class="form-card">
           <h3 class="form-title"><i class="fas fa-database"></i> 保存先ステータス</h3>
-          <div class="settings-summary-grid">
+          <div class="settings-summary-grid admin-stats-grid">
             <div class="stat-card">
               <div class="stat-label">保存先種別</div>
               <div class="stat-val" id="settings-storage-mode">--</div>
@@ -1661,11 +1661,16 @@
 
         <div class="form-card" id="admin-stats-card" hidden>
           <h3 class="form-title"><i class="fas fa-user-shield"></i> 管理者統計</h3>
-          <div class="settings-summary-grid">
+          <div class="settings-summary-grid admin-stats-grid">
             <div class="stat-card">
               <div class="stat-label">登録ユーザー数</div>
               <div class="stat-val" id="admin-total-users">--</div>
               <div class="stat-sub">Google / Supabase Auth 登録数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">直近7日アクティブ</div>
+              <div class="stat-val" id="admin-active-users">--</div>
+              <div class="stat-sub">過去7日以内に利用した人数</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">管理者アカウント</div>
