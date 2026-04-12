@@ -1,4 +1,4 @@
-const CACHE_NAME = 'boxer-pro-v13';
+const CACHE_NAME = 'boxer-pro-v14';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -53,8 +53,18 @@ function shouldFetchNetworkFirst(url, request) {
   }
 }
 
+function isCacheableRequest(request) {
+  try {
+    const url = new URL(request.url);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (error) {
+    return false;
+  }
+}
+
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  if (!isCacheableRequest(event.request)) return;
 
   if (shouldFetchNetworkFirst(event.request.url, event.request)) {
     event.respondWith(
