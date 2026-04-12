@@ -120,6 +120,37 @@ function cleanupSupabaseAuthRedirectUrl() {
   }
 }
 
+function readSupabaseAuthTokensFromUrl() {
+  if (typeof window === 'undefined') return null;
+  const hash = window.location.hash || '';
+  if (!hash || !hash.includes('access_token=')) return null;
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+  const params = new URLSearchParams(raw);
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  if (!accessToken || !refreshToken) return null;
+  return {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  };
+}
+
+async function restoreSupabaseSessionFromUrl(sb) {
+  const tokens = readSupabaseAuthTokensFromUrl();
+  if (!tokens) return null;
+  try {
+    const result = await withTimeout(sb.auth.setSession(tokens), SUPABASE_AUTH_TIMEOUT_MS, 'setSession');
+    supabaseSessionSnapshot = result?.data?.session || null;
+    if (supabaseSessionSnapshot?.user) {
+      cleanupSupabaseAuthRedirectUrl();
+    }
+    return supabaseSessionSnapshot;
+  } catch (error) {
+    console.error('BOXER PRO: Supabase URL session restore failed', error);
+    return null;
+  }
+}
+
 function syncSupabaseUi() {
   updateSupabaseAuthUI();
   renderSettingsPage();
@@ -273,7 +304,10 @@ async function initSupabaseAuth() {
     return;
   }
 
-  const session = await getSupabaseSessionSafe(sb);
+  let session = await restoreSupabaseSessionFromUrl(sb);
+  if (!session) {
+    session = await getSupabaseSessionSafe(sb);
+  }
   if (session?.user) {
     setStorageMode(STORAGE_MODE.SUPABASE);
     await loadAppSettingsFromSupabase();
