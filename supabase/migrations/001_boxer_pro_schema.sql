@@ -277,16 +277,24 @@ create policy "boxer_recovery_update_own" on public.boxer_recovery_logs for upda
 create policy "boxer_recovery_delete_own" on public.boxer_recovery_logs for delete using (auth.uid() = user_id);
 
 -- ---------------------------------------------------------------------------
--- Supabase Storage bucket for weight photos
+-- Supabase Storage buckets for media uploads
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public)
 values ('weight-photos', 'weight-photos', false)
+on conflict (id) do nothing;
+
+insert into storage.buckets (id, name, public)
+values ('opponent-photos', 'opponent-photos', false)
 on conflict (id) do nothing;
 
 drop policy if exists "weight_photos_select_own" on storage.objects;
 drop policy if exists "weight_photos_insert_own" on storage.objects;
 drop policy if exists "weight_photos_update_own" on storage.objects;
 drop policy if exists "weight_photos_delete_own" on storage.objects;
+drop policy if exists "opponent_photos_select_own" on storage.objects;
+drop policy if exists "opponent_photos_insert_own" on storage.objects;
+drop policy if exists "opponent_photos_update_own" on storage.objects;
+drop policy if exists "opponent_photos_delete_own" on storage.objects;
 
 create policy "weight_photos_select_own"
   on storage.objects for select
@@ -313,5 +321,33 @@ create policy "weight_photos_delete_own"
   on storage.objects for delete
   using (
     bucket_id = 'weight-photos'
+    and auth.uid()::text = split_part(name, '/', 1)
+  );
+
+create policy "opponent_photos_select_own"
+  on storage.objects for select
+  using (
+    bucket_id = 'opponent-photos'
+    and auth.uid()::text = split_part(name, '/', 1)
+  );
+
+create policy "opponent_photos_insert_own"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'opponent-photos'
+    and auth.uid()::text = split_part(name, '/', 1)
+  );
+
+create policy "opponent_photos_update_own"
+  on storage.objects for update
+  using (
+    bucket_id = 'opponent-photos'
+    and auth.uid()::text = split_part(name, '/', 1)
+  );
+
+create policy "opponent_photos_delete_own"
+  on storage.objects for delete
+  using (
+    bucket_id = 'opponent-photos'
     and auth.uid()::text = split_part(name, '/', 1)
   );

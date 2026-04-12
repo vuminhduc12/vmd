@@ -1,6 +1,55 @@
 // ============================================================
 // FIGHT GOALS PAGE
 // ============================================================
+function resetPendingOpponentPhoto() {
+  if (pendingOpponentPhotoPreviewUrl) {
+    URL.revokeObjectURL(pendingOpponentPhotoPreviewUrl);
+  }
+  pendingOpponentPhotoFile = null;
+  pendingOpponentPhotoPreviewUrl = '';
+  const input = document.getElementById('opponentPhotoInput');
+  if (input) input.value = '';
+  renderOpponentPhotoPreview();
+}
+
+function renderOpponentPhotoPreview(photoUrl = pendingOpponentPhotoPreviewUrl) {
+  const preview = document.getElementById('opponentPhotoPreview');
+  const meta = document.getElementById('opponentPhotoMeta');
+  if (!preview || !meta) return;
+
+  preview.innerHTML = photoUrl
+    ? `<img src="${escapeHtml(photoUrl)}" alt="対戦相手プロフィール写真">`
+    : '<div class="opponent-photo-fallback"><i class="fas fa-user"></i></div>';
+
+  meta.innerHTML = pendingOpponentPhotoFile
+    ? `
+      <div class="media-chip">
+        <span><i class="fas fa-image"></i> ${escapeHtml(pendingOpponentPhotoFile.name)}</span>
+        <button type="button" class="btn-icon" onclick="resetPendingOpponentPhoto()" aria-label="削除"><i class="fas fa-times"></i></button>
+      </div>
+    `
+    : '';
+}
+
+function handleOpponentPhotoInput(event) {
+  const [file] = Array.from(event.target.files || []).filter((row) => row.type.startsWith('image/'));
+  if (!file) {
+    resetPendingOpponentPhoto();
+    return;
+  }
+  if (!canUseCloudMedia()) {
+    showToast('対戦相手写真はクラウドログイン時のみ保存できます', 'info');
+    event.target.value = '';
+    return;
+  }
+  if (pendingOpponentPhotoPreviewUrl) {
+    URL.revokeObjectURL(pendingOpponentPhotoPreviewUrl);
+  }
+  pendingOpponentPhotoFile = file;
+  pendingOpponentPhotoPreviewUrl = URL.createObjectURL(file);
+  renderOpponentPhotoPreview();
+}
+
 function syncFightOpponentSelect(selectedId = '') {
   const selectEl = document.getElementById('f-opponent-id');
   const historySelectEl = document.getElementById('fh-opponent-id');
@@ -20,32 +69,79 @@ async function saveOpponentProfile() {
     showToast('対戦相手名を入力してください', 'error');
     return;
   }
+
+  const heightChk = parseOptionalBounded(document.getElementById('o-height')?.value, INPUT_BOUNDS.heightCm, '身長');
+  if (!heightChk.ok) {
+    showToast(heightChk.msg, 'error');
+    return;
+  }
+  const reachChk = parseOptionalBounded(document.getElementById('o-reach')?.value, INPUT_BOUNDS.reachCm, 'リーチ');
+  if (!reachChk.ok) {
+    showToast(reachChk.msg, 'error');
+    return;
+  }
+  const winsChk = parseOptionalIntBounded(document.getElementById('o-wins')?.value, INPUT_BOUNDS.opponentRecordCount, '勝利数');
+  if (!winsChk.ok) {
+    showToast(winsChk.msg, 'error');
+    return;
+  }
+  const lossesChk = parseOptionalIntBounded(document.getElementById('o-losses')?.value, INPUT_BOUNDS.opponentRecordCount, '敗戦数');
+  if (!lossesChk.ok) {
+    showToast(lossesChk.msg, 'error');
+    return;
+  }
+  const drawsChk = parseOptionalIntBounded(document.getElementById('o-draws')?.value, INPUT_BOUNDS.opponentRecordCount, '引き分け数');
+  if (!drawsChk.ok) {
+    showToast(drawsChk.msg, 'error');
+    return;
+  }
+  const kosChk = parseOptionalIntBounded(document.getElementById('o-kos')?.value, INPUT_BOUNDS.opponentRecordCount, 'KO数');
+  if (!kosChk.ok) {
+    showToast(kosChk.msg, 'error');
+    return;
+  }
+
   const payload = {
     name,
     ring_name: document.getElementById('o-ring-name')?.value.trim() || '',
     gym: document.getElementById('o-gym')?.value.trim() || '',
     nationality: document.getElementById('o-nationality')?.value.trim() || '',
     stance: document.getElementById('o-stance')?.value || '',
-    height_cm: Number(document.getElementById('o-height')?.value) || null,
-    reach_cm: Number(document.getElementById('o-reach')?.value) || null,
-    wins: Number(document.getElementById('o-wins')?.value) || 0,
-    losses: Number(document.getElementById('o-losses')?.value) || 0,
-    draws: Number(document.getElementById('o-draws')?.value) || 0,
-    kos: Number(document.getElementById('o-kos')?.value) || 0,
+    height_cm: heightChk.value,
+    reach_cm: reachChk.value,
+    wins: winsChk.value ?? 0,
+    losses: lossesChk.value ?? 0,
+    draws: drawsChk.value ?? 0,
+    kos: kosChk.value ?? 0,
     strengths: document.getElementById('o-strengths')?.value.trim() || '',
     weaknesses: document.getElementById('o-weaknesses')?.value.trim() || '',
     notes: document.getElementById('o-notes')?.value.trim() || '',
   };
   try {
-    const record = await apiPost('opponents', payload);
+    let record = await apiPost('opponents', payload);
+    if (pendingOpponentPhotoFile) {
+      try {
+        const photoMeta = await uploadOpponentPhotoFile(pendingOpponentPhotoFile, record.id);
+        record = await apiPut('opponents', record.id, {
+          photo_storage_path: photoMeta.storage_path,
+          photo_file_name: photoMeta.file_name,
+          photo_content_type: photoMeta.content_type,
+          photo_file_size: photoMeta.file_size,
+        });
+      } catch (photoErr) {
+        console.error(photoErr);
+        showToast('プロフィールは保存しましたが、写真の保存に失敗しました', 'info');
+      }
+    }
     opponents.push(record);
     opponents.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
     syncFightOpponentSelect(record.id);
     clearForm(['o-name', 'o-ring-name', 'o-gym', 'o-nationality', 'o-height', 'o-reach', 'o-wins', 'o-losses', 'o-draws', 'o-kos', 'o-strengths', 'o-weaknesses', 'o-notes']);
     const stance = document.getElementById('o-stance');
     if (stance) stance.value = OPPONENT_STANCES[0];
+    resetPendingOpponentPhoto();
     showToast('対戦相手プロフィールを保存しました', 'success');
-    renderFightPage();
+    await renderFightPage();
     switchFightSectionTab('opponents');
   } catch (err) {
     console.error(err);
@@ -68,10 +164,14 @@ async function deleteOpponentProfile(id) {
         const idx = fightHistory.findIndex((item) => item.id === row.id);
         if (idx !== -1) fightHistory[idx] = updated;
       }
+      const opponentRow = opponents.find((row) => row.id === id);
+      if (opponentRow?.photo_storage_path) {
+        await deleteOpponentPhotoStorage(opponentRow.photo_storage_path);
+      }
       await apiDelete('opponents', id);
       opponents = opponents.filter((row) => row.id !== id);
       syncFightOpponentSelect();
-      renderFightPage();
+      await renderFightPage();
       showToast('対戦相手を削除しました', 'info');
     } catch (err) {
       console.error(err);
@@ -117,7 +217,7 @@ async function saveFightHistoryEntry() {
     const methodEl = document.getElementById('fh-method');
     if (methodEl) methodEl.value = FIGHT_METHODS[0];
     showToast('過去試合を保存しました', 'success');
-    renderFightPage();
+    await renderFightPage();
     switchFightSectionTab('history');
   } catch (err) {
     console.error(err);
@@ -130,7 +230,7 @@ async function deleteFightHistoryEntry(id) {
     try {
       await apiDelete('fight_history', id);
       fightHistory = fightHistory.filter((row) => row.id !== id);
-      renderFightPage();
+      await renderFightPage();
       showToast('過去試合を削除しました', 'info');
     } catch (err) {
       console.error(err);
@@ -171,7 +271,7 @@ async function saveFightGoal() {
     clearForm(['f-opponent','f-target','f-venue','f-note']);
     const opponentSelect = document.getElementById('f-opponent-id');
     if (opponentSelect) opponentSelect.value = '';
-    renderFightPage();
+    await renderFightPage();
     renderDashboard();
     switchFightSectionTab('next');
   } catch(e) {
@@ -185,15 +285,16 @@ async function deleteFightGoal(id) {
       await apiDelete('fight_goals', id);
       fightGoals = fightGoals.filter(f => f.id !== id);
       showToast('削除しました', 'info');
-      renderFightPage();
+      await renderFightPage();
       renderDashboard();
     } catch(e) { showToast('削除に失敗しました', 'error'); }
   });
 }
 
-function renderFightPage() {
+async function renderFightPage() {
   switchFightSectionTab(currentFightSectionTab, false);
   syncFightOpponentSelect(document.getElementById('f-opponent-id')?.value || '');
+  renderOpponentPhotoPreview();
   const activeFights = fightGoals.filter(f => f.status === '準備中' && f.fight_date);
   const nextFight = activeFights.sort((a,b) => new Date(a.fight_date)-new Date(b.fight_date))[0];
 
@@ -322,26 +423,44 @@ function renderFightPage() {
     if (!opponents.length) {
       opponentContainer.innerHTML = '<div class="empty-state">対戦相手プロフィールがまだありません</div>';
     } else {
-      opponentContainer.innerHTML = opponents.slice().reverse().map((op) => `
+      const cards = await Promise.all(opponents.slice().reverse().map(async (op) => {
+        const photoUrl = op.photo_storage_path ? await getOpponentPhotoSignedUrl(op.photo_storage_path) : '';
+        return `
         <div class="opponent-card">
           <div class="opponent-card-head">
             <div>
               <strong>${escapeHtml(op.name)}</strong>
-              <div class="table-subnote">${escapeHtml(op.gym || '所属未設定')} / ${escapeHtml(op.stance || '構え未設定')}</div>
+              <div class="table-subnote">${escapeHtml(op.ring_name || 'リングネーム未設定')}</div>
             </div>
             <button type="button" class="btn btn-sm btn-danger" onclick="deleteOpponentProfile('${op.id}')"><i class="fas fa-trash"></i></button>
           </div>
-          <div class="opponent-chip-row">
-            <span class="badge">${escapeHtml(op.nationality || '国籍未設定')}</span>
-            <span class="badge">身長 ${op.height_cm || '--'} cm</span>
-            <span class="badge">リーチ ${op.reach_cm || '--'} cm</span>
-            <span class="badge">${op.wins || 0}-${op.losses || 0}-${op.draws || 0} / KO ${op.kos || 0}</span>
+          <div class="opponent-card-body">
+            <div class="opponent-card-photo">
+              ${photoUrl
+                ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(op.name)}">`
+                : '<div class="opponent-photo-fallback"><i class="fas fa-user"></i></div>'}
+            </div>
+            <div class="opponent-card-main">
+              <div class="opponent-chip-row">
+                <span class="badge">${escapeHtml(op.gym || '所属未設定')}</span>
+                <span class="badge">${escapeHtml(op.nationality || '国籍未設定')}</span>
+                <span class="badge">${escapeHtml(op.stance || '構え未設定')}</span>
+              </div>
+              <div class="opponent-card-summary">
+                <div class="opponent-card-stat"><span>身長</span><strong>${op.height_cm || '--'} cm</strong></div>
+                <div class="opponent-card-stat"><span>リーチ</span><strong>${op.reach_cm || '--'} cm</strong></div>
+                <div class="opponent-card-stat"><span>戦績</span><strong>${op.wins || 0}-${op.losses || 0}-${op.draws || 0}</strong></div>
+                <div class="opponent-card-stat"><span>KO</span><strong>${op.kos || 0}</strong></div>
+              </div>
+            </div>
           </div>
           ${op.strengths ? `<p class="settings-note"><strong>強み:</strong> ${escapeHtml(op.strengths)}</p>` : ''}
           ${op.weaknesses ? `<p class="settings-note"><strong>弱み:</strong> ${escapeHtml(op.weaknesses)}</p>` : ''}
           ${op.notes ? `<p class="settings-note">${escapeHtml(op.notes)}</p>` : ''}
         </div>
-      `).join('');
+      `;
+      }));
+      opponentContainer.innerHTML = cards.join('');
     }
   }
 

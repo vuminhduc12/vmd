@@ -48,6 +48,7 @@ const WEIGHT_LOG_SLOTS = [
   { value: 'evening', label: '夜', shortLabel: '夜' },
 ];
 const WEIGHT_PHOTO_BUCKET = 'weight-photos';
+const OPPONENT_PHOTO_BUCKET = 'opponent-photos';
 const WEIGHT_PHOTO_MAX_FILES = 3;
 const IMAGE_MAX_EDGE = 1600;
 const IMAGE_MAX_SIZE_BYTES = 850 * 1024;
@@ -281,6 +282,8 @@ let editingWeightId = null;
 let editingTrainingId = null;
 let selectedWeightRecordId = '';
 let pendingWeightPhotoFiles = [];
+let pendingOpponentPhotoFile = null;
+let pendingOpponentPhotoPreviewUrl = '';
 
 // ============================================================
 // UTILITIES
@@ -710,9 +713,11 @@ function clampNumber(value, min, max) {
 const INPUT_BOUNDS = {
   weightKg: [30, 220],
   heightCm: [120, 230],
+  reachCm: [120, 250],
   bodyFatPct: [2, 70],
   muscleKg: [20, 150],
   targetWeightKg: [30, 220],
+  opponentRecordCount: [0, 300],
   mealAmountGrams: [1, 10000],
   mealCaloriesPerItem: [0, 20000],
   macroGPerItem: [0, 500],

@@ -386,6 +386,48 @@ async function deleteWeightPhoto(photoId) {
   weightLogPhotos = weightLogPhotos.filter((item) => item.id !== photoId);
 }
 
+async function uploadOpponentPhotoFile(file, opponentId) {
+  const sb = await getSupabaseClient();
+  if (!sb || !canUseCloudMedia()) throw new Error('クラウドログイン時のみ画像を保存できます');
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) throw new Error('ログインが必要です');
+
+  const compressed = await compressImageFile(file);
+  const storagePath = `${user.id}/opponents/${opponentId}/profile.jpg`;
+  const upload = await sb.storage.from(OPPONENT_PHOTO_BUCKET).upload(storagePath, compressed, {
+    cacheControl: '3600',
+    contentType: 'image/jpeg',
+    upsert: true,
+  });
+  if (upload.error) throw upload.error;
+
+  return {
+    storage_path: storagePath,
+    file_name: compressed.name,
+    content_type: compressed.type,
+    file_size: compressed.size,
+  };
+}
+
+async function getOpponentPhotoSignedUrl(storagePath) {
+  const sb = await getSupabaseClient();
+  if (!sb || !storagePath) return '';
+  const { data, error } = await sb.storage.from(OPPONENT_PHOTO_BUCKET).createSignedUrl(storagePath, 60 * 30);
+  if (error) {
+    console.error('BOXER PRO: createSignedUrl failed', error);
+    return '';
+  }
+  return data?.signedUrl || '';
+}
+
+async function deleteOpponentPhotoStorage(storagePath) {
+  if (!storagePath) return;
+  const sb = await getSupabaseClient();
+  if (!sb) return;
+  const { error } = await sb.storage.from(OPPONENT_PHOTO_BUCKET).remove([storagePath]);
+  if (error) console.error('BOXER PRO: remove opponent photo storage', error);
+}
+
 if (typeof window !== 'undefined') {
   window.signInWithGoogle = signInWithGoogle;
   window.signOutSupabase = signOutSupabase;

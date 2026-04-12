@@ -3,15 +3,6 @@
 // ============================================================
 function initNav() {
   const navItems = document.querySelectorAll('.nav-item[data-page]');
-  const pageMap = {
-    'dashboard': 'ダッシュボード',
-    'weight': '⚖️ 体重管理',
-    'meals': '🍱 食事管理',
-    'training': '🥊 練習スケジュール',
-    'calories': '🔥 カロリー計算',
-    'fight': '🏆 試合目標',
-    'settings': '⚙️ マイ設定',
-  };
 
   navItems.forEach(item => {
     const link = item.querySelector('.nav-link');

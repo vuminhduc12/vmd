@@ -375,6 +375,32 @@ textarea.input-field{resize:vertical;min-height:70px}
 }
 .opponent-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
 .opponent-chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.opponent-form-hero{
+  display:grid;grid-template-columns:minmax(200px, 240px) 1fr;gap:14px;margin-bottom:14px;align-items:stretch;
+}
+.opponent-upload-stack{display:flex;flex-direction:column;gap:10px}
+.opponent-upload-drop{min-height:unset;padding:12px}
+.opponent-photo-preview{
+  width:100%;max-width:200px;aspect-ratio:1/1;border-radius:18px;overflow:hidden;
+  background:var(--bg-input);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);
+}
+.opponent-photo-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.opponent-photo-fallback{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:44px;color:var(--tx-3)}
+.opponent-form-note{margin-top:0}
+.opponent-card-photo{
+  width:84px;height:84px;border-radius:18px;overflow:hidden;flex:0 0 84px;
+  background:var(--bg-input);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;
+}
+.opponent-card-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.opponent-card-body{display:flex;gap:14px;align-items:flex-start}
+.opponent-card-main{flex:1;min-width:0}
+.opponent-card-summary{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;margin-bottom:10px}
+.opponent-card-stat{
+  padding:10px 12px;border-radius:14px;background:rgba(255,255,255,0.03);border:1px solid var(--b1);
+}
+.opponent-card-stat span{display:block;font-size:10px;color:var(--tx-3);font-weight:800;letter-spacing:.4px;text-transform:uppercase}
+.opponent-card-stat strong{display:block;margin-top:4px;font-size:14px;color:var(--tx-1)}
 .fight-section-tabs{
   display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px;
 }
@@ -1472,6 +1498,11 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .fight-section-tabs{gap:8px}
   .fight-section-tab{flex:1 1 calc(33.333% - 6px);text-align:center;padding:10px 8px}
   .media-thumb-grid{grid-template-columns:1fr}
+  .opponent-form-hero{grid-template-columns:1fr}
+  .opponent-photo-preview{max-width:none}
+  .opponent-card-body{flex-direction:column}
+  .opponent-card-photo{width:100%;height:auto;aspect-ratio:4/3}
+  .opponent-card-summary{grid-template-columns:1fr}
   .onboarding-head{flex-direction:column}
   .onboarding-steps{grid-template-columns:1fr}
   .onboarding-actions{flex-direction:column}
