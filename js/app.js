@@ -42,6 +42,63 @@ const LOCAL_TABLE_PREFIX = 'boxerpro.table.';
 const SETTINGS_KEY = 'boxerpro.settings';
 const APP_SCHEMA_VERSION = 1;
 const CUTTING_PLAN_URL = 'data/weight-cut-plan.csv';
+const AUTO_CUT_WEEKLY_LIMIT_RATIO = 0.009;
+const AUTO_CUT_PHASE_BOUNDARIES = {
+  baseDaysMin: 29,
+  intensiveDaysMin: 15,
+  finalDaysMin: 6,
+};
+const AUTO_CUT_CLASS_PRESETS = [
+  {
+    id: 'mini_to_fly',
+    label: 'ミニマム〜フライ',
+    keywords: ['ミニマム', 'ライトフライ', 'フライ'],
+    proteinMul: 1.08,
+    fatMul: 0.92,
+    carbsShift: -15,
+    deficitMul: 0.90,
+    kcalFloorMul: 1.00,
+  },
+  {
+    id: 'superfly_to_feather',
+    label: 'Sフライ〜フェザー',
+    keywords: ['スーパーフライ', 'バンタム', 'スーパーバンタム', 'フェザー'],
+    proteinMul: 1.04,
+    fatMul: 0.96,
+    carbsShift: -8,
+    deficitMul: 0.95,
+    kcalFloorMul: 1.00,
+  },
+  {
+    id: 'superfeather_to_welter',
+    label: 'Sフェザー〜ウェルター',
+    keywords: ['スーパーフェザー', 'ライト級', 'スーパーライト', 'ウェルター'],
+    proteinMul: 1.00,
+    fatMul: 1.00,
+    carbsShift: 0,
+    deficitMul: 1.00,
+    kcalFloorMul: 1.00,
+  },
+  {
+    id: 'middle_plus',
+    label: 'ミドル以上',
+    keywords: ['ミドル', 'スーパーミドル', 'ライトヘビー', 'クルーザー', 'ヘビー'],
+    proteinMul: 0.96,
+    fatMul: 1.05,
+    carbsShift: 10,
+    deficitMul: 1.08,
+    kcalFloorMul: 1.04,
+  },
+];
+const AUTO_CUT_CLASS_PRESET_DEFAULT = {
+  id: 'default',
+  label: '標準',
+  proteinMul: 1,
+  fatMul: 1,
+  carbsShift: 0,
+  deficitMul: 1,
+  kcalFloorMul: 1,
+};
 const DATA_TABLES = ['weight_logs', 'weight_log_photos', 'meals', 'training_logs', 'fight_goals', 'opponents', 'fight_history', 'hydration_logs', 'recovery_logs'];
 const WEIGHT_LOG_SLOTS = [
   { value: 'morning', label: '朝', shortLabel: '朝' },
@@ -81,6 +138,7 @@ const DEFAULT_SETTINGS = {
   reminderHydrationTime: '13:00',
   reminderSleepTime: '22:00',
   goalMode: 'boxer_cut',
+  fatLossTargetDate: '',
 };
 
 const APP_PAGE_IDS = ['dashboard', 'weight', 'meals', 'training', 'calories', 'fight', 'settings'];
@@ -93,6 +151,12 @@ function normalizeAppPageId(name) {
 function normalizeGoalMode(mode) {
   const value = String(mode || '').trim();
   return GOAL_MODES.includes(value) ? value : DEFAULT_SETTINGS.goalMode;
+}
+
+function normalizeOptionalIsoDate(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  return isIsoDateString(text) ? text : '';
 }
 
 function getCurrentGoalMode() {
@@ -108,6 +172,7 @@ let goalModeUiRedirecting = false;
 function applyGoalModeUi() {
   const mode = getCurrentGoalMode();
   const boxerMode = mode === 'boxer_cut';
+  const fatLossMode = mode === 'fat_loss';
   const countdownPill = document.getElementById('countdownPill');
   if (countdownPill) countdownPill.hidden = !boxerMode;
 
@@ -118,6 +183,8 @@ function applyGoalModeUi() {
 
   const dashboardFightCard = document.querySelector('#dash-quick-anchor .dashboard-focus-card');
   if (dashboardFightCard) dashboardFightCard.style.display = boxerMode ? '' : 'none';
+  const dashboardQuickRow = document.getElementById('dash-quick-anchor');
+  if (dashboardQuickRow) dashboardQuickRow.classList.toggle('single-card', !boxerMode);
 
   const fightTabs = document.getElementById('fightSectionTabs');
   if (fightTabs) fightTabs.hidden = !boxerMode;
@@ -133,6 +200,11 @@ function applyGoalModeUi() {
     fightGuideText.textContent = mode === 'fat_loss'
       ? '一般減量（安全重視）モードでは、試合・対戦相手・過去試合管理は非表示です。体重・食事・練習の継続管理に集中してください。'
       : '維持モードでは試合管理は非表示です。体重維持と回復の安定化を中心に使ってください。';
+  }
+
+  const fatLossTargetDateWrap = document.getElementById('fatLossTargetDateWrap');
+  if (fatLossTargetDateWrap) {
+    fatLossTargetDateWrap.style.display = fatLossMode ? '' : 'none';
   }
 
   const activePage = document.querySelector('.page.active')?.id || '';
@@ -312,6 +384,7 @@ let weightLogPhotos = [];
 let hydrationLogs = [];
 let recoveryLogs = [];
 let cuttingPlanRows = [];
+let baseCuttingPlanRows = [];
 let currentCutPlanTab = 'card';
 let currentFightSectionTab = 'next';
 let currentCalendarDate = new Date();
@@ -320,6 +393,7 @@ let activeStorageMode = STORAGE_MODE.CHECKING;
 let storageFallbackNotified = false;
 let deferredInstallPrompt = null;
 let appSettings = { ...DEFAULT_SETTINGS };
+let fatLossTargetDateWarning = '';
 let hasInitialDataLoaded = false;
 let reminderIntervalId = null;
 let storageWriteWarningShown = false;
@@ -532,6 +606,7 @@ function mergeSettings(raw = {}) {
     remindersEnabled: typeof raw.remindersEnabled === 'boolean' ? raw.remindersEnabled : DEFAULT_SETTINGS.remindersEnabled,
     landingPage: normalizeAppPageId(raw.landingPage ?? DEFAULT_SETTINGS.landingPage),
     goalMode: normalizeGoalMode(raw.goalMode ?? DEFAULT_SETTINGS.goalMode),
+    fatLossTargetDate: normalizeOptionalIsoDate(raw.fatLossTargetDate ?? DEFAULT_SETTINGS.fatLossTargetDate),
   };
 }
 
@@ -1186,6 +1261,7 @@ function renderSettingsPage() {
   setFieldValue('s-intensity', appSettings.defaultTrainingIntensity);
   setFieldValue('s-landing-page', appSettings.landingPage);
   setFieldValue('s-goal-mode', appSettings.goalMode);
+  setFieldValue('s-fat-loss-target-date', appSettings.fatLossTargetDate);
   setFieldValue('s-reminders-enabled', String(appSettings.remindersEnabled));
   setFieldValue('s-reminder-weight', appSettings.reminderWeightTime);
   setFieldValue('s-reminder-hydration', appSettings.reminderHydrationTime);
@@ -1253,6 +1329,11 @@ function saveAppSettings() {
   const di = document.getElementById('s-intensity').value;
   if (!TRAINING_INTENSITIES.includes(di)) { showToast('既定の練習強度を選択してください', 'error'); return; }
   const goalMode = normalizeGoalMode(document.getElementById('s-goal-mode')?.value || DEFAULT_SETTINGS.goalMode);
+  const fatLossTargetRaw = (document.getElementById('s-fat-loss-target-date')?.value || '').trim();
+  if (fatLossTargetRaw && !isIsoDateString(fatLossTargetRaw)) {
+    showToast('一般減量の目標達成日は YYYY-MM-DD 形式で入力してください', 'error');
+    return;
+  }
 
   appSettings = mergeSettings({
     athleteName: document.getElementById('s-name').value.trim() || DEFAULT_SETTINGS.athleteName,
@@ -1265,6 +1346,7 @@ function saveAppSettings() {
     defaultMealType: document.getElementById('s-meal-type').value || DEFAULT_SETTINGS.defaultMealType,
     defaultTrainingIntensity: di,
     goalMode,
+    fatLossTargetDate: goalMode === 'fat_loss' ? fatLossTargetRaw : '',
     landingPage: document.getElementById('s-landing-page').value || DEFAULT_SETTINGS.landingPage,
     remindersEnabled: document.getElementById('s-reminders-enabled').value === 'true',
     reminderWeightTime,
@@ -1283,19 +1365,26 @@ function saveAppSettings() {
 function renderWeeklyFatLossCard() {
   const card = document.getElementById('weeklyFatLossCard');
   const summary = document.getElementById('weeklyFatLossSummary');
-  if (!card || !summary) return;
+  const plan = document.getElementById('weeklyFatLossPlan');
+  if (!card || !summary || !plan) return;
 
   if ((appSettings?.goalMode || '') !== 'fat_loss') {
     card.style.display = 'none';
+    plan.style.display = 'none';
+    plan.innerHTML = '';
+    summary.innerHTML = '';
     return;
   }
   card.style.display = '';
+  card.classList.add('fatloss-card');
 
   const rows = [...weightLogs]
     .filter((row) => row?.date && Number.isFinite(Number(row?.weight)))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
   if (rows.length < 2) {
-    summary.textContent = '体重記録が2件以上あると週間ペースを判定します。';
+    summary.innerHTML = '<div class="fatloss-warn">体重記録が2件以上あると週間ペースを判定します。</div>';
+    plan.style.display = 'none';
+    plan.innerHTML = '';
     return;
   }
 
@@ -1314,7 +1403,64 @@ function renderWeeklyFatLossCard() {
   if (weeklyPct < 0.25) judge = '遅め';
   else if (weeklyPct > 0.75) judge = '速め';
 
-  summary.textContent = `直近7日: ${weeklyPct.toFixed(2)}%（${diffKg >= 0 ? '-' : '+'}${Math.abs(diffKg).toFixed(1)}kg） / 判定: ${judge}（推奨 0.25〜0.75%/週）`;
+  summary.innerHTML = `
+    <div class="fatloss-summary-grid">
+      <div class="fatloss-summary-chip">
+        <span>直近7日</span>
+        <strong>${weeklyPct.toFixed(2)}%</strong>
+      </div>
+      <div class="fatloss-summary-chip">
+        <span>体重差</span>
+        <strong>${diffKg >= 0 ? '-' : '+'}${Math.abs(diffKg).toFixed(1)} kg</strong>
+      </div>
+      <div class="fatloss-summary-chip">
+        <span>判定</span>
+        <strong>${escapeHtml(judge)}</strong>
+      </div>
+      <div class="fatloss-summary-chip">
+        <span>推奨ペース</span>
+        <strong>0.25〜0.75% / 週</strong>
+      </div>
+    </div>
+  `;
+
+  const today = TODAY();
+  const row = cuttingPlanRows.find((item) => item.date >= today) || cuttingPlanRows[cuttingPlanRows.length - 1];
+  if (!row?.autoGenerated) {
+    plan.style.display = 'none';
+    plan.innerHTML = '';
+    return;
+  }
+  plan.style.display = 'block';
+  const kcal = Math.round(Number(row.totalKcalTarget) || 0);
+  const protein = Math.round(Number(row.protein) || 0);
+  const fat = Math.round(Number(row.fat) || 0);
+  const carbs = Math.round(Number(row.carbs) || 0);
+  const warnHtml = fatLossTargetDateWarning
+    ? `<div class="fatloss-warn"><strong>警告:</strong> ${escapeHtml(fatLossTargetDateWarning)}</div>`
+    : '';
+  plan.innerHTML = `
+    <div class="fatloss-plan">
+      <div class="fatloss-plan-head">
+        <div>
+          <div class="fatloss-plan-title">今日/次回の一般減量プラン</div>
+          <div class="fatloss-plan-date">${escapeHtml(formatDate(row.date))} / フェーズ: ${escapeHtml(row.phase || '--')}</div>
+        </div>
+      </div>
+      <div class="fatloss-pfc-row">
+        <div class="fatloss-pfc-chip"><span>目標体重</span><strong>${escapeHtml(row.targetMorningWeight || '--')}</strong></div>
+        <div class="fatloss-pfc-chip"><span>KCAL</span><strong>${kcal}</strong></div>
+        <div class="fatloss-pfc-chip"><span>P / F / C</span><strong>${protein} / ${fat} / ${carbs} g</strong></div>
+        <div class="fatloss-pfc-chip"><span>補食</span><strong>${escapeHtml(row.snack || 'なし')}</strong></div>
+      </div>
+      <div class="fatloss-meals">
+        <div class="fatloss-meal"><strong>朝:</strong> ${escapeHtml(row.breakfast || '--')}</div>
+        <div class="fatloss-meal"><strong>昼:</strong> ${escapeHtml(row.lunch || '--')}</div>
+        <div class="fatloss-meal"><strong>夜:</strong> ${escapeHtml(row.dinner || '--')}</div>
+      </div>
+      ${warnHtml}
+    </div>
+  `;
 }
 
 function buildExportPayload() {
@@ -1560,7 +1706,7 @@ async function loadCuttingPlanData() {
   try {
     const text = await loadCuttingPlanText();
     const lines = text.split(/\r?\n/).filter(line => line.trim());
-    cuttingPlanRows = lines.slice(1).map(line => {
+    baseCuttingPlanRows = lines.slice(1).map(line => {
       const parts = parseCsvLine(line);
       return {
         date: normalizeSlashDate(parts[0]),
@@ -1578,10 +1724,254 @@ async function loadCuttingPlanData() {
         conditionMemo: parts[12] || '',
       };
     }).filter(row => row.date);
+    refreshCuttingPlanRows();
   } catch (error) {
     console.error(error);
+    baseCuttingPlanRows = [];
     cuttingPlanRows = [];
   }
+}
+
+function toIsoDateLocal(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function getNextActiveFightGoal() {
+  const rows = fightGoals
+    .filter((row) => row?.status === '準備中' && row?.fight_date)
+    .sort((a, b) => new Date(a.fight_date) - new Date(b.fight_date));
+  if (!rows.length) return null;
+  const today = TODAY();
+  return rows.find((row) => String(row.fight_date || '') >= today) || rows[0];
+}
+
+function getLatestWeightValue() {
+  if (!weightLogs.length) return null;
+  const latest = [...weightLogs]
+    .filter((row) => Number.isFinite(Number(row?.weight)))
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .pop();
+  return latest ? Number(latest.weight) : null;
+}
+
+function getAutoCutPhase(daysLeft) {
+  if (daysLeft >= AUTO_CUT_PHASE_BOUNDARIES.baseDaysMin) return '基礎減量';
+  if (daysLeft >= AUTO_CUT_PHASE_BOUNDARIES.intensiveDaysMin) return '強化減量';
+  if (daysLeft >= AUTO_CUT_PHASE_BOUNDARIES.finalDaysMin) return '最終調整';
+  return '計量直前調整';
+}
+
+function resolveAutoCutClassPreset(weightClass) {
+  const raw = String(weightClass || '').trim().toLowerCase();
+  if (!raw) return { ...AUTO_CUT_CLASS_PRESET_DEFAULT };
+  const found = AUTO_CUT_CLASS_PRESETS.find((preset) => preset.keywords.some((kw) => raw.includes(String(kw).toLowerCase())));
+  return found ? { ...AUTO_CUT_CLASS_PRESET_DEFAULT, ...found } : { ...AUTO_CUT_CLASS_PRESET_DEFAULT };
+}
+
+function getAutoCutPhaseConfig(phase, weightKg, baseKcal, classPreset = AUTO_CUT_CLASS_PRESET_DEFAULT) {
+  const bw = Number(weightKg) || 60;
+  const preset = classPreset || AUTO_CUT_CLASS_PRESET_DEFAULT;
+  const defaultFloor = Math.max(1400, Math.round(bw * 22 * (preset.kcalFloorMul || 1)));
+  const defaultCeiling = Math.max(defaultFloor + 100, Math.round(baseKcal * 1.05));
+  if (phase === '基礎減量') {
+    return {
+      proteinG: Math.round(clampNumber(bw * 2.0 * (preset.proteinMul || 1), 120, 240)),
+      fatG: Math.round(clampNumber(bw * 0.8 * (preset.fatMul || 1), 38, 90)),
+      minCarbsG: Math.max(60, 130 + (preset.carbsShift || 0)),
+      maxDeficitKcal: Math.round(450 * (preset.deficitMul || 1)),
+      phaseAdjustKcal: 60,
+      kcalFloor: defaultFloor,
+      kcalCeiling: defaultCeiling,
+    };
+  }
+  if (phase === '強化減量') {
+    return {
+      proteinG: Math.round(clampNumber(bw * 2.2 * (preset.proteinMul || 1), 130, 250)),
+      fatG: Math.round(clampNumber(bw * 0.7 * (preset.fatMul || 1), 35, 80)),
+      minCarbsG: Math.max(55, 110 + (preset.carbsShift || 0)),
+      maxDeficitKcal: Math.round(650 * (preset.deficitMul || 1)),
+      phaseAdjustKcal: 0,
+      kcalFloor: defaultFloor,
+      kcalCeiling: defaultCeiling,
+    };
+  }
+  if (phase === '最終調整') {
+    return {
+      proteinG: Math.round(clampNumber(bw * 2.3 * (preset.proteinMul || 1), 140, 260)),
+      fatG: Math.round(clampNumber(bw * 0.6 * (preset.fatMul || 1), 30, 70)),
+      minCarbsG: Math.max(50, 90 + (preset.carbsShift || 0)),
+      maxDeficitKcal: Math.round(750 * (preset.deficitMul || 1)),
+      phaseAdjustKcal: -40,
+      kcalFloor: defaultFloor,
+      kcalCeiling: defaultCeiling,
+    };
+  }
+  return {
+    proteinG: Math.round(clampNumber(bw * 2.4 * (preset.proteinMul || 1), 145, 265)),
+    fatG: Math.round(clampNumber(bw * 0.55 * (preset.fatMul || 1), 28, 65)),
+    minCarbsG: Math.max(45, 70 + (preset.carbsShift || 0)),
+    maxDeficitKcal: Math.round(500 * (preset.deficitMul || 1)),
+    phaseAdjustKcal: -80,
+    kcalFloor: defaultFloor,
+    kcalCeiling: defaultCeiling,
+  };
+}
+
+function getAutoCutMealTemplate(phase) {
+  if (phase === '基礎減量') {
+    return {
+      breakfast: 'オートミール + 卵 + ヨーグルト',
+      lunch: '鶏胸肉 + 白米 + 温野菜',
+      dinner: '白身魚 + 白米少量 + 野菜スープ',
+      snack: 'プロテイン + 果物',
+    };
+  }
+  if (phase === '強化減量') {
+    return {
+      breakfast: '卵白オムレツ + バナナ1/2',
+      lunch: '鶏胸肉 + 白米130g + ブロッコリー',
+      dinner: '豆腐 + 赤身魚 + 野菜',
+      snack: 'プロテイン + ナッツ少量',
+    };
+  }
+  if (phase === '最終調整') {
+    return {
+      breakfast: '白米少量 + 卵 + 味噌汁',
+      lunch: '鶏胸肉 + 低脂質炭水化物',
+      dinner: '白身魚 + 消化の良い炭水化物少量',
+      snack: 'プロテイン',
+    };
+  }
+  return {
+    breakfast: '低残渣食（少量）',
+    lunch: '低脂質・低繊維で調整',
+    dinner: 'コンディション優先の軽食',
+    snack: '必要時のみプロテイン',
+  };
+}
+
+function buildAutoCuttingPlanRows() {
+  const mode = getCurrentGoalMode();
+  fatLossTargetDateWarning = '';
+  const today = TODAY();
+  let horizonDate = '';
+  let currentWeight = null;
+  let targetWeight = null;
+  let classPreset = { ...AUTO_CUT_CLASS_PRESET_DEFAULT };
+
+  if (mode === 'boxer_cut') {
+    const nextFight = getNextActiveFightGoal();
+    if (!nextFight?.fight_date) return [];
+    horizonDate = String(nextFight.fight_date);
+    if (horizonDate < today) return [];
+    currentWeight = getLatestWeightValue() || Number(nextFight.current_weight) || null;
+    targetWeight = Number(nextFight.target_weight) || Number(appSettings.targetWeight) || null;
+    classPreset = resolveAutoCutClassPreset(nextFight.weight_class);
+  } else if (mode === 'fat_loss') {
+    currentWeight = getLatestWeightValue();
+    targetWeight = Number(appSettings.targetWeight) || null;
+    if (!currentWeight || !targetWeight || currentWeight <= targetWeight) return [];
+    const targetDate = normalizeOptionalIsoDate(appSettings.fatLossTargetDate);
+    if (targetDate) {
+      if (targetDate < today) {
+        fatLossTargetDateWarning = '目標達成日が過去日です。安全ペースで再計算した日程を表示しています。';
+      } else {
+        horizonDate = targetDate;
+      }
+    }
+    if (!horizonDate) {
+      const weeklyLoss = Math.max(currentWeight * 0.005, 0.15);
+      const estimatedDays = Math.ceil(((currentWeight - targetWeight) / weeklyLoss) * 7);
+      const planDays = clampNumber(estimatedDays, 14, 140);
+      const horizon = new Date(`${today}T00:00:00`);
+      horizon.setDate(horizon.getDate() + planDays);
+      horizonDate = toIsoDateLocal(horizon);
+    }
+  } else {
+    return [];
+  }
+
+  if (!currentWeight || !targetWeight) return [];
+
+  const totalDays = Math.max(getDaysUntil(horizonDate), 0);
+  if (!Number.isFinite(totalDays)) return [];
+
+  const totalLoss = Math.max(currentWeight - targetWeight, 0);
+  const requiredPerWeek = totalDays > 0 ? (totalLoss / Math.max(totalDays / 7, 1)) : 0;
+  const safeWeeklyLimit = mode === 'fat_loss' ? currentWeight * 0.0075 : currentWeight * AUTO_CUT_WEEKLY_LIMIT_RATIO;
+  const baseKcal = Number(appSettings.dailyCalorieGoal) || 1800;
+
+  if (mode === 'fat_loss' && appSettings.fatLossTargetDate && appSettings.fatLossTargetDate >= today && requiredPerWeek > safeWeeklyLimit) {
+    fatLossTargetDateWarning = `目標日までに必要な減量速度は ${requiredPerWeek.toFixed(2)}kg/週 です（安全目安 ${safeWeeklyLimit.toFixed(2)}kg/週）。目標日を後ろへ調整してください。`;
+  }
+
+  const rows = [];
+  const startDate = new Date(`${today}T00:00:00`);
+  for (let i = 0; i <= totalDays; i += 1) {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
+    const date = toIsoDateLocal(d);
+    const daysLeft = totalDays - i;
+    const phase = getAutoCutPhase(daysLeft);
+    const progress = totalDays > 0 ? i / totalDays : 1;
+    const targetMorningWeight = currentWeight - (totalLoss * progress);
+
+    const requiredDailyLoss = totalDays > 0 ? totalLoss / totalDays : 0;
+    const requiredDeficit = Math.round(requiredDailyLoss * 7700);
+    const phaseCfgRaw = getAutoCutPhaseConfig(phase, currentWeight, baseKcal, classPreset);
+    const phaseCfg = mode === 'fat_loss'
+      ? {
+          ...phaseCfgRaw,
+          maxDeficitKcal: Math.round(phaseCfgRaw.maxDeficitKcal * 0.7),
+          phaseAdjustKcal: Math.max(phaseCfgRaw.phaseAdjustKcal, -20),
+          kcalFloor: Math.max(phaseCfgRaw.kcalFloor, Math.round(currentWeight * 24)),
+          minCarbsG: Math.max(phaseCfgRaw.minCarbsG, 120),
+        }
+      : phaseCfgRaw;
+    const kcalTarget = clampNumber(
+      Math.round(baseKcal - clampNumber(requiredDeficit, 200, phaseCfg.maxDeficitKcal) + phaseCfg.phaseAdjustKcal),
+      phaseCfg.kcalFloor,
+      phaseCfg.kcalCeiling
+    );
+
+    const protein = phaseCfg.proteinG;
+    const fat = phaseCfg.fatG;
+    const carbsRaw = Math.round((kcalTarget - (protein * 4) - (fat * 9)) / 4);
+    const carbs = Math.max(phaseCfg.minCarbsG, carbsRaw);
+    const meals = getAutoCutMealTemplate(phase);
+    const hydrationMemo = daysLeft <= 2
+      ? '急激な水抜きは避ける。電解質を維持しながらこまめに補給。'
+      : '体重(kg)×35〜45mlを目安に補給。発汗量の差分を記録。';
+    const conditionMemo = requiredPerWeek > safeWeeklyLimit
+      ? `減量ペース警告: ${requiredPerWeek.toFixed(2)}kg/週（安全目安 ${safeWeeklyLimit.toFixed(2)}kg/週）`
+      : mode === 'fat_loss'
+        ? '一般減量: 週0.25〜0.75%を目安に、睡眠・NEAT・食事継続を優先。'
+        : `睡眠7時間以上・疲労スコア確認・練習強度を日次調整。階級プリセット: ${classPreset.label}`;
+
+    rows.push({
+      date,
+      phase,
+      targetMorningWeight: `${targetMorningWeight.toFixed(1)} kg`,
+      breakfast: meals.breakfast,
+      lunch: meals.lunch,
+      dinner: meals.dinner,
+      snack: meals.snack,
+      totalKcalTarget: kcalTarget,
+      protein,
+      fat,
+      carbs,
+      hydrationMemo,
+      conditionMemo,
+      autoGenerated: true,
+      autoGeneratedMode: mode,
+    });
+  }
+  return rows;
+}
+
+function refreshCuttingPlanRows() {
+  const autoRows = buildAutoCuttingPlanRows();
+  cuttingPlanRows = autoRows.length ? autoRows : [...baseCuttingPlanRows];
 }
 
 function renderPerformanceCoach() {
@@ -1897,6 +2287,7 @@ function renderFightPlanComparison(nextFight = null) {
   const badge = document.getElementById('planCompareBadge');
   if (!badge) return;
 
+  refreshCuttingPlanRows();
   const snapshot = getDailyPerformanceSnapshot(TODAY());
   const planRow = snapshot.planRow;
   if (!planRow) {
@@ -1911,7 +2302,7 @@ function renderFightPlanComparison(nextFight = null) {
     setText('planHydrationStatus', '水分: --');
     setText('planRecoveryStatus', '回復: --');
     setText('planTrainingStatus', '練習: --');
-    setText('planCompareNote', 'CSVの減量プランを読み込むと、計画との差分を表示します。');
+    setText('planCompareNote', '試合目標と体重記録が揃うと、自動減量プランとの差分を表示します。');
     badge.classList.remove('up', 'down', 'flat');
     badge.textContent = '比較待ち';
     return;
@@ -2041,6 +2432,7 @@ function getDashboardCalorieJudge(snapshot) {
 // DASHBOARD
 // ============================================================
 function renderDashboard() {
+  refreshCuttingPlanRows();
   const today = TODAY();
   const snapshot = getDailyPerformanceSnapshot(today);
 

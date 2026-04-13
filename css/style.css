@@ -1047,15 +1047,67 @@ textarea.input-field{resize:vertical;min-height:70px}
 
 /* Quick log cards */
 .quick-log-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.quick-log-row.single-card{grid-template-columns:1fr}
 .quick-log-card{background:var(--bg-card);border:1px solid var(--b1);border-radius:var(--r);padding:18px}
 .quick-header{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--b1)}
 .quick-header h3{font-size:13px;font-weight:700;color:var(--tx-1);display:flex;align-items:center;gap:8px}
 .quick-header h3 i{color:var(--gold)}
 .quick-form{display:flex;flex-direction:column;gap:9px}
 .dashboard-focus-card{grid-column:1 / -1}
+#weeklyFatLossCard{grid-column:1 / -1}
 .dashboard-focus-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 .dashboard-focus-actions .btn{min-width:160px}
 .input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fatloss-card{display:flex;flex-direction:column;gap:10px}
+.fatloss-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+}
+.fatloss-summary-chip{
+  border:1px solid var(--b1);
+  background:rgba(255,255,255,0.03);
+  border-radius:12px;
+  padding:10px 12px;
+}
+.fatloss-summary-chip span{display:block;font-size:10px;color:var(--tx-3);font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.fatloss-summary-chip strong{display:block;margin-top:4px;font-size:15px;color:var(--tx-1);line-height:1.3}
+.fatloss-plan{
+  border:1px solid var(--b1);
+  background:rgba(255,255,255,0.03);
+  border-radius:12px;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.fatloss-plan-head{
+  display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
+  padding-bottom:8px;border-bottom:1px solid var(--b1);
+}
+.fatloss-plan-title{font-size:13px;font-weight:700;color:var(--tx-1)}
+.fatloss-plan-date{font-size:11px;color:var(--tx-3)}
+.fatloss-pfc-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.fatloss-pfc-chip{
+  border:1px solid var(--b1);
+  background:rgba(255,255,255,0.02);
+  border-radius:10px;
+  padding:8px 10px;
+}
+.fatloss-pfc-chip span{display:block;font-size:10px;color:var(--tx-3)}
+.fatloss-pfc-chip strong{display:block;margin-top:3px;font-size:14px;color:var(--tx-1)}
+.fatloss-meals{display:grid;grid-template-columns:1fr;gap:6px}
+.fatloss-meal{font-size:12px;line-height:1.5;color:var(--tx-2)}
+.fatloss-meal strong{color:var(--tx-1)}
+.fatloss-warn{
+  border:1px solid rgba(232,57,74,0.35);
+  background:rgba(232,57,74,0.12);
+  color:#ffb1b8;
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:12px;
+  line-height:1.55;
+}
 
 /* Activity */
 .activity-list{padding:0}
@@ -1874,6 +1926,8 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .weight-record-view .media-thumb-card{max-width:none}
   .weight-data-table{min-width:620px}
   .onboarding-steps{grid-template-columns:1fr 1fr}
+  .fatloss-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fatloss-pfc-row{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:540px){
   .input-field,.btn{font-size:max(16px, 0.875rem)}
@@ -1973,6 +2027,8 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .onboarding-steps{grid-template-columns:1fr}
   .onboarding-actions{flex-direction:column}
   .onboarding-actions .btn{width:100%}
+  .fatloss-summary-grid{grid-template-columns:1fr}
+  .fatloss-pfc-row{grid-template-columns:1fr}
 }
 @media(min-width:901px){
   .sidebar-backdrop{display:none !important}

@@ -207,6 +207,7 @@
       <div class="quick-log-card" id="weeklyFatLossCard" style="display:none">
         <div class="quick-header"><h3><i class="fas fa-chart-line"></i> 週間減量進捗</h3></div>
         <div class="settings-note" id="weeklyFatLossSummary">データ待ち</div>
+        <div class="settings-note" id="weeklyFatLossPlan" style="margin-top:10px;display:none"></div>
       </div>
     </div>
 
@@ -1633,6 +1634,12 @@
               <option value="fat_loss">一般減量（安全重視）</option>
               <option value="maintenance">維持</option>
             </select>
+          </div>
+        </div>
+        <div class="form-row" id="fatLossTargetDateWrap" style="display:none">
+          <div class="form-group">
+            <label class="form-label">一般減量の目標達成日</label>
+            <input type="date" id="s-fat-loss-target-date" class="input-field">
           </div>
         </div>
         <button class="btn btn-primary btn-full" onclick="saveAppSettings()">

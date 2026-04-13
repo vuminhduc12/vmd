@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (typeof setAiCoachWidgetOpen === 'function') setAiCoachWidgetOpen(false);
   setDateInputs();
   applyAppSettings(true);
+  if (typeof initCollapseToggleButtons === 'function') initCollapseToggleButtons();
   try {
     await initSupabaseAuth();
   } catch (err) {
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   await loadCuttingPlanData();
   await loadAllData();
+  if (typeof refreshCuttingPlanRows === 'function') refreshCuttingPlanRows();
   startReminderLoop();
 
   // Set mealViewDate to today and load summary（要素欠落でここで止まると active ページが更新されないことがある）
