@@ -37,7 +37,14 @@
 // CONSTANTS
 // ============================================================
 const API_BASE = 'tables';
-const TODAY = () => new Date().toISOString().slice(0, 10);
+function toLocalIsoDate(date = new Date()) {
+  const d = date instanceof Date ? date : new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+const TODAY = () => toLocalIsoDate(new Date());
 const LOCAL_TABLE_PREFIX = 'boxerpro.table.';
 const SETTINGS_KEY = 'boxerpro.settings';
 const APP_SCHEMA_VERSION = 1;
@@ -896,7 +903,7 @@ const TRAINING_INTENSITIES = ['低', '中', '高', '最大'];
 function isIsoDateString(value) {
   if (!value || typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const d = new Date(`${value}T12:00:00`);
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
+  return !Number.isNaN(d.getTime()) && toLocalIsoDate(d) === value;
 }
 
 function isValidTimeHHMM(value) {
@@ -2438,7 +2445,7 @@ function renderDashboard() {
 
   // Today's weight
   const todayWeights = weightLogs.filter(w => w.date && w.date.slice(0,10) === today);
-  const latestWeight = weightLogs.length ? weightLogs[weightLogs.length - 1] : null;
+  const latestWeight = todayWeights.length ? todayWeights[todayWeights.length - 1] : null;
 
   if (latestWeight) {
     document.getElementById('kpi-current-weight').textContent = `${latestWeight.weight} kg`;
@@ -2457,6 +2464,8 @@ function renderDashboard() {
       setText('dashSubDate', formatDateJP(today));
     }
   } else {
+    document.getElementById('kpi-current-weight').textContent = '-- kg';
+    setText('kpi-bmi-badge', '--');
     setText('dashSubDate', formatDateJP(today));
   }
 
@@ -2696,7 +2705,7 @@ function buildTrainingWeightRecoverySeries(dayCount) {
   for (let i = dayCount - 1; i >= 0; i--) {
     const d = new Date(end);
     d.setDate(d.getDate() - i);
-    const ds = d.toISOString().slice(0, 10);
+    const ds = toLocalIsoDate(d);
     labels.push(`${d.getMonth() + 1}/${d.getDate()}`);
 
     const trainMins = trainingLogs
@@ -3163,7 +3172,7 @@ function render7dayMealChart() {
   const ctx = canvas.getContext('2d');
   const days7 = Array.from({length:7}, (_,i) => {
     const d = new Date(); d.setDate(d.getDate()-6+i);
-    return d.toISOString().slice(0,10);
+    return toLocalIsoDate(d);
   });
 
   const calArr = days7.map(d => Math.round(mealLogs.filter(m => m.date && m.date.slice(0,10)===d).reduce((s,m) => s+(parseFloat(m.calories)||0), 0)));
@@ -3438,11 +3447,11 @@ function renderWeeklyChart() {
   const dayNames = ['日','月','火','水','木','金','土'];
   const labels = days.map(d => dayNames[d.getDay()]);
   const durations = days.map(d => {
-    const ds = d.toISOString().slice(0,10);
+    const ds = toLocalIsoDate(d);
     return trainingLogs.filter(t => t.date && t.date.slice(0,10) === ds).reduce((s,t) => s+(parseFloat(t.duration)||0), 0);
   });
   const burnedArr = days.map(d => {
-    const ds = d.toISOString().slice(0,10);
+    const ds = toLocalIsoDate(d);
     return trainingLogs.filter(t => t.date && t.date.slice(0,10) === ds).reduce((s,t) => s+(parseFloat(t.calories_burned)||0), 0);
   });
 
@@ -3761,7 +3770,7 @@ function renderCalorieBalanceChart() {
   const ctx = document.getElementById('calorieBalanceChart').getContext('2d');
   const days7 = Array.from({length:7}, (_,i) => {
     const d = new Date(); d.setDate(d.getDate()-6+i);
-    return d.toISOString().slice(0,10);
+    return toLocalIsoDate(d);
   });
 
   const intakes = days7.map(d => Math.round(mealLogs.filter(m => m.date && m.date.slice(0,10)===d).reduce((s,m) => s+(parseFloat(m.calories)||0), 0)));
