@@ -15,9 +15,21 @@ const BOXER_SUPABASE_TABLES = {
 const SUPABASE_LAST_SEEN_SYNC_KEY = 'boxerpro.supabase.lastSeenSyncAt';
 const SUPABASE_LAST_SEEN_INTERVAL_MS = 30 * 60 * 1000;
 const SUPABASE_AUTH_TIMEOUT_MS = 8000;
+const API_PAGE_SIZE = 500;
+const API_MAX_PAGES = 40;
+const SUPABASE_PAGE_SIZE = 1000;
+const SUPABASE_MAX_PAGES = 20;
+const RETENTION_MAX_DELETES_PER_RUN = 120;
+const RETENTION_POLICY_RULES = {
+  meals: { days: 365 * 2, maxRows: 5000, dateField: 'date' },
+  training_logs: { days: 365 * 2, maxRows: 5000, dateField: 'date' },
+  hydration_logs: { days: 365 * 2, maxRows: 3000, dateField: 'date' },
+  recovery_logs: { days: 365 * 2, maxRows: 3000, dateField: 'date' },
+};
 let supabaseLastSeenBindingDone = false;
 let supabaseSessionRequest = null;
 let supabaseSessionSnapshot = null;
+let retentionPolicyAppliedOnce = false;
 
 function withTimeout(promise, ms, label = 'operation') {
   return Promise.race([
@@ -225,9 +237,19 @@ async function boxerSupabaseApiGet(table, params = '') {
   const sb = await getSupabaseClient();
   const tn = BOXER_SUPABASE_TABLES[table];
   if (!sb || !tn) throw new Error('Supabase not available');
-  const { data, error } = await sb.from(tn).select('id, payload, created_at, updated_at');
-  if (error) throw error;
-  const rows = (data || []).map(boxerRowToRecord);
+  const rows = [];
+  for (let page = 0; page < SUPABASE_MAX_PAGES; page += 1) {
+    const from = page * SUPABASE_PAGE_SIZE;
+    const to = from + SUPABASE_PAGE_SIZE - 1;
+    const { data, error } = await sb
+      .from(tn)
+      .select('id, payload, created_at, updated_at')
+      .range(from, to);
+    if (error) throw error;
+    const chunk = (data || []).map(boxerRowToRecord);
+    rows.push(...chunk);
+    if (chunk.length < SUPABASE_PAGE_SIZE) break;
+  }
   return { data: sortRows(rows, params) };
 }
 
@@ -736,30 +758,43 @@ async function apiGet(table, params = '') {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/${table}?limit=500${params ? '&' + params : ''}`);
-    if (!res.ok) {
-      if (shouldFallbackToLocal(null, res)) {
+    const rows = [];
+    for (let page = 0; page < API_MAX_PAGES; page += 1) {
+      const offset = page * API_PAGE_SIZE;
+      const res = await fetch(`${API_BASE}/${table}?limit=${API_PAGE_SIZE}&offset=${offset}${params ? '&' + params : ''}`);
+      if (!res.ok) {
+        if (shouldFallbackToLocal(null, res)) {
+          setStorageMode(STORAGE_MODE.LOCAL);
+          notifyLocalFallback();
+          return getLocalTableResponse(table, params);
+        }
+        throw new Error(`GET ${table} failed`);
+      }
+      // Workers/Pages 等で /tables が無いと index.html が 200 で返ることがある → JSON でなければローカル
+      if (!responseLooksLikeJson(res)) {
         setStorageMode(STORAGE_MODE.LOCAL);
         notifyLocalFallback();
         return getLocalTableResponse(table, params);
       }
-      throw new Error(`GET ${table} failed`);
+      let payload;
+      try {
+        payload = await res.json();
+      } catch (parseErr) {
+        setStorageMode(STORAGE_MODE.LOCAL);
+        notifyLocalFallback();
+        return getLocalTableResponse(table, params);
+      }
+      const chunk = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : null);
+      if (!Array.isArray(chunk)) {
+        setStorageMode(STORAGE_MODE.LOCAL);
+        notifyLocalFallback();
+        return getLocalTableResponse(table, params);
+      }
+      rows.push(...chunk);
+      if (chunk.length < API_PAGE_SIZE) break;
     }
-    // Workers/Pages 等で /tables が無いと index.html が 200 で返ることがある → JSON でなければローカル
-    if (!responseLooksLikeJson(res)) {
-      setStorageMode(STORAGE_MODE.LOCAL);
-      notifyLocalFallback();
-      return getLocalTableResponse(table, params);
-    }
-    try {
-      const data = await res.json();
-      setStorageMode(STORAGE_MODE.API);
-      return data;
-    } catch (parseErr) {
-      setStorageMode(STORAGE_MODE.LOCAL);
-      notifyLocalFallback();
-      return getLocalTableResponse(table, params);
-    }
+    setStorageMode(STORAGE_MODE.API);
+    return { data: sortRows(rows, params) };
   } catch (error) {
     if (shouldFallbackToLocal(error)) {
       setStorageMode(STORAGE_MODE.LOCAL);
@@ -767,6 +802,97 @@ async function apiGet(table, params = '') {
       return getLocalTableResponse(table, params);
     }
     throw error;
+  }
+}
+
+function normalizeDateValue(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+  const normalized = text.replace(/\//g, '-').slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(normalized) ? normalized : '';
+}
+
+function getTableRowsByName(table) {
+  if (table === 'meals') return mealLogs;
+  if (table === 'training_logs') return trainingLogs;
+  if (table === 'hydration_logs') return hydrationLogs;
+  if (table === 'recovery_logs') return recoveryLogs;
+  return [];
+}
+
+function setTableRowsByName(table, rows) {
+  if (table === 'meals') mealLogs = rows;
+  else if (table === 'training_logs') trainingLogs = rows;
+  else if (table === 'hydration_logs') hydrationLogs = rows;
+  else if (table === 'recovery_logs') recoveryLogs = rows;
+}
+
+function collectRetentionDeleteIds(table, rows) {
+  const rule = RETENTION_POLICY_RULES[table];
+  if (!rule || !Array.isArray(rows) || !rows.length) return [];
+
+  const now = new Date();
+  const cutoffDate = new Date(now);
+  cutoffDate.setDate(cutoffDate.getDate() - Number(rule.days || 0));
+  const cutoffIso = cutoffDate.toISOString().slice(0, 10);
+
+  const withDate = rows
+    .map((row) => ({
+      id: row?.id,
+      date: normalizeDateValue(row?.[rule.dateField]),
+    }))
+    .filter((item) => item.id && item.date)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const deletes = new Set();
+  withDate.forEach((item) => {
+    if (item.date < cutoffIso) deletes.add(item.id);
+  });
+
+  const keepSorted = withDate.filter((item) => !deletes.has(item.id));
+  const overflow = keepSorted.length - Number(rule.maxRows || 0);
+  if (overflow > 0) {
+    keepSorted.slice(0, overflow).forEach((item) => deletes.add(item.id));
+  }
+  return [...deletes];
+}
+
+async function enforceRetentionPolicyOnce() {
+  if (retentionPolicyAppliedOnce) return;
+  retentionPolicyAppliedOnce = true;
+
+  let deletedCount = 0;
+  for (const table of Object.keys(RETENTION_POLICY_RULES)) {
+    const rows = getTableRowsByName(table);
+    const deleteIds = collectRetentionDeleteIds(table, rows).slice(0, RETENTION_MAX_DELETES_PER_RUN - deletedCount);
+    if (!deleteIds.length) continue;
+
+    const deleteSet = new Set();
+    for (const id of deleteIds) {
+      try {
+        await apiDelete(table, id);
+        deleteSet.add(id);
+        deletedCount += 1;
+        if (deletedCount >= RETENTION_MAX_DELETES_PER_RUN) break;
+      } catch (error) {
+        console.error(`Retention delete failed: ${table}/${id}`, error);
+      }
+    }
+    if (deleteSet.size) {
+      setTableRowsByName(table, rows.filter((row) => !deleteSet.has(row?.id)));
+    }
+    if (deletedCount >= RETENTION_MAX_DELETES_PER_RUN) break;
+  }
+
+  if (deletedCount > 0) {
+    showToast(`保持ポリシーを適用し、古い記録を${deletedCount}件整理しました`, 'info');
+    renderDashboard();
+    renderWeightPage();
+    renderMealsPage();
+    renderTrainingPage();
+    renderCaloriesPage();
+    renderFightPage();
   }
 }
 
@@ -941,6 +1067,7 @@ async function loadAllData() {
     hasInitialDataLoaded = true;
     renderDashboard();
     renderSettingsPage();
+    void enforceRetentionPolicyOnce().catch((error) => console.error('Retention policy run failed', error));
   } catch(e) {
     showToast('データの読み込みに失敗しました', 'error');
     console.error(e);

@@ -1,11 +1,49 @@
-const json = (data, status = 200) =>
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const AI_RATE_LIMIT_PER_IP = 30;
+const AI_RATE_LIMIT_PER_USER = 12;
+const ADMIN_RATE_LIMIT_PER_IP = 60;
+const rateLimitBuckets = new Map();
+
+const json = (data, status = 200, extraHeaders = {}) =>
   new Response(JSON.stringify(data), {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
+      ...extraHeaders,
     },
   });
+
+function readClientIp(request) {
+  return (
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown'
+  );
+}
+
+function cleanupRateLimitBuckets(now) {
+  if (rateLimitBuckets.size < 5000) return;
+  for (const [key, entry] of rateLimitBuckets.entries()) {
+    if (!entry || now >= entry.resetAt) rateLimitBuckets.delete(key);
+  }
+}
+
+function takeRateLimitToken(key, limit, windowMs = RATE_LIMIT_WINDOW_MS) {
+  const now = Date.now();
+  cleanupRateLimitBuckets(now);
+  const current = rateLimitBuckets.get(key);
+  if (!current || now >= current.resetAt) {
+    const next = { count: 1, resetAt: now + windowMs };
+    rateLimitBuckets.set(key, next);
+    return { allowed: true, remaining: Math.max(limit - 1, 0), retryAfterSec: Math.ceil(windowMs / 1000), limit };
+  }
+  current.count += 1;
+  rateLimitBuckets.set(key, current);
+  const remaining = Math.max(limit - current.count, 0);
+  const retryAfterSec = Math.max(1, Math.ceil((current.resetAt - now) / 1000));
+  return { allowed: current.count <= limit, remaining, retryAfterSec, limit };
+}
 
 function parseBearerToken(request) {
   const authHeader = request.headers.get('authorization') || '';
@@ -238,6 +276,19 @@ async function handleAiChat(request, env) {
   if (request.method !== 'POST') {
     return json({ error: 'Method not allowed' }, 405);
   }
+  const ip = readClientIp(request);
+  const ipRate = takeRateLimitToken(`ai:ip:${ip}`, AI_RATE_LIMIT_PER_IP);
+  if (!ipRate.allowed) {
+    return json(
+      { error: 'Rate limit exceeded', retry_after_sec: ipRate.retryAfterSec },
+      429,
+      {
+        'retry-after': String(ipRate.retryAfterSec),
+        'x-ratelimit-limit': String(ipRate.limit),
+        'x-ratelimit-remaining': String(ipRate.remaining),
+      }
+    );
+  }
 
   const accessToken = parseBearerToken(request);
   if (!accessToken) {
@@ -248,6 +299,18 @@ async function handleAiChat(request, env) {
   const userId = String(sessionUser?.id || '').trim();
   if (!userId) {
     return json({ error: 'Unauthorized' }, 401);
+  }
+  const userRate = takeRateLimitToken(`ai:user:${userId}`, AI_RATE_LIMIT_PER_USER);
+  if (!userRate.allowed) {
+    return json(
+      { error: 'Rate limit exceeded', retry_after_sec: userRate.retryAfterSec },
+      429,
+      {
+        'retry-after': String(userRate.retryAfterSec),
+        'x-ratelimit-limit': String(userRate.limit),
+        'x-ratelimit-remaining': String(userRate.remaining),
+      }
+    );
   }
 
   let body = {};
@@ -332,6 +395,19 @@ async function handleAdminStats(request, env) {
   }
 
   const authHeader = request.headers.get('authorization') || '';
+  const ip = readClientIp(request);
+  const ipRate = takeRateLimitToken(`admin:ip:${ip}`, ADMIN_RATE_LIMIT_PER_IP);
+  if (!ipRate.allowed) {
+    return json(
+      { error: 'Rate limit exceeded', retry_after_sec: ipRate.retryAfterSec },
+      429,
+      {
+        'retry-after': String(ipRate.retryAfterSec),
+        'x-ratelimit-limit': String(ipRate.limit),
+        'x-ratelimit-remaining': String(ipRate.remaining),
+      }
+    );
+  }
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
   if (!match) {
     return json({ error: 'Unauthorized' }, 401);

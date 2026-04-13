@@ -191,6 +191,10 @@ README.md               # このファイル
 - 既定はローカル保存
 - `tables/*` API が使える環境では API 保存
 - Supabase 設定済みかつログイン済みなら Supabase 保存
+- 一覧取得はページング取得に対応（500件超でも順次読み込み）
+- 保持ポリシー（自動整理）:
+  - `meals` / `training_logs` / `hydration_logs` / `recovery_logs`
+  - 2年超の古い記録、または上限件数超過分を自動整理（1回あたり最大120件）
 
 ローカル保存しかなくても主要機能は利用できます。
 
@@ -213,6 +217,11 @@ README.md               # このファイル
 | POST | `tables/fight_goals` | 試合目標追加 |
 | DELETE | `tables/fight_goals/{id}` | 試合目標削除 |
 | POST | `/api/ai/chat` | ログインユーザーの記録を使ったAIチャット（Bearer必須） |
+
+レート制限:
+- `/api/ai/chat`: IPあたり 30 req/分、ユーザーあたり 12 req/分
+- `/api/admin/stats`: IPあたり 60 req/分
+- 超過時は `429` と `Retry-After` を返します
 
 ---
 
