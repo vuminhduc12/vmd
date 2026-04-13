@@ -81,7 +81,7 @@
       <button class="status-chip install-chip" id="installAppBtn" type="button" style="display:none">
         <i class="fas fa-mobile-screen-button"></i> アプリをインストール     </button>
       <div class="today-date" id="todayDate"></div>
-      <div class="countdown-pill" id="countdownPill" onclick="switchPage('fight')">
+      <div class="countdown-pill" id="countdownPill" onclick="openFightCountdownView()">
         <i class="fas fa-calendar-alt"></i>
         <span id="countdownText">試合まで --日</span>
       </div>
@@ -1659,33 +1659,6 @@
           </div>
         </div>
 
-        <div class="form-card" id="ai-coach-card">
-          <div class="ai-chat-head">
-            <h3 class="form-title"><i class="fas fa-robot"></i> AIコーチ</h3>
-            <span class="ai-chat-status" id="ai-chat-status-pill">準備中</span>
-          </div>
-          <p class="settings-note" id="ai-coach-note">クラウドログイン中のみ、あなたの記録を使って質問できます。</p>
-          <div class="ai-chat-suggestions" id="ai-chat-suggestions">
-            <button type="button" class="ai-suggestion-chip" onclick="useAiCoachSuggestion(this)">今日の食事と練習で改善点は？</button>
-            <button type="button" class="ai-suggestion-chip" onclick="useAiCoachSuggestion(this)">計量日までの体重ペースは順調？</button>
-            <button type="button" class="ai-suggestion-chip" onclick="useAiCoachSuggestion(this)">明日の食事プランを3つ提案して</button>
-          </div>
-          <div class="ai-chat-log" id="ai-chat-log" aria-live="polite">
-            <div class="ai-chat-empty" id="ai-chat-empty">上の例をタップするか、自由に質問してください。</div>
-          </div>
-          <div class="ai-chat-form">
-            <textarea id="ai-chat-input" class="input-field" rows="3" placeholder="例: 今日の摂取カロリーと体重の流れで、明日の食事をどう調整すべき？" onkeydown="handleAiCoachInputKeydown(event)"></textarea>
-            <div class="ai-chat-actions">
-              <button type="button" class="btn btn-ghost" onclick="clearAiCoachChat()">
-                <i class="fas fa-eraser"></i> クリア
-              </button>
-              <button type="button" class="btn btn-primary" id="ai-chat-send-btn" onclick="sendAiCoachQuestion()">
-                <i class="fas fa-paper-plane"></i> 送信
-              </button>
-            </div>
-          </div>
-        </div>
-
         <div class="form-card" id="admin-stats-card" hidden>
           <h3 class="form-title"><i class="fas fa-user-shield"></i> 管理者統計</h3>
           <div class="settings-summary-grid admin-stats-grid">
@@ -1762,6 +1735,42 @@
 
 </div><!-- /main-wrapper -->
 
+<button type="button" class="ai-coach-fab" id="aiCoachFab" aria-label="AIコーチを開く" aria-expanded="false" aria-controls="aiCoachWidget" onclick="toggleAiCoachWidget()">
+  <i class="fas fa-robot"></i>
+</button>
+<div class="ai-coach-backdrop" id="aiCoachBackdrop" hidden onclick="closeAiCoachWidget()"></div>
+<section class="ai-coach-widget" id="aiCoachWidget" hidden aria-live="polite">
+  <div class="ai-chat-head">
+    <h3 class="form-title"><i class="fas fa-robot"></i> AIコーチ</h3>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="ai-chat-status" id="ai-chat-status-pill">準備中</span>
+      <button type="button" class="btn btn-icon btn-ghost" onclick="closeAiCoachWidget()" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+  <p class="settings-note" id="ai-coach-note">クラウドログイン中のみ、あなたの記録を使って質問できます。</p>
+  <div class="ai-chat-suggestions" id="ai-chat-suggestions">
+    <button type="button" class="ai-suggestion-chip" onclick="useAiCoachSuggestion(this)">今日の食事と練習で改善点は？</button>
+    <button type="button" class="ai-suggestion-chip" onclick="useAiCoachSuggestion(this)">計量日までの体重ペースは順調？</button>
+    <button type="button" class="ai-suggestion-chip" onclick="useAiCoachSuggestion(this)">明日の食事プランを3つ提案して</button>
+  </div>
+  <div class="ai-chat-log" id="ai-chat-log">
+    <div class="ai-chat-empty" id="ai-chat-empty">上の例をタップするか、自由に質問してください。</div>
+  </div>
+  <div class="ai-chat-form">
+    <textarea id="ai-chat-input" class="input-field" rows="3" placeholder="例: 今日の摂取カロリーと体重の流れで、明日の食事をどう調整すべき？" onkeydown="handleAiCoachInputKeydown(event)"></textarea>
+    <div class="ai-chat-actions">
+      <button type="button" class="btn btn-ghost" onclick="clearAiCoachChat()">
+        <i class="fas fa-eraser"></i> クリア
+      </button>
+      <button type="button" class="btn btn-primary" id="ai-chat-send-btn" onclick="sendAiCoachQuestion()">
+        <i class="fas fa-paper-plane"></i> 送信
+      </button>
+    </div>
+  </div>
+</section>
+
 <div class="mobile-quick-backdrop" id="mobileQuickBackdrop" hidden></div>
 <div class="mobile-quick-sheet" id="mobileQuickSheet" role="dialog" aria-modal="true" aria-labelledby="mobileQuickTitle" hidden>
   <div class="mobile-quick-sheet-inner">
@@ -1834,12 +1843,12 @@
 
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
-<script src="js/core/navigation.js?v=18"></script>
-<script src="js/services/storage.js?v=18"></script>
-<script src="js/pages/weight.js?v=18"></script>
-<script src="js/pages/fight.js?v=18"></script>
-<script src="js/core/helpers.js?v=18"></script>
-<script src="js/core/init.js?v=18"></script>
-<script src="js/app.js?v=18"></script>
+<script src="js/core/navigation.js?v=20"></script>
+<script src="js/services/storage.js?v=20"></script>
+<script src="js/pages/weight.js?v=20"></script>
+<script src="js/pages/fight.js?v=20"></script>
+<script src="js/core/helpers.js?v=20"></script>
+<script src="js/core/init.js?v=20"></script>
+<script src="js/app.js?v=20"></script>
 </body>
 </html>

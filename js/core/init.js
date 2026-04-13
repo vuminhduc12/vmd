@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initInstallPrompt();
   registerServiceWorker();
   bindAppEventHandlers();
+  if (typeof setAiCoachWidgetOpen === 'function') setAiCoachWidgetOpen(false);
   setDateInputs();
   applyAppSettings(true);
   try {

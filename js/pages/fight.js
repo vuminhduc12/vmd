@@ -26,6 +26,43 @@ function getOpponentPhotoPreviewUrl() {
   return pendingOpponentPhotoPreviewUrl || editingOpponentPhotoUrl || '';
 }
 
+function linkifyText(value) {
+  const raw = String(value ?? '');
+  if (!raw) return '';
+  const urlRegex = /https?:\/\/[^\s<>"']+/gi;
+  const links = [];
+  const plainText = raw.replace(urlRegex, (fullMatch) => {
+    let url = fullMatch;
+    while (/[),.!?;:]$/.test(url)) {
+      url = url.slice(0, -1);
+    }
+    if (url) links.push(url);
+    return '';
+  }).trim();
+
+  const sections = [];
+  if (plainText) {
+    sections.push(escapeHtml(plainText).replaceAll('\n', '<br>'));
+  }
+  if (links.length) {
+    const linkLines = links.map((url, idx) => (
+      `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">リンク${idx + 1}</a> / ${escapeHtml(url)}`
+    ));
+    sections.push(linkLines.join('<br>'));
+  }
+  return sections.join('<br>');
+}
+
+function openFightCountdownView() {
+  const activeFights = fightGoals.filter((row) => row.status === '準備中' && row.fight_date);
+  const nextFight = activeFights.sort((a, b) => new Date(a.fight_date) - new Date(b.fight_date))[0] || null;
+  if (nextFight?.opponent_id && opponents.some((row) => row.id === nextFight.opponent_id)) {
+    selectedOpponentId = nextFight.opponent_id;
+  }
+  currentFightSectionTab = 'opponents';
+  switchPage('fight');
+}
+
 function updateOpponentFormModeUi() {
   const note = document.getElementById('opponentFormModeNote');
   const saveBtn = document.getElementById('saveOpponentBtn');
@@ -583,12 +620,12 @@ async function renderFightPage() {
     setText('selectedOpponentName', selectedOpponent.name || '--');
     setText('selectedOpponentMeta', [selectedOpponent.ring_name, selectedOpponent.nationality].filter(Boolean).join(' / ') || 'リングネーム・国籍未設定');
     setText('selectedOpponentStance', selectedOpponent.stance || '構え未設定');
-    setText(
-      'selectedOpponentNotes',
-      [selectedOpponent.strengths && `強み: ${selectedOpponent.strengths}`, selectedOpponent.weaknesses && `弱み: ${selectedOpponent.weaknesses}`, selectedOpponent.notes]
-        .filter(Boolean)
-        .join(' / ') || 'メモはありません。'
-    );
+    const notesHtml = [
+      selectedOpponent.strengths ? `<strong>強み:</strong> ${linkifyText(selectedOpponent.strengths)}` : '',
+      selectedOpponent.weaknesses ? `<strong>弱み:</strong> ${linkifyText(selectedOpponent.weaknesses)}` : '',
+      selectedOpponent.notes ? linkifyText(selectedOpponent.notes) : '',
+    ].filter(Boolean).join(' / ');
+    setHtml('selectedOpponentNotes', notesHtml || 'メモはありません。');
     if (selectedStats) {
       selectedStats.innerHTML = `
         <div class="opponent-card-stat"><span>身長</span><strong>${selectedOpponent.height_cm || '--'} cm</strong></div>
@@ -627,7 +664,7 @@ async function renderFightPage() {
             ${f.target_weight ? `🎯 目標体重: <strong>${f.target_weight} kg</strong><br>` : ''}
             ${f.venue ? `📍 ${f.venue}<br>` : ''}
             ${f.status === '準備中' && days !== null ? `⏱️ <strong style="color:var(--red-light)">${days}日後</strong>` : ''}
-            ${f.note ? `<br>📝 ${f.note}` : ''}
+            ${f.note ? `<br>📝 ${linkifyText(f.note)}` : ''}
           </div>
           <div class="fight-card-actions">
             <button class="btn btn-sm btn-danger" onclick="deleteFightGoal('${f.id}')">
@@ -678,9 +715,9 @@ async function renderFightPage() {
               </div>
             </div>
           </div>
-          ${op.strengths ? `<p class="settings-note"><strong>強み:</strong> ${escapeHtml(op.strengths)}</p>` : ''}
-          ${op.weaknesses ? `<p class="settings-note"><strong>弱み:</strong> ${escapeHtml(op.weaknesses)}</p>` : ''}
-          ${op.notes ? `<p class="settings-note">${escapeHtml(op.notes)}</p>` : ''}
+          ${op.strengths ? `<p class="settings-note"><strong>強み:</strong> ${linkifyText(op.strengths)}</p>` : ''}
+          ${op.weaknesses ? `<p class="settings-note"><strong>弱み:</strong> ${linkifyText(op.weaknesses)}</p>` : ''}
+          ${op.notes ? `<p class="settings-note">${linkifyText(op.notes)}</p>` : ''}
         </div>
       `;
       }));
@@ -706,7 +743,7 @@ async function renderFightPage() {
             ${row.event_name ? `🎫 ${escapeHtml(row.event_name)}<br>` : ''}
             ${row.venue ? `📍 ${escapeHtml(row.venue)}<br>` : ''}
             ${row.video_url ? `🎥 <a href="${escapeHtml(row.video_url)}" target="_blank" rel="noopener noreferrer">映像リンク</a><br>` : ''}
-            ${row.memo ? `📝 ${escapeHtml(row.memo)}` : ''}
+            ${row.memo ? `📝 ${linkifyText(row.memo)}` : ''}
           </div>
           <div class="fight-card-actions">
             <button class="btn btn-sm btn-danger" onclick="deleteFightHistoryEntry('${row.id}')"><i class="fas fa-trash"></i> 削除</button>
@@ -845,4 +882,5 @@ if (typeof window !== 'undefined') {
   window.selectOpponentProfile = selectOpponentProfile;
   window.editSelectedOpponentProfile = editSelectedOpponentProfile;
   window.deleteSelectedOpponentProfile = deleteSelectedOpponentProfile;
+  window.openFightCountdownView = openFightCountdownView;
 }

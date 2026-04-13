@@ -292,6 +292,7 @@ let pendingOpponentPhotoFile = null;
 let pendingOpponentPhotoPreviewUrl = '';
 let aiCoachMessages = [];
 let aiCoachPending = false;
+let aiCoachOpen = false;
 
 // ============================================================
 // UTILITIES
@@ -1002,6 +1003,7 @@ function updateAiCoachAvailability() {
   const sendBtn = document.getElementById('ai-chat-send-btn');
   const statusPill = document.getElementById('ai-chat-status-pill');
   const chips = Array.from(document.querySelectorAll('#ai-chat-suggestions .ai-suggestion-chip'));
+  const fab = document.getElementById('aiCoachFab');
   if (!note || !input || !sendBtn || !statusPill) return;
 
   const canUse = activeStorageMode === STORAGE_MODE.SUPABASE && typeof fetchAiCoachReply === 'function';
@@ -1027,11 +1029,40 @@ function updateAiCoachAvailability() {
   sendBtn.innerHTML = aiCoachPending
     ? '<i class="fas fa-spinner fa-spin"></i> 解析中...'
     : '<i class="fas fa-paper-plane"></i> 送信';
+  if (fab) {
+    fab.classList.toggle('is-busy', aiCoachPending);
+    fab.classList.toggle('is-locked', !canUse);
+  }
 }
 
 function clearAiCoachChat() {
   aiCoachMessages = [];
   renderAiCoachMessages();
+}
+
+function setAiCoachWidgetOpen(open) {
+  aiCoachOpen = !!open;
+  const widget = document.getElementById('aiCoachWidget');
+  const backdrop = document.getElementById('aiCoachBackdrop');
+  const fab = document.getElementById('aiCoachFab');
+  if (!widget || !backdrop || !fab) return;
+  widget.hidden = !aiCoachOpen;
+  backdrop.hidden = !aiCoachOpen;
+  fab.classList.toggle('is-open', aiCoachOpen);
+  fab.setAttribute('aria-expanded', aiCoachOpen ? 'true' : 'false');
+  if (aiCoachOpen) {
+    updateAiCoachAvailability();
+    renderAiCoachMessages();
+    window.setTimeout(() => document.getElementById('ai-chat-input')?.focus(), 40);
+  }
+}
+
+function toggleAiCoachWidget() {
+  setAiCoachWidgetOpen(!aiCoachOpen);
+}
+
+function closeAiCoachWidget() {
+  setAiCoachWidgetOpen(false);
 }
 
 function useAiCoachSuggestion(btn) {

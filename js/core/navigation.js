@@ -157,6 +157,7 @@ function initMobileQuickUI() {
 function switchPage(pageName) {
   closeMobileQuickSheet();
   closeSidebar();
+  if (typeof closeAiCoachWidget === 'function') closeAiCoachWidget();
   const page = normalizeAppPageId(pageName);
   if (page !== String(pageName || '').trim() && pageName != null && String(pageName).trim() !== '') {
     console.warn('BOXER PRO: invalid page id, using', page, 'was:', pageName);
