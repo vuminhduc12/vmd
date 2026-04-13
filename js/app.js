@@ -983,9 +983,13 @@ function renderAiCoachMessages() {
   aiCoachMessages.forEach((msg) => {
     const row = document.createElement('div');
     row.className = `ai-chat-item ${msg.role === 'user' ? 'user' : 'assistant'}`;
+    const roleLabel = msg.role === 'user' ? 'YOU' : 'AI';
     row.innerHTML = `
-      <div class="ai-chat-role">${msg.role === 'user' ? 'あなた' : 'AIコーチ'}</div>
-      <div class="ai-chat-text">${escapeHtml(msg.text).replaceAll('\n', '<br>')}</div>
+      <div class="ai-chat-badge">${roleLabel}</div>
+      <div class="ai-chat-bubble">
+        <div class="ai-chat-role">${msg.role === 'user' ? 'あなた' : 'AIコーチ'}</div>
+        <div class="ai-chat-text">${escapeHtml(msg.text).replaceAll('\n', '<br>')}</div>
+      </div>
     `;
     log.appendChild(row);
   });
@@ -996,22 +1000,52 @@ function updateAiCoachAvailability() {
   const note = document.getElementById('ai-coach-note');
   const input = document.getElementById('ai-chat-input');
   const sendBtn = document.getElementById('ai-chat-send-btn');
-  if (!note || !input || !sendBtn) return;
+  const statusPill = document.getElementById('ai-chat-status-pill');
+  const chips = Array.from(document.querySelectorAll('#ai-chat-suggestions .ai-suggestion-chip'));
+  if (!note || !input || !sendBtn || !statusPill) return;
 
   const canUse = activeStorageMode === STORAGE_MODE.SUPABASE && typeof fetchAiCoachReply === 'function';
   input.disabled = !canUse || aiCoachPending;
   sendBtn.disabled = !canUse || aiCoachPending;
+  chips.forEach((chip) => { chip.disabled = !canUse || aiCoachPending; });
   note.textContent = canUse
     ? 'あなたの直近記録（体重・食事・練習など）を使って回答します。医療診断は行いません。'
     : 'クラウドログイン中のみ利用できます。先に Google でログインしてください。';
+
+  statusPill.classList.remove('ready', 'busy', 'locked');
+  if (!canUse) {
+    statusPill.classList.add('locked');
+    statusPill.textContent = 'ログイン必要';
+  } else if (aiCoachPending) {
+    statusPill.classList.add('busy');
+    statusPill.textContent = '解析中';
+  } else {
+    statusPill.classList.add('ready');
+    statusPill.textContent = '利用可能';
+  }
+
   sendBtn.innerHTML = aiCoachPending
     ? '<i class="fas fa-spinner fa-spin"></i> 解析中...'
-    : '<i class="fas fa-paper-plane"></i> 質問する';
+    : '<i class="fas fa-paper-plane"></i> 送信';
 }
 
 function clearAiCoachChat() {
   aiCoachMessages = [];
   renderAiCoachMessages();
+}
+
+function useAiCoachSuggestion(btn) {
+  const input = document.getElementById('ai-chat-input');
+  if (!btn || !input) return;
+  input.value = String(btn.textContent || '').trim();
+  input.focus();
+}
+
+function handleAiCoachInputKeydown(event) {
+  if (!event) return;
+  if (event.key !== 'Enter' || event.shiftKey) return;
+  event.preventDefault();
+  sendAiCoachQuestion();
 }
 
 async function sendAiCoachQuestion() {
