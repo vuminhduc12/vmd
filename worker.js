@@ -154,6 +154,7 @@ function summarizeUserData(profile, weights, meals, trainings, goals, hydration,
     athlete: {
       name: settings.athleteName || '',
       role: settings.athleteRole || '',
+      goal_mode: settings.goalMode || 'boxer_cut',
       target_weight: settings.targetWeight || '',
       daily_calorie_goal: settings.dailyCalorieGoal || '',
     },
@@ -215,6 +216,18 @@ function extractResponseText(payload) {
   return chunks.join('\n').trim();
 }
 
+function enforceFatLossSafety(answerText) {
+  const text = String(answerText || '').trim();
+  if (!text) return '';
+  const unsafePattern = /(脱水|水抜き|サウナ[^。\n]*発汗|利尿剤|下剤|塩分[^。\n]*極端|炭水化物[^。\n]*極端|短期間[^。\n]*\d+\s*kg)/i;
+  if (!unsafePattern.test(text)) return text;
+  return [
+    '安全上の理由で提案を調整しました。',
+    '一般減量モードでは、急激な減量や脱水を伴う方法は提案しません。',
+    '週0.25〜0.75%の体重減少、十分なたんぱく質、睡眠、継続可能な食事調整を優先してください。'
+  ].join('\n');
+}
+
 async function handleAiChat(request, env) {
   if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY || !env.SUPABASE_SERVICE_ROLE_KEY) {
     return json({ error: 'Server auth env is not configured' }, 500);
@@ -244,6 +257,7 @@ async function handleAiChat(request, env) {
     return json({ error: 'Invalid JSON body' }, 400);
   }
   const question = String(body?.question || '').trim();
+  const requestGoalMode = String(body?.goal_mode || '').trim();
   if (!question) return json({ error: 'question is required' }, 400);
   if (question.length > 1000) return json({ error: 'question is too long' }, 400);
 
@@ -257,14 +271,23 @@ async function handleAiChat(request, env) {
     fetchUserRows(env, 'boxer_recovery_logs', userId, 10),
   ]);
   const summary = summarizeUserData(profile, weights, meals, trainings, goals, hydration, recovery);
+  const goalMode = ['boxer_cut', 'fat_loss', 'maintenance'].includes(requestGoalMode)
+    ? requestGoalMode
+    : (summary?.athlete?.goal_mode || 'boxer_cut');
 
   const model = env.OPENAI_MODEL || 'gpt-4.1-mini';
+  const modePolicy = goalMode === 'fat_loss'
+    ? 'General fat loss mode. Prioritize sustainability and safety. Never suggest dehydration, water-cut, sauna sweat cutting, laxatives, diuretics, or extreme sodium/carbohydrate manipulation.'
+    : goalMode === 'maintenance'
+      ? 'Maintenance mode. Prioritize weight stability and recovery.'
+      : 'Boxer cut mode. Prioritize safety and avoid medical diagnosis.';
   const systemText = [
     'You are a boxing performance coach assistant.',
     'Use only the provided user data summary.',
     'If data is missing, explicitly say what is missing.',
     'Keep answer concise in Japanese with practical actions for today and tomorrow.',
     'Do not provide medical diagnosis.',
+    modePolicy,
   ].join(' ');
   const userText = `ユーザー質問:\n${question}\n\nユーザーデータ要約(JSON):\n${JSON.stringify(summary)}`;
 
@@ -288,7 +311,10 @@ async function handleAiChat(request, env) {
     throw new Error(`OpenAI responses failed: ${aiRes.status} ${errText}`);
   }
   const aiPayload = await aiRes.json();
-  const answer = extractResponseText(aiPayload);
+  let answer = extractResponseText(aiPayload);
+  if (goalMode === 'fat_loss') {
+    answer = enforceFatLossSafety(answer);
+  }
   if (!answer) {
     return json({ error: 'AI response is empty' }, 502);
   }

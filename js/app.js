@@ -61,6 +61,7 @@ const STORAGE_MODE = {
   LOCAL: 'local',
   SUPABASE: 'supabase',
 };
+const GOAL_MODES = ['boxer_cut', 'fat_loss', 'maintenance'];
 
 let supabaseClientPromise = null;
 let supabaseAuthListenerBound = false;
@@ -79,6 +80,7 @@ const DEFAULT_SETTINGS = {
   reminderWeightTime: '07:00',
   reminderHydrationTime: '13:00',
   reminderSleepTime: '22:00',
+  goalMode: 'boxer_cut',
 };
 
 const APP_PAGE_IDS = ['dashboard', 'weight', 'meals', 'training', 'calories', 'fight', 'settings'];
@@ -86,6 +88,59 @@ const APP_PAGE_IDS = ['dashboard', 'weight', 'meals', 'training', 'calories', 'f
 function normalizeAppPageId(name) {
   const p = String(name == null ? '' : name).trim();
   return APP_PAGE_IDS.includes(p) ? p : 'dashboard';
+}
+
+function normalizeGoalMode(mode) {
+  const value = String(mode || '').trim();
+  return GOAL_MODES.includes(value) ? value : DEFAULT_SETTINGS.goalMode;
+}
+
+function getCurrentGoalMode() {
+  return normalizeGoalMode(appSettings?.goalMode || DEFAULT_SETTINGS.goalMode);
+}
+
+function isFightModeEnabled() {
+  return getCurrentGoalMode() === 'boxer_cut';
+}
+
+let goalModeUiRedirecting = false;
+
+function applyGoalModeUi() {
+  const mode = getCurrentGoalMode();
+  const boxerMode = mode === 'boxer_cut';
+  const countdownPill = document.getElementById('countdownPill');
+  if (countdownPill) countdownPill.hidden = !boxerMode;
+
+  const desktopFightNav = document.querySelector('.nav-item[data-page="fight"]');
+  if (desktopFightNav) desktopFightNav.style.display = boxerMode ? '' : 'none';
+  const mobileFightNav = document.querySelector('.mobile-nav-btn[data-page="fight"]');
+  if (mobileFightNav) mobileFightNav.style.display = boxerMode ? '' : 'none';
+
+  const dashboardFightCard = document.querySelector('#dash-quick-anchor .dashboard-focus-card');
+  if (dashboardFightCard) dashboardFightCard.style.display = boxerMode ? '' : 'none';
+
+  const fightTabs = document.getElementById('fightSectionTabs');
+  if (fightTabs) fightTabs.hidden = !boxerMode;
+  ['fightSectionPanelNext', 'fightSectionPanelOpponents', 'fightSectionPanelHistory'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = !boxerMode;
+  });
+
+  const fightGuideCard = document.getElementById('fightModeGuideCard');
+  const fightGuideText = document.getElementById('fightModeGuideText');
+  if (fightGuideCard) fightGuideCard.hidden = boxerMode;
+  if (fightGuideText && !boxerMode) {
+    fightGuideText.textContent = mode === 'fat_loss'
+      ? '一般減量（安全重視）モードでは、試合・対戦相手・過去試合管理は非表示です。体重・食事・練習の継続管理に集中してください。'
+      : '維持モードでは試合管理は非表示です。体重維持と回復の安定化を中心に使ってください。';
+  }
+
+  const activePage = document.querySelector('.page.active')?.id || '';
+  if (!boxerMode && activePage === 'page-fight' && !goalModeUiRedirecting) {
+    goalModeUiRedirecting = true;
+    switchPage('dashboard');
+    goalModeUiRedirecting = false;
+  }
 }
 
 // ============================================================
@@ -476,6 +531,7 @@ function mergeSettings(raw = {}) {
     dailyCalorieGoal: Number(raw.dailyCalorieGoal ?? DEFAULT_SETTINGS.dailyCalorieGoal) || DEFAULT_SETTINGS.dailyCalorieGoal,
     remindersEnabled: typeof raw.remindersEnabled === 'boolean' ? raw.remindersEnabled : DEFAULT_SETTINGS.remindersEnabled,
     landingPage: normalizeAppPageId(raw.landingPage ?? DEFAULT_SETTINGS.landingPage),
+    goalMode: normalizeGoalMode(raw.goalMode ?? DEFAULT_SETTINGS.goalMode),
   };
 }
 
@@ -676,6 +732,7 @@ function applyAppSettings(force = false) {
 
   if (typeof updateGoalBar === 'function') updateGoalBar();
   if (typeof updateWeightBmiPreview === 'function') updateWeightBmiPreview();
+  applyGoalModeUi();
 }
 
 function getLatestKnownHeightCm() {
@@ -1128,6 +1185,7 @@ function renderSettingsPage() {
   setFieldValue('s-meal-type', appSettings.defaultMealType);
   setFieldValue('s-intensity', appSettings.defaultTrainingIntensity);
   setFieldValue('s-landing-page', appSettings.landingPage);
+  setFieldValue('s-goal-mode', appSettings.goalMode);
   setFieldValue('s-reminders-enabled', String(appSettings.remindersEnabled));
   setFieldValue('s-reminder-weight', appSettings.reminderWeightTime);
   setFieldValue('s-reminder-hydration', appSettings.reminderHydrationTime);
@@ -1194,6 +1252,7 @@ function saveAppSettings() {
 
   const di = document.getElementById('s-intensity').value;
   if (!TRAINING_INTENSITIES.includes(di)) { showToast('既定の練習強度を選択してください', 'error'); return; }
+  const goalMode = normalizeGoalMode(document.getElementById('s-goal-mode')?.value || DEFAULT_SETTINGS.goalMode);
 
   appSettings = mergeSettings({
     athleteName: document.getElementById('s-name').value.trim() || DEFAULT_SETTINGS.athleteName,
@@ -1205,6 +1264,7 @@ function saveAppSettings() {
     dailyCalorieGoal,
     defaultMealType: document.getElementById('s-meal-type').value || DEFAULT_SETTINGS.defaultMealType,
     defaultTrainingIntensity: di,
+    goalMode,
     landingPage: document.getElementById('s-landing-page').value || DEFAULT_SETTINGS.landingPage,
     remindersEnabled: document.getElementById('s-reminders-enabled').value === 'true',
     reminderWeightTime,
@@ -1218,6 +1278,43 @@ function saveAppSettings() {
   renderWeightPage();
   renderCaloriesPage();
   showToast('設定を保存しました', 'success');
+}
+
+function renderWeeklyFatLossCard() {
+  const card = document.getElementById('weeklyFatLossCard');
+  const summary = document.getElementById('weeklyFatLossSummary');
+  if (!card || !summary) return;
+
+  if ((appSettings?.goalMode || '') !== 'fat_loss') {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+
+  const rows = [...weightLogs]
+    .filter((row) => row?.date && Number.isFinite(Number(row?.weight)))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  if (rows.length < 2) {
+    summary.textContent = '体重記録が2件以上あると週間ペースを判定します。';
+    return;
+  }
+
+  const latest = rows[rows.length - 1];
+  const latestDate = new Date(`${latest.date}T00:00:00`);
+  const baselineDate = new Date(latestDate);
+  baselineDate.setDate(baselineDate.getDate() - 7);
+  const baseline = [...rows].reverse().find((row) => new Date(`${row.date}T00:00:00`) <= baselineDate) || rows[0];
+
+  const latestWeight = Number(latest.weight);
+  const baseWeight = Number(baseline.weight);
+  const diffKg = baseWeight - latestWeight;
+  const weeklyPct = baseWeight > 0 ? (diffKg / baseWeight) * 100 : 0;
+
+  let judge = '適正';
+  if (weeklyPct < 0.25) judge = '遅め';
+  else if (weeklyPct > 0.75) judge = '速め';
+
+  summary.textContent = `直近7日: ${weeklyPct.toFixed(2)}%（${diffKg >= 0 ? '-' : '+'}${Math.abs(diffKg).toFixed(1)}kg） / 判定: ${judge}（推奨 0.25〜0.75%/週）`;
 }
 
 function buildExportPayload() {
@@ -2005,6 +2102,7 @@ function renderDashboard() {
   document.getElementById('todayDate').textContent = formatDateJP(today);
 
   renderDashboardOnboarding();
+  renderWeeklyFatLossCard();
 
   // Charts
   renderDashboardWeightChart();

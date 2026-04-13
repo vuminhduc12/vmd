@@ -629,7 +629,10 @@ async function fetchAiCoachReply(question) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({
+      question,
+      goal_mode: appSettings?.goalMode || 'boxer_cut',
+    }),
   });
   const payload = await res.json().catch(() => ({}));
   if (!res.ok) {

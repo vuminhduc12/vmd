@@ -158,7 +158,10 @@ function switchPage(pageName) {
   closeMobileQuickSheet();
   closeSidebar();
   if (typeof closeAiCoachWidget === 'function') closeAiCoachWidget();
-  const page = normalizeAppPageId(pageName);
+  let page = normalizeAppPageId(pageName);
+  if (page === 'fight' && typeof isFightModeEnabled === 'function' && !isFightModeEnabled()) {
+    page = 'dashboard';
+  }
   if (page !== String(pageName || '').trim() && pageName != null && String(pageName).trim() !== '') {
     console.warn('BOXER PRO: invalid page id, using', page, 'was:', pageName);
   }
@@ -205,4 +208,5 @@ function switchPage(pageName) {
   if (page === 'calories') renderCaloriesPage();
   if (page === 'fight') renderFightPage();
   if (page === 'settings') renderSettingsPage();
+  if (typeof applyGoalModeUi === 'function') applyGoalModeUi();
 }

@@ -204,6 +204,10 @@
           <div class="no-fight-msg">試合目標が未登録<br><small>「試合目標」タブから追加</small></div>
         </div>
       </div>
+      <div class="quick-log-card" id="weeklyFatLossCard" style="display:none">
+        <div class="quick-header"><h3><i class="fas fa-chart-line"></i> 週間減量進捗</h3></div>
+        <div class="settings-note" id="weeklyFatLossSummary">データ待ち</div>
+      </div>
     </div>
 
     <!-- Bottom Row: 7-day kcal chart + streak + activity -->
@@ -1051,7 +1055,19 @@
       <p class="page-subtitle">次の試合に向けたカウントダウンと減量進捗</p>
     </div>
 
-    <div class="fight-section-tabs" role="tablist" aria-label="試合管理セクション切替">
+    <div class="section-card" id="fightModeGuideCard" hidden>
+      <div class="section-card-header">
+        <h3><i class="fas fa-compass"></i> 現在モードの画面案内</h3>
+      </div>
+      <div class="settings-note" id="fightModeGuideText">このモードでは試合管理画面は非表示です。</div>
+      <div class="filter-row" style="margin-top:10px">
+        <button type="button" class="btn btn-secondary" onclick="switchPage('weight')"><i class="fas fa-weight-scale"></i> 体重管理へ</button>
+        <button type="button" class="btn btn-secondary" onclick="switchPage('meals')"><i class="fas fa-bowl-food"></i> 食事管理へ</button>
+        <button type="button" class="btn btn-secondary" onclick="switchPage('training')"><i class="fas fa-dumbbell"></i> 練習記録へ</button>
+      </div>
+    </div>
+
+    <div class="fight-section-tabs" id="fightSectionTabs" role="tablist" aria-label="試合管理セクション切替">
       <button class="fight-section-tab active" id="fightSectionTabNext" type="button" onclick="switchFightSectionTab('next', true)" aria-selected="true">次の試合</button>
       <button class="fight-section-tab" id="fightSectionTabOpponents" type="button" onclick="switchFightSectionTab('opponents', true)" aria-selected="false">対戦相手</button>
       <button class="fight-section-tab" id="fightSectionTabHistory" type="button" onclick="switchFightSectionTab('history', true)" aria-selected="false">過去試合</button>
@@ -1606,6 +1622,16 @@
               <option value="calories">カロリー計算</option>
               <option value="fight">試合目標</option>
               <option value="settings">マイ設定</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">目標モード</label>
+            <select id="s-goal-mode" class="input-field">
+              <option value="boxer_cut">試合向け減量（競技者）</option>
+              <option value="fat_loss">一般減量（安全重視）</option>
+              <option value="maintenance">維持</option>
             </select>
           </div>
         </div>
