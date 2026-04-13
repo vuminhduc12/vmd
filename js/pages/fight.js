@@ -826,21 +826,21 @@ function renderCuttingPlanSection() {
   `;
 
   tbody.innerHTML = cuttingPlanRows.map(row => `
-    <tr>
-      <td>${formatDate(row.date)}</td>
-      <td>${row.phase}</td>
-      <td>${row.targetMorningWeight}</td>
-      <td>${row.totalKcalTarget || '--'}</td>
-      <td>${row.protein || '--'}</td>
-      <td>${row.fat || '--'}</td>
-      <td>${row.carbs || '--'}</td>
-      <td>
+    <tr class="cut-plan-table-row">
+      <td data-label="日付">${formatDate(row.date)}</td>
+      <td data-label="フェーズ">${row.phase}</td>
+      <td data-label="目標体重">${row.targetMorningWeight}</td>
+      <td data-label="KCAL">${row.totalKcalTarget || '--'}</td>
+      <td data-label="P">${row.protein || '--'}</td>
+      <td data-label="F">${row.fat || '--'}</td>
+      <td data-label="C">${row.carbs || '--'}</td>
+      <td data-label="メニュー" class="cut-plan-table-meals">
         <strong>朝</strong> ${row.breakfast}<br>
         <strong>昼</strong> ${row.lunch}<br>
         <strong>夜</strong> ${row.dinner}<br>
         <strong>補</strong> ${row.snack || 'なし'}
       </td>
-      <td>${row.hydrationMemo}<br>${row.conditionMemo}</td>
+      <td data-label="メモ" class="cut-plan-table-notes">${row.hydrationMemo}<br>${row.conditionMemo}</td>
     </tr>
   `).join('');
 
