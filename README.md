@@ -65,6 +65,8 @@ python3 -m http.server 5500
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `ADMIN_EMAILS`
+- `OPENAI_API_KEY`（AIコーチ機能を使う場合）
+- `OPENAI_MODEL`（任意。未設定時は `gpt-4.1-mini`）
 
 例:
 
@@ -73,10 +75,14 @@ wrangler secret put SUPABASE_URL
 wrangler secret put SUPABASE_ANON_KEY
 wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 wrangler secret put ADMIN_EMAILS
+wrangler secret put OPENAI_API_KEY
 ```
 
 `ADMIN_EMAILS` には、管理者にしたい Google メールアドレスをカンマ区切りまたは改行区切りで入れます。  
 設定後、対象メールでログインしたユーザーにだけ `マイ設定 > 管理者統計` カードが表示されます。
+
+AIコーチ機能は `マイ設定 > AIコーチ` から利用できます。  
+権限制御として、Supabaseログイン中のユーザーだけが利用可能で、サーバー側ではそのユーザーIDのデータのみを集約して OpenAI に送信します。
 
 ---
 
@@ -206,6 +212,7 @@ README.md               # このファイル
 | GET | `tables/fight_goals?limit=500` | 試合目標一覧 |
 | POST | `tables/fight_goals` | 試合目標追加 |
 | DELETE | `tables/fight_goals/{id}` | 試合目標削除 |
+| POST | `/api/ai/chat` | ログインユーザーの記録を使ったAIチャット（Bearer必須） |
 
 ---
 

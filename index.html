@@ -1659,6 +1659,27 @@
           </div>
         </div>
 
+        <div class="form-card" id="ai-coach-card">
+          <h3 class="form-title"><i class="fas fa-robot"></i> AIコーチ (ベータ)</h3>
+          <p class="settings-note" id="ai-coach-note">
+            クラウドログイン中のみ、あなたの記録を使って質問できます。
+          </p>
+          <div class="ai-chat-log" id="ai-chat-log">
+            <div class="ai-chat-empty" id="ai-chat-empty">質問を入力すると、体重・食事・練習データから回答します。</div>
+          </div>
+          <div class="ai-chat-form">
+            <textarea id="ai-chat-input" class="input-field" rows="3" placeholder="例: 今日の摂取カロリーと体重の流れで、明日の食事をどう調整すべき？"></textarea>
+            <div class="settings-actions">
+              <button type="button" class="btn btn-primary btn-full" id="ai-chat-send-btn" onclick="sendAiCoachQuestion()">
+                <i class="fas fa-paper-plane"></i> 質問する
+              </button>
+              <button type="button" class="btn btn-ghost btn-full" onclick="clearAiCoachChat()">
+                <i class="fas fa-eraser"></i> クリア
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="form-card" id="admin-stats-card" hidden>
           <h3 class="form-title"><i class="fas fa-user-shield"></i> 管理者統計</h3>
           <div class="settings-summary-grid admin-stats-grid">

@@ -612,6 +612,36 @@ async function fetchAdminStats() {
   return res.json();
 }
 
+async function fetchAiCoachReply(question) {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    throw new Error('クラウドログイン中のみ利用できます');
+  }
+  const session = await getSupabaseSessionSafe(sb);
+  const accessToken = session?.access_token;
+  if (!accessToken) {
+    throw new Error('ログインセッションを取得できません');
+  }
+
+  const res = await fetch('/api/ai/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ question }),
+  });
+  const payload = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(payload?.error || `AI chat failed (${res.status})`);
+  }
+  const answer = String(payload?.answer || '').trim();
+  if (!answer) {
+    throw new Error('AI応答が空です');
+  }
+  return answer;
+}
+
 async function updateAdminStatsUi() {
   const card = document.getElementById('admin-stats-card');
   const totalEl = document.getElementById('admin-total-users');

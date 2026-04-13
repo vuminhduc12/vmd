@@ -290,6 +290,8 @@ let selectedOpponentId = '';
 let pendingWeightPhotoFiles = [];
 let pendingOpponentPhotoFile = null;
 let pendingOpponentPhotoPreviewUrl = '';
+let aiCoachMessages = [];
+let aiCoachPending = false;
 
 // ============================================================
 // UTILITIES
@@ -967,6 +969,88 @@ function getDailyRecovery(dateStr) {
   return recoveryLogs.filter(r => r.date && r.date.slice(0, 10) === dateStr);
 }
 
+function renderAiCoachMessages() {
+  const log = document.getElementById('ai-chat-log');
+  const empty = document.getElementById('ai-chat-empty');
+  if (!log) return;
+  if (!aiCoachMessages.length) {
+    if (empty) empty.style.display = '';
+    Array.from(log.querySelectorAll('.ai-chat-item')).forEach((el) => el.remove());
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  Array.from(log.querySelectorAll('.ai-chat-item')).forEach((el) => el.remove());
+  aiCoachMessages.forEach((msg) => {
+    const row = document.createElement('div');
+    row.className = `ai-chat-item ${msg.role === 'user' ? 'user' : 'assistant'}`;
+    row.innerHTML = `
+      <div class="ai-chat-role">${msg.role === 'user' ? 'あなた' : 'AIコーチ'}</div>
+      <div class="ai-chat-text">${escapeHtml(msg.text).replaceAll('\n', '<br>')}</div>
+    `;
+    log.appendChild(row);
+  });
+  log.scrollTop = log.scrollHeight;
+}
+
+function updateAiCoachAvailability() {
+  const note = document.getElementById('ai-coach-note');
+  const input = document.getElementById('ai-chat-input');
+  const sendBtn = document.getElementById('ai-chat-send-btn');
+  if (!note || !input || !sendBtn) return;
+
+  const canUse = activeStorageMode === STORAGE_MODE.SUPABASE && typeof fetchAiCoachReply === 'function';
+  input.disabled = !canUse || aiCoachPending;
+  sendBtn.disabled = !canUse || aiCoachPending;
+  note.textContent = canUse
+    ? 'あなたの直近記録（体重・食事・練習など）を使って回答します。医療診断は行いません。'
+    : 'クラウドログイン中のみ利用できます。先に Google でログインしてください。';
+  sendBtn.innerHTML = aiCoachPending
+    ? '<i class="fas fa-spinner fa-spin"></i> 解析中...'
+    : '<i class="fas fa-paper-plane"></i> 質問する';
+}
+
+function clearAiCoachChat() {
+  aiCoachMessages = [];
+  renderAiCoachMessages();
+}
+
+async function sendAiCoachQuestion() {
+  const input = document.getElementById('ai-chat-input');
+  if (!input) return;
+  const question = input.value.trim();
+  if (!question) {
+    showToast('質問を入力してください', 'info');
+    return;
+  }
+  if (question.length > 1000) {
+    showToast('質問は1000文字以内で入力してください', 'error');
+    return;
+  }
+  if (activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    showToast('クラウドログイン中のみ利用できます', 'error');
+    return;
+  }
+  if (aiCoachPending) return;
+
+  aiCoachMessages.push({ role: 'user', text: question });
+  renderAiCoachMessages();
+  input.value = '';
+  aiCoachPending = true;
+  updateAiCoachAvailability();
+
+  try {
+    const answer = await fetchAiCoachReply(question);
+    aiCoachMessages.push({ role: 'assistant', text: answer });
+    renderAiCoachMessages();
+  } catch (error) {
+    console.error('BOXER PRO: AI coach', error);
+    showToast(`AI応答に失敗しました: ${error?.message || 'unknown error'}`, 'error');
+  } finally {
+    aiCoachPending = false;
+    updateAiCoachAvailability();
+  }
+}
+
 function renderSettingsPage() {
   try {
   setFieldValue('s-name', appSettings.athleteName);
@@ -995,6 +1079,8 @@ function renderSettingsPage() {
       ? `体重 ${appSettings.reminderWeightTime} / 水分 ${appSettings.reminderHydrationTime} / 睡眠 ${appSettings.reminderSleepTime} ・ 通知権限 ${permission}`
       : '通知はOFFです。アプリ起動中のローカル通知も停止します。';
   }
+  renderAiCoachMessages();
+  updateAiCoachAvailability();
   updateSupabaseAuthUI();
   } catch (err) {
     console.error('BOXER PRO: renderSettingsPage', err);

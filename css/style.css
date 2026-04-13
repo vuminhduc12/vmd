@@ -392,6 +392,52 @@ textarea.input-field{resize:vertical;min-height:70px}
   border:1px solid var(--b1);background:rgba(255,255,255,0.03);
   color:var(--tx-2);font-size:12px;line-height:1.7;
 }
+.ai-chat-log{
+  margin-top:10px;
+  border:1px solid var(--b1);
+  border-radius:12px;
+  background:rgba(5,9,18,0.55);
+  min-height:120px;
+  max-height:320px;
+  overflow:auto;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.ai-chat-empty{
+  color:var(--tx-3);
+  font-size:12px;
+  line-height:1.6;
+}
+.ai-chat-item{
+  border:1px solid var(--b1);
+  border-radius:10px;
+  padding:10px 12px;
+  background:rgba(255,255,255,0.03);
+}
+.ai-chat-item.user{
+  border-color:rgba(74,144,226,0.35);
+  background:rgba(74,144,226,0.1);
+}
+.ai-chat-item.assistant{
+  border-color:rgba(48,208,128,0.25);
+  background:rgba(48,208,128,0.08);
+}
+.ai-chat-role{
+  font-size:11px;
+  font-weight:800;
+  color:var(--tx-2);
+  margin-bottom:6px;
+  letter-spacing:.3px;
+}
+.ai-chat-text{
+  color:var(--tx-1);
+  font-size:13px;
+  line-height:1.65;
+  white-space:normal;
+}
+.ai-chat-form{margin-top:10px}
 .table-subnote{margin-top:4px;font-size:11px;color:var(--tx-3)}
 .media-upload-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .media-upload-drop{
