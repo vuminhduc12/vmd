@@ -32,4 +32,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (mealViewDateEl) mealViewDateEl.value = TODAY();
   loadMealSummary();
   switchPage(appSettings.landingPage || 'dashboard');
+
+  if (typeof syncAppDayBoundary === 'function') {
+    syncAppDayBoundary(true);
+    window.setInterval(() => {
+      try {
+        syncAppDayBoundary(false);
+      } catch (err) {
+        console.error('BOXER PRO: day boundary sync interval', err);
+      }
+    }, 30 * 1000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        syncAppDayBoundary(true);
+      }
+    });
+    window.addEventListener('focus', () => {
+      syncAppDayBoundary(true);
+    });
+  }
 });

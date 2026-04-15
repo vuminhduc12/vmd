@@ -404,6 +404,7 @@ let fatLossTargetDateWarning = '';
 let hasInitialDataLoaded = false;
 let reminderIntervalId = null;
 let storageWriteWarningShown = false;
+let currentAppDayKey = TODAY();
 const reminderSessionStamps = new Set();
 
 // Chart instances
@@ -1689,6 +1690,51 @@ function setDateInputs() {
   });
   const weightSlotEl = document.getElementById('w-slot');
   if (weightSlotEl && !weightSlotEl.value) weightSlotEl.value = 'morning';
+}
+
+function renderActivePageById(activePageId) {
+  if (activePageId === 'page-dashboard') {
+    renderDashboard();
+    return;
+  }
+  if (activePageId === 'page-weight') {
+    renderWeightPage();
+    return;
+  }
+  if (activePageId === 'page-meals') {
+    renderMealsPage();
+    return;
+  }
+  if (activePageId === 'page-training') {
+    renderTrainingPage();
+    return;
+  }
+  if (activePageId === 'page-calories') {
+    renderCaloriesPage();
+    return;
+  }
+  if (activePageId === 'page-fight') {
+    renderFightPage();
+    return;
+  }
+  if (activePageId === 'page-settings') {
+    renderSettingsPage();
+    return;
+  }
+  renderDashboard();
+}
+
+function syncAppDayBoundary(force = false) {
+  const today = TODAY();
+  if (!force && today === currentAppDayKey) return false;
+  currentAppDayKey = today;
+
+  setDateInputs();
+  loadMealSummary();
+  renderDashboard();
+  const activePageId = document.querySelector('.page.active')?.id || '';
+  renderActivePageById(activePageId);
+  return true;
 }
 
 // Navigation moved to js/core/navigation.js
