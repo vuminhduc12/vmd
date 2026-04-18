@@ -215,4 +215,5 @@ function switchPage(pageName) {
   if (page === 'fight') renderFightPage();
   if (page === 'settings') renderSettingsPage();
   if (typeof applyGoalModeUi === 'function') applyGoalModeUi();
+  if (typeof window.applyLanguageUi === 'function') window.applyLanguageUi();
 }

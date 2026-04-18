@@ -225,6 +225,147 @@ const UI_TEXT = {
   },
 };
 
+const JA_TO_VI_TEXT = {
+  'Navigation': 'Điều hướng',
+  '同期確認中': 'Đang kiểm tra đồng bộ',
+  'アプリをインストール': 'Cài đặt ứng dụng',
+  '今日のコンディションを一目で確認': 'Xem nhanh tình trạng hôm nay',
+  '記録の確認と、必要なときだけ編集': 'Xem bản ghi và chỉ chỉnh sửa khi cần',
+  '食品名を入力して': 'Nhập tên thực phẩm để',
+  'カロリー・PFC 自動計算': 'tự động tính calo và PFC',
+  'トレーニング記録・消費カロリー・感想レビュー管理': 'Quản lý buổi tập, calo tiêu hao và ghi chú',
+  'BMR / TDEE 計算とPFCバランス管理': 'Tính BMR/TDEE và quản lý cân bằng PFC',
+  '次の試合に向けたカウントダウンと減量進捗': 'Đếm ngược trận đấu và tiến độ giảm cân',
+  '記録詳細': 'Chi tiết bản ghi',
+  '新規記録': 'Bản ghi mới',
+  '編集': 'Sửa',
+  '削除': 'Xóa',
+  'キャンセル': 'Hủy',
+  '閉じる': 'Đóng',
+  '体重を記録': 'Ghi cân nặng',
+  '体重を保存': 'Lưu cân nặng',
+  '体重推移グラフ': 'Biểu đồ cân nặng',
+  '記録一覧': 'Danh sách bản ghi',
+  '日付': 'Ngày',
+  '区分': 'Mục',
+  '体重': 'Cân nặng',
+  '体脂肪率': 'Mỡ cơ thể',
+  'メモ': 'Ghi chú',
+  'データなし': 'Không có dữ liệu',
+  '日': 'ngày',
+  '全期間': 'Toàn kỳ',
+  '食品リスト': 'Danh sách thực phẩm',
+  '行を追加': 'Thêm dòng',
+  'クリア': 'Xóa nhanh',
+  '目標 kcal': 'Mục tiêu kcal',
+  '合計 KCAL': 'Tổng KCAL',
+  'タンパク質 (g)': 'Protein (g)',
+  '脂質 (g)': 'Chất béo (g)',
+  '炭水化物 (g)': 'Carb (g)',
+  'この食事を保存': 'Lưu bữa ăn này',
+  '日別 食事サマリー': 'Tóm tắt bữa ăn theo ngày',
+  '7日間カロリー推移': 'Xu hướng calo 7 ngày',
+  '食事記録一覧': 'Danh sách bữa ăn',
+  '全タイプ': 'Tất cả loại',
+  '種別': 'Loại',
+  '食品名': 'Thực phẩm',
+  '量': 'Lượng',
+  '操作': 'Thao tác',
+  '練習を記録': 'Ghi buổi tập',
+  '既存の練習記録を編集中': 'Đang sửa bản ghi tập hiện có',
+  '新規入力に戻す': 'Quay lại nhập mới',
+  '練習時間 (分)': 'Thời gian tập (phút)',
+  '強度': 'Cường độ',
+  '消費カロリー (kcal)': 'Calo tiêu hao (kcal)',
+  '自動計算': 'Tự tính',
+  'メモ・感想': 'Ghi chú/Cảm nhận',
+  'ラウンド数': 'Số hiệp',
+  'スパー相手': 'Đối tác sparring',
+  'テーマ': 'Chủ đề',
+  '自己評価': 'Tự đánh giá',
+  '練習を保存': 'Lưu buổi tập',
+  '今週のサマリー': 'Tóm tắt tuần này',
+  '練習回数': 'Số buổi tập',
+  '合計分': 'Tổng phút',
+  '練習バランス (今週)': 'Cân bằng tập luyện (tuần này)',
+  '練習カレンダー': 'Lịch tập',
+  '練習記録一覧': 'Danh sách bản ghi tập',
+  'BMR / TDEE 計算': 'Tính BMR / TDEE',
+  '年齢': 'Tuổi',
+  '性別': 'Giới tính',
+  '身長 (cm)': 'Chiều cao (cm)',
+  '活動レベル': 'Mức hoạt động',
+  '目標': 'Mục tiêu',
+  '計算する': 'Tính toán',
+  '推奨 PFCバランス（ボクサー向け）': 'PFC khuyến nghị (cho boxer)',
+  '摂取 vs 消費カロリー（直近7日）': 'Nạp vào vs tiêu hao (7 ngày gần nhất)',
+  '練習と体重・回復の相関（直近14日）': 'Tương quan tập luyện, cân nặng và phục hồi (14 ngày)',
+  '今日のカロリー収支': 'Cân bằng calo hôm nay',
+  '摂取 kcal': 'Kcal nạp vào',
+  '消費 kcal': 'Kcal tiêu hao',
+  '収支 kcal': 'Kcal chênh lệch',
+  '水分 / 発汗 / 塩分': 'Nước / Mồ hôi / Muối',
+  '水分ログを保存': 'Lưu log nước',
+  '睡眠 / 疲労 / 体調': 'Ngủ / Mệt mỏi / Thể trạng',
+  '回復ログを保存': 'Lưu log phục hồi',
+  '今日の水分サマリー': 'Tóm tắt nước hôm nay',
+  '今日の回復サマリー': 'Tóm tắt phục hồi hôm nay',
+  '試合目標を登録': 'Đăng ký mục tiêu trận đấu',
+  '折りたたむ': 'Thu gọn',
+  '展開': 'Mở rộng',
+  '試合目標を保存': 'Lưu mục tiêu trận đấu',
+  '減量進捗': 'Tiến độ giảm cân',
+  '危険な減量診断': 'Cảnh báo giảm cân nguy hiểm',
+  '減量食事プラン': 'Kế hoạch ăn kiêng giảm cân',
+  '今日/次戦': 'Hôm nay/Trận kế',
+  '全期間一覧': 'Danh sách toàn kỳ',
+  '計画 vs 実績': 'Kế hoạch vs Thực tế',
+  '試合リスト': 'Danh sách trận',
+  '次の相手': 'Đối thủ kế tiếp',
+  '新規登録': 'Đăng ký mới',
+  '対戦相手プロフィールを編集': 'Sửa hồ sơ đối thủ',
+  '対戦相手を保存': 'Lưu đối thủ',
+  '対戦相手一覧': 'Danh sách đối thủ',
+  '過去試合管理': 'Quản lý trận đã đấu',
+  '過去試合を保存': 'Lưu trận đã đấu',
+  '過去試合一覧': 'Danh sách trận đã đấu',
+  '個人プロフィール設定': 'Thiết lập hồ sơ cá nhân',
+  '表示名': 'Tên hiển thị',
+  '肩書き': 'Vai trò',
+  '目標体重 (kg)': 'Cân nặng mục tiêu (kg)',
+  '既定 kcal': 'Kcal mặc định',
+  '既定の食事タイプ': 'Loại bữa ăn mặc định',
+  '既定の練習強度': 'Cường độ tập mặc định',
+  '起動ページ': 'Trang khi mở ứng dụng',
+  '目標モード': 'Chế độ mục tiêu',
+  '一般減量の目標達成日': 'Ngày mục tiêu đạt cân (giảm cân thường)',
+  '設定を保存': 'Lưu cài đặt',
+  '保存先ステータス': 'Trạng thái lưu trữ',
+  '保存先種別': 'Loại lưu trữ',
+  'レコード件数': 'Số bản ghi',
+  'クラウド同期 (Supabase)': 'Đồng bộ cloud (Supabase)',
+  'アカウント': 'Tài khoản',
+  'Google でログイン': 'Đăng nhập bằng Google',
+  'この端末のデータをクラウドへマージ': 'Gộp dữ liệu thiết bị này lên cloud',
+  'ログアウト': 'Đăng xuất',
+  '管理者統計': 'Thống kê quản trị',
+  'バックアップ / 復元': 'Sao lưu / Khôi phục',
+  'JSONバックアップを保存': 'Lưu sao lưu JSON',
+  'JSONから復元': 'Khôi phục từ JSON',
+  '通知 / リマインダー': 'Thông báo / Nhắc nhở',
+  '通知を有効化': 'Bật thông báo',
+  '通知許可': 'Quyền thông báo',
+  '許可をリクエスト': 'Yêu cầu quyền',
+  '体重記録': 'Ghi cân nặng',
+  '水分チェック': 'Kiểm tra nước',
+  '睡眠 / 回復': 'Ngủ / Phục hồi',
+  'AIコーチ': 'AI Coach',
+  '準備中': 'Đang chuẩn bị',
+  '送信': 'Gửi',
+  '確認': 'Xác nhận',
+  '削除する': 'Xóa',
+};
+
 let supabaseClientPromise = null;
 let supabaseAuthListenerBound = false;
 const DEFAULT_SETTINGS = {
@@ -1017,7 +1158,72 @@ function applyLanguageUi() {
   const activePage = document.querySelector('.page.active')?.id?.replace('page-', '') || 'dashboard';
   const topTitle = document.getElementById('topbarTitle');
   if (topTitle) topTitle.textContent = getUiText(`pageTitles.${activePage}`, topTitle.textContent || activePage);
+
+  applyStaticLanguageReplacements(lang);
 }
+
+function applyStaticLanguageReplacements(lang) {
+  const reverseMap = Object.fromEntries(Object.entries(JA_TO_VI_TEXT).map(([ja, vi]) => [vi, ja]));
+  const replaceMap = lang === 'vi' ? JA_TO_VI_TEXT : reverseMap;
+  const roots = [
+    document.querySelector('#mainWrapper'),
+    document.querySelector('#sidebar'),
+    document.querySelector('#aiCoachWidget'),
+    document.querySelector('#mobileQuickSheet'),
+    document.querySelector('.mobile-bottom-nav'),
+    document.querySelector('#modalOverlay'),
+  ].filter(Boolean);
+
+  roots.forEach((root) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    textNodes.forEach((node) => {
+      const raw = node.nodeValue || '';
+      const trimmed = raw.trim();
+      if (!trimmed) return;
+      const next = replaceMap[trimmed];
+      if (!next || next === trimmed) return;
+      node.nodeValue = raw.replace(trimmed, next);
+    });
+
+    root.querySelectorAll('[placeholder]').forEach((el) => {
+      const raw = el.getAttribute('placeholder') || '';
+      const trimmed = raw.trim();
+      const next = replaceMap[trimmed];
+      if (!next || next === trimmed) return;
+      el.setAttribute('placeholder', raw.replace(trimmed, next));
+    });
+    root.querySelectorAll('[title]').forEach((el) => {
+      const raw = el.getAttribute('title') || '';
+      const trimmed = raw.trim();
+      const next = replaceMap[trimmed];
+      if (!next || next === trimmed) return;
+      el.setAttribute('title', raw.replace(trimmed, next));
+    });
+  });
+
+  const goalModeSelect = document.getElementById('s-goal-mode');
+  if (goalModeSelect) {
+    const labels = lang === 'vi'
+      ? {
+          boxer_cut: 'Giảm cân thi đấu (vận động viên)',
+          fat_loss: 'Giảm cân thường (an toàn)',
+          maintenance: 'Duy trì',
+        }
+      : {
+          boxer_cut: '試合向け減量（競技者）',
+          fat_loss: '一般減量（安全重視）',
+          maintenance: '維持',
+        };
+    goalModeSelect.querySelectorAll('option[value]').forEach((option) => {
+      const text = labels[option.value];
+      if (text) option.textContent = text;
+    });
+  }
+}
+
+window.applyLanguageUi = applyLanguageUi;
 
 function getLatestKnownHeightCm() {
   const lastHeight = [...weightLogs].reverse().find(w => Number(w.height_cm));
