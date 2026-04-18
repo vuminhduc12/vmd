@@ -1121,6 +1121,37 @@ function renderAiCoachMessages() {
   }
   if (empty) empty.style.display = 'none';
   Array.from(log.querySelectorAll('.ai-chat-item')).forEach((el) => el.remove());
+
+  const formatAiMessageHtml = (role, text) => {
+    const lines = String(text || '').split('\n');
+    if (role === 'user') {
+      return `<p>${escapeHtml(String(text || '').trim()).replaceAll('\n', '<br>')}</p>`;
+    }
+    const parts = [];
+    let listItems = [];
+    const flushList = () => {
+      if (!listItems.length) return;
+      parts.push(`<ul>${listItems.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`);
+      listItems = [];
+    };
+    lines.forEach((raw) => {
+      const line = String(raw || '').trim();
+      if (!line) {
+        flushList();
+        return;
+      }
+      const bullet = line.match(/^(?:[-・*]|(?:\d+[\.\)]))\s*(.+)$/);
+      if (bullet) {
+        listItems.push((bullet[1] || '').trim());
+        return;
+      }
+      flushList();
+      parts.push(`<p>${escapeHtml(line)}</p>`);
+    });
+    flushList();
+    return parts.join('') || `<p>${escapeHtml(String(text || '').trim())}</p>`;
+  };
+
   aiCoachMessages.forEach((msg) => {
     const row = document.createElement('div');
     row.className = `ai-chat-item ${msg.role === 'user' ? 'user' : 'assistant'}`;
@@ -1129,7 +1160,7 @@ function renderAiCoachMessages() {
       <div class="ai-chat-badge">${roleLabel}</div>
       <div class="ai-chat-bubble">
         <div class="ai-chat-role">${msg.role === 'user' ? 'あなた' : 'AIコーチ'}</div>
-        <div class="ai-chat-text">${escapeHtml(msg.text).replaceAll('\n', '<br>')}</div>
+        <div class="ai-chat-text ai-chat-rich">${formatAiMessageHtml(msg.role, msg.text)}</div>
       </div>
     `;
     log.appendChild(row);
@@ -1156,8 +1187,12 @@ function updateAiCoachAvailability() {
   sendBtn.disabled = !canUse || aiCoachPending;
   chips.forEach((chip) => { chip.disabled = !canUse || aiCoachPending; });
   note.textContent = canUse
-    ? 'あなたの直近記録（体重・食事・練習など）を使って回答します。医療診断は行いません。'
-    : '管理者アカウント（ADMIN_EMAILS）でのクラウドログイン時のみ利用できます。';
+    ? '記録をもとに、今日と明日の実行案を返します。'
+    : '';
+  note.style.display = canUse ? 'block' : 'none';
+  input.placeholder = canUse
+    ? '例: 今日の食事と練習を見て、明日の修正点を3つだけ教えて'
+    : '管理者限定';
 
   statusPill.classList.remove('ready', 'busy', 'locked');
   if (!canUse) {

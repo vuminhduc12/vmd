@@ -567,8 +567,25 @@ textarea.input-field{resize:vertical;min-height:70px}
 .ai-chat-text{
   color:var(--tx-1);
   font-size:13px;
-  line-height:1.65;
+  line-height:1.8;
   white-space:normal;
+}
+.ai-chat-rich p{
+  margin:0 0 8px;
+}
+.ai-chat-rich p:last-child{
+  margin-bottom:0;
+}
+.ai-chat-rich ul{
+  margin:2px 0 8px 18px;
+  padding:0;
+}
+.ai-chat-rich ul:last-child{
+  margin-bottom:0;
+}
+.ai-chat-rich li{
+  margin:0 0 4px;
+  line-height:1.7;
 }
 .ai-chat-form{margin-top:10px}
 .ai-chat-actions{
