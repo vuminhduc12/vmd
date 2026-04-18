@@ -22,6 +22,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('BOXER PRO: initSupabaseAuth', err);
     setStorageMode(STORAGE_MODE.LOCAL);
   }
+  try {
+    await loadFoodDatabase();
+  } catch (err) {
+    console.error('BOXER PRO: loadFoodDatabase', err);
+  }
   await loadCuttingPlanData();
   await loadAllData();
   if (typeof refreshCuttingPlanRows === 'function') refreshCuttingPlanRows();

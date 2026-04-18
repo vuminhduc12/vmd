@@ -49,6 +49,7 @@ const LOCAL_TABLE_PREFIX = 'boxerpro.table.';
 const SETTINGS_KEY = 'boxerpro.settings';
 const APP_SCHEMA_VERSION = 1;
 const CUTTING_PLAN_URL = 'data/weight-cut-plan.csv';
+const FOODS_DB_URL = 'data/foods.csv';
 const AUTO_CUT_WEEKLY_LIMIT_RATIO = 0.009;
 const AUTO_CUT_PHASE_BOUNDARIES = {
   baseDaysMin: 29,
@@ -571,7 +572,7 @@ function applyGoalModeUi() {
 // FOOD DATABASE -- 120+ items (per 100g unless noted)
 // CSV data from user's actual meal plan included
 // ============================================================
-const FOOD_DB = [
+const DEFAULT_FOOD_DB = [
   // === タンパク質系 ===
   { name: '鶏胸肉(皮なし)', cat:'タンパク質', per100: { cal: 116, p: 24.4, f: 1.9, c: 0 }, unit: 'g', defaultAmt: 150 },
   { name: '鶏もも肉(皮なし)', cat:'タンパク質', per100: { cal: 138, p: 22.0, f: 5.0, c: 0 }, unit: 'g', defaultAmt: 150 },
@@ -676,6 +677,7 @@ const FOOD_DB = [
   { name: 'ゆで野菜200g', cat:'野菜', per100: { cal: 25, p: 2.0, f: 0.3, c: 4.0 }, unit: 'g', defaultAmt: 200 },
   { name: '切り干し大根', cat:'野菜', per100: { cal: 30, p: 1.5, f: 0.1, c: 7.0 }, unit: 'g', defaultAmt: 50 },
 ];
+let FOOD_DB = [...DEFAULT_FOOD_DB];
 
 // Quick presets from user's CSV meal plan
 const MEAL_PRESETS = {
@@ -930,6 +932,105 @@ function parseCsvLine(line) {
 
   cols.push(current.trim());
   return cols;
+}
+
+function normalizeFoodCsvHeader(header) {
+  return String(header || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_（）()]/g, '');
+}
+
+function readFoodCsvValue(row, aliases = []) {
+  for (const alias of aliases) {
+    const key = normalizeFoodCsvHeader(alias);
+    if (Object.prototype.hasOwnProperty.call(row, key) && String(row[key]).trim() !== '') {
+      return String(row[key]).trim();
+    }
+  }
+  return '';
+}
+
+function parseFoodsCsv(text) {
+  const lines = String(text || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'));
+  if (lines.length < 2) return [];
+
+  const headers = parseCsvLine(lines[0]).map((h) => normalizeFoodCsvHeader(h));
+  const parsed = [];
+
+  for (let i = 1; i < lines.length; i += 1) {
+    const cols = parseCsvLine(lines[i]);
+    const row = {};
+    headers.forEach((h, idx) => { row[h] = cols[idx] ?? ''; });
+
+    const name = readFoodCsvValue(row, ['name', 'food_name', '食品名', '名称']);
+    const cat = readFoodCsvValue(row, ['cat', 'category', 'カテゴリ', '分類']) || 'その他';
+    const calRaw = readFoodCsvValue(row, ['cal', 'kcal', 'エネルギー', 'カロリー']);
+    const pRaw = readFoodCsvValue(row, ['p', 'protein', 'タンパク質']);
+    const fRaw = readFoodCsvValue(row, ['f', 'fat', '脂質']);
+    const cRaw = readFoodCsvValue(row, ['c', 'carb', 'carbs', '炭水化物']);
+    const unit = readFoodCsvValue(row, ['unit', '単位']) || 'g';
+    const defaultAmtRaw = readFoodCsvValue(row, ['defaultamt', 'default_amount', '量', '既定量']);
+
+    const cal = Number(calRaw);
+    const p = Number(pRaw);
+    const f = Number(fRaw);
+    const c = Number(cRaw);
+    const defaultAmt = Number(defaultAmtRaw);
+
+    if (!name) continue;
+    if (![cal, p, f, c].every((v) => Number.isFinite(v) && v >= 0)) continue;
+
+    parsed.push({
+      name,
+      cat,
+      per100: { cal, p, f, c },
+      unit,
+      defaultAmt: Number.isFinite(defaultAmt) && defaultAmt > 0 ? defaultAmt : 100,
+    });
+  }
+
+  return parsed;
+}
+
+function getDefaultFoodDbClone() {
+  return DEFAULT_FOOD_DB.map((row) => ({
+    ...row,
+    per100: { ...(row.per100 || {}) },
+  }));
+}
+
+function mergeFoodsWithDefaults(csvFoods) {
+  const merged = new Map(getDefaultFoodDbClone().map((row) => [String(row.name || ''), row]));
+  csvFoods.forEach((row) => {
+    if (!row?.name) return;
+    merged.set(String(row.name), row);
+  });
+  return Array.from(merged.values());
+}
+
+async function loadFoodDatabase() {
+  FOOD_DB = getDefaultFoodDbClone();
+  try {
+    const response = await fetch(FOODS_DB_URL, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`foods.csv load failed (${response.status})`);
+    const text = await response.text();
+    const csvFoods = parseFoodsCsv(text);
+    if (!csvFoods.length) {
+      console.info('BOXER PRO: foods.csv is empty or invalid, fallback to bundled FOOD_DB');
+      return false;
+    }
+    FOOD_DB = mergeFoodsWithDefaults(csvFoods);
+    console.info(`BOXER PRO: foods.csv loaded (${csvFoods.length} rows)`);
+    return true;
+  } catch (error) {
+    console.warn('BOXER PRO: foods.csv fallback to bundled FOOD_DB', error);
+    FOOD_DB = getDefaultFoodDbClone();
+    return false;
+  }
 }
 
 function getDaysUntil(dateStr) {
