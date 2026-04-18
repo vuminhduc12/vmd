@@ -7,6 +7,7 @@ SE兼プロボクサー・Vu Minh Duc専用の総合コンディション管理W
 
 関連ドキュメント:
 - `ARCHITECTURE_ROADMAP.md` : 保守しやすい分割設計、月1000円以下の本番運用構成、Supabase前提の拡張ロードマップ
+- `docs/FINAL_QA_CHECKLIST_JA.md` : iPhone PWA/同期/画像/AI制限まで含めた最終QA手順
 
 ---
 
@@ -82,7 +83,7 @@ wrangler secret put OPENAI_API_KEY
 設定後、対象メールでログインしたユーザーにだけ `マイ設定 > 管理者統計` カードが表示されます。
 
 AIコーチ機能は `マイ設定 > AIコーチ` から利用できます。  
-権限制御として、Supabaseログイン中のユーザーだけが利用可能で、サーバー側ではそのユーザーIDのデータのみを集約して OpenAI に送信します。
+権限制御として、`ADMIN_EMAILS` に含まれる管理者メールで Supabase ログインしたユーザーだけが利用可能です。サーバー側ではそのユーザーIDのデータのみを集約して OpenAI に送信します。
 
 ---
 
@@ -216,7 +217,7 @@ README.md               # このファイル
 | GET | `tables/fight_goals?limit=500` | 試合目標一覧 |
 | POST | `tables/fight_goals` | 試合目標追加 |
 | DELETE | `tables/fight_goals/{id}` | 試合目標削除 |
-| POST | `/api/ai/chat` | ログインユーザーの記録を使ったAIチャット（Bearer必須） |
+| POST | `/api/ai/chat` | 管理者ログインユーザー専用AIチャット（Bearer必須） |
 
 レート制限:
 - `/api/ai/chat`: IPあたり 30 req/分、ユーザーあたり 12 req/分

@@ -297,8 +297,13 @@ async function handleAiChat(request, env) {
 
   const sessionUser = await getSessionUser(env, accessToken);
   const userId = String(sessionUser?.id || '').trim();
+  const email = String(sessionUser?.email || '').trim().toLowerCase();
   if (!userId) {
     return json({ error: 'Unauthorized' }, 401);
+  }
+  const adminEmails = getAdminEmailSet(env.ADMIN_EMAILS);
+  if (!email || !adminEmails.has(email)) {
+    return json({ error: 'Forbidden' }, 403);
   }
   const userRate = takeRateLimitToken(`ai:user:${userId}`, AI_RATE_LIMIT_PER_USER);
   if (!userRate.allowed) {

@@ -1146,18 +1146,23 @@ function updateAiCoachAvailability() {
   const fab = document.getElementById('aiCoachFab');
   if (!note || !input || !sendBtn || !statusPill) return;
 
-  const canUse = activeStorageMode === STORAGE_MODE.SUPABASE && typeof fetchAiCoachReply === 'function';
+  const adminAllowed = typeof window.isAiCoachAdminAllowed === 'function'
+    ? window.isAiCoachAdminAllowed()
+    : false;
+  const canUse = activeStorageMode === STORAGE_MODE.SUPABASE
+    && typeof fetchAiCoachReply === 'function'
+    && adminAllowed;
   input.disabled = !canUse || aiCoachPending;
   sendBtn.disabled = !canUse || aiCoachPending;
   chips.forEach((chip) => { chip.disabled = !canUse || aiCoachPending; });
   note.textContent = canUse
     ? 'あなたの直近記録（体重・食事・練習など）を使って回答します。医療診断は行いません。'
-    : 'クラウドログイン中のみ利用できます。先に Google でログインしてください。';
+    : '管理者アカウント（ADMIN_EMAILS）でのクラウドログイン時のみ利用できます。';
 
   statusPill.classList.remove('ready', 'busy', 'locked');
   if (!canUse) {
     statusPill.classList.add('locked');
-    statusPill.textContent = 'ログイン必要';
+    statusPill.textContent = '管理者限定';
   } else if (aiCoachPending) {
     statusPill.classList.add('busy');
     statusPill.textContent = '解析中';
@@ -1233,6 +1238,10 @@ async function sendAiCoachQuestion() {
   }
   if (activeStorageMode !== STORAGE_MODE.SUPABASE) {
     showToast('クラウドログイン中のみ利用できます', 'error');
+    return;
+  }
+  if (!(typeof window.isAiCoachAdminAllowed === 'function' && window.isAiCoachAdminAllowed())) {
+    showToast('AIコーチは管理者アカウントのみ利用できます', 'error');
     return;
   }
   if (aiCoachPending) return;
@@ -3128,6 +3137,10 @@ async function saveMealBatch() {
     render7dayMealChart();
     filterMeals();
     renderDashboard();
+    window.setTimeout(() => {
+      const nextInput = document.getElementById('foodSearch');
+      if (nextInput && typeof nextInput.focus === 'function') nextInput.focus();
+    }, 60);
   } catch(e) {
     showToast('保存に失敗しました', 'error');
     console.error(e);
@@ -3381,6 +3394,10 @@ async function saveTraining() {
     }
     renderTrainingPage();
     renderDashboard();
+    window.setTimeout(() => {
+      const nextInput = document.getElementById('t-type');
+      if (nextInput && typeof nextInput.focus === 'function') nextInput.focus();
+    }, 60);
   } catch(e) {
     showToast('保存に失敗しました', 'error');
   }
@@ -3622,6 +3639,10 @@ async function saveHydrationLog() {
     renderCaloriesPage();
     renderDashboard();
     showToast('水分ログを保存しました', 'success');
+    window.setTimeout(() => {
+      const nextInput = document.getElementById('h-water');
+      if (nextInput && typeof nextInput.focus === 'function') nextInput.focus();
+    }, 80);
   } catch (e) {
     console.error(e);
     showToast('保存に失敗しました', 'error');
@@ -3664,6 +3685,10 @@ async function saveRecoveryLog() {
     renderCaloriesPage();
     renderDashboard();
     showToast('回復ログを保存しました', 'success');
+    window.setTimeout(() => {
+      const nextInput = document.getElementById('r-sleep');
+      if (nextInput && typeof nextInput.focus === 'function') nextInput.focus();
+    }, 80);
   } catch (e) {
     console.error(e);
     showToast('保存に失敗しました', 'error');

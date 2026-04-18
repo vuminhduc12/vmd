@@ -488,6 +488,10 @@ async function saveFightGoal() {
     await renderFightPage();
     renderDashboard();
     switchFightSectionTab('next');
+    window.setTimeout(() => {
+      const nextInput = document.getElementById('f-opponent-id') || document.getElementById('f-opponent');
+      if (nextInput && typeof nextInput.focus === 'function') nextInput.focus();
+    }, 80);
   } catch(e) {
     showToast('保存に失敗しました', 'error');
   }

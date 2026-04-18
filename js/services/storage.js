@@ -30,6 +30,7 @@ let supabaseLastSeenBindingDone = false;
 let supabaseSessionRequest = null;
 let supabaseSessionSnapshot = null;
 let retentionPolicyAppliedOnce = false;
+let aiCoachAdminAllowed = false;
 
 function withTimeout(promise, ms, label = 'operation') {
   return Promise.race([
@@ -598,6 +599,7 @@ if (typeof window !== 'undefined') {
   window.signInWithGoogle = signInWithGoogle;
   window.signOutSupabase = signOutSupabase;
   window.mergeLocalDataToSupabase = mergeLocalDataToSupabase;
+  window.isAiCoachAdminAllowed = () => activeStorageMode === STORAGE_MODE.SUPABASE && aiCoachAdminAllowed;
 }
 
 function resetAdminStatsUi() {
@@ -611,6 +613,7 @@ function resetAdminStatsUi() {
   if (activeEl) activeEl.textContent = '--';
   if (emailEl) emailEl.textContent = '--';
   if (updatedEl) updatedEl.textContent = '--';
+  aiCoachAdminAllowed = false;
 }
 
 async function fetchAdminStats() {
@@ -688,6 +691,7 @@ async function updateAdminStatsUi() {
     updatedEl.textContent = data.measured_at
       ? `取得: ${formatDateTimeJP(data.measured_at)}`
       : '取得済み';
+    aiCoachAdminAllowed = true;
   } catch (err) {
     console.error('BOXER PRO: updateAdminStatsUi', err);
     resetAdminStatsUi();
