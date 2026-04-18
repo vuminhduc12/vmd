@@ -732,10 +732,12 @@ function updateSupabaseAuthUI() {
     const session = await getSupabaseSessionSafe(sb);
     const email = session?.user?.email || '';
     emailEl.textContent = email || '未ログイン';
-    const inCloud = activeStorageMode === STORAGE_MODE.SUPABASE && !!session;
+    const hasSession = !!session;
+    const inCloud = activeStorageMode === STORAGE_MODE.SUPABASE && hasSession;
     renderProfileCard(inCloud ? session.user : null);
-    loginBtn.style.display = inCloud ? 'none' : 'inline-flex';
-    logoutBtn.style.display = inCloud ? 'inline-flex' : 'none';
+    loginBtn.style.display = hasSession ? 'none' : 'inline-flex';
+    // ローカルフォールバック中でも、セッションが残っていればログアウト可能にする
+    logoutBtn.style.display = hasSession ? 'inline-flex' : 'none';
     mergeBtn.style.display = inCloud ? 'inline-flex' : 'none';
     if (inCloud) await updateAdminStatsUi();
     else resetAdminStatsUi();
