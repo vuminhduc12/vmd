@@ -369,8 +369,8 @@ async function handleAiChat(request, env) {
       model,
       max_output_tokens: 500,
       input: [
-        { role: 'system', content: [{ type: 'text', text: systemText }] },
-        { role: 'user', content: [{ type: 'text', text: userText }] },
+        { role: 'system', content: [{ type: 'input_text', text: systemText }] },
+        { role: 'user', content: [{ type: 'input_text', text: userText }] },
       ],
     }),
   });
