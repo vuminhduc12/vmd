@@ -600,6 +600,7 @@ if (typeof window !== 'undefined') {
   window.signOutSupabase = signOutSupabase;
   window.mergeLocalDataToSupabase = mergeLocalDataToSupabase;
   window.isAiCoachAdminAllowed = () => activeStorageMode === STORAGE_MODE.SUPABASE && aiCoachAdminAllowed;
+  window.refreshAiCoachAdminAccess = refreshAiCoachAdminAccess;
 }
 
 function resetAdminStatsUi() {
@@ -683,6 +684,21 @@ async function fetchAiCoachReply(question) {
     throw new Error('AI応答が空です');
   }
   return answer;
+}
+
+async function refreshAiCoachAdminAccess() {
+  aiCoachAdminAllowed = false;
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return false;
+  try {
+    const data = await fetchAdminStats();
+    aiCoachAdminAllowed = !!data;
+    return aiCoachAdminAllowed;
+  } catch (error) {
+    console.error('BOXER PRO: refreshAiCoachAdminAccess', error);
+    aiCoachAdminAllowed = false;
+    return false;
+  }
 }
 
 async function updateAdminStatsUi() {

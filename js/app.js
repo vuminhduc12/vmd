@@ -1198,6 +1198,11 @@ function setAiCoachWidgetOpen(open) {
   if (aiCoachOpen) {
     updateAiCoachAvailability();
     renderAiCoachMessages();
+    if (typeof window.refreshAiCoachAdminAccess === 'function') {
+      window.refreshAiCoachAdminAccess()
+        .catch(() => false)
+        .finally(() => updateAiCoachAvailability());
+    }
     window.setTimeout(() => document.getElementById('ai-chat-input')?.focus(), 40);
   }
 }
