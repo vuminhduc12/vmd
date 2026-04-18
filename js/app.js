@@ -226,10 +226,34 @@ const UI_TEXT = {
 };
 
 const JA_TO_VI_TEXT = {
+  'ダッシュボード': 'Bảng điều khiển',
+  '体重管理': 'Quản lý cân nặng',
+  '食事メニュー': 'Bữa ăn',
+  '練習スケジュール': 'Lịch tập',
+  'カロリー計算': 'Tính calo',
+  '試合目標': 'Mục tiêu trận đấu',
+  'マイ設定': 'Cài đặt',
   'Navigation': 'Điều hướng',
   '同期確認中': 'Đang kiểm tra đồng bộ',
   'アプリをインストール': 'Cài đặt ứng dụng',
   '今日のコンディションを一目で確認': 'Xem nhanh tình trạng hôm nay',
+  '現在の体重': 'Cân nặng hiện tại',
+  '本日摂取カロリー': 'Calo hôm nay',
+  '判定: 計算待ち': 'Đánh giá: chờ tính',
+  '本日タンパク質': 'Protein hôm nay',
+  '目安 体重×2.2g': 'Mốc: cân nặng x 2.2g',
+  '本日の練習': 'Buổi tập hôm nay',
+  '消費 -- kcal': 'Tiêu hao -- kcal',
+  '体重推移（直近14日）': 'Xu hướng cân nặng (14 ngày gần nhất)',
+  '減量ペースと目標ラインを同時に確認': 'Theo dõi cùng lúc tốc độ giảm cân và mốc mục tiêu',
+  '増量トレンド': 'Xu hướng tăng',
+  '記録待ち': 'Chờ ghi nhận',
+  '本日 PFC バランス': 'Cân bằng PFC hôm nay',
+  '食事から逆算して減量中でもチェック': 'Kiểm tra cả khi giảm cân dựa trên bữa ăn',
+  '現在': 'Hiện tại',
+  '14日平均': 'TB 14 ngày',
+  '前回比': 'So với lần trước',
+  '目標差': 'Chênh lệch mục tiêu',
   '記録の確認と、必要なときだけ編集': 'Xem bản ghi và chỉ chỉnh sửa khi cần',
   '食品名を入力して': 'Nhập tên thực phẩm để',
   'カロリー・PFC 自動計算': 'tự động tính calo và PFC',
@@ -1159,12 +1183,33 @@ function applyLanguageUi() {
   const topTitle = document.getElementById('topbarTitle');
   if (topTitle) topTitle.textContent = getUiText(`pageTitles.${activePage}`, topTitle.textContent || activePage);
 
+  const pageHeaderMap = {
+    'page-dashboard-title-text': lang === 'vi' ? 'Bảng điều khiển' : 'ダッシュボード',
+    'page-dashboard-subtitle-text': lang === 'vi' ? 'Xem nhanh tình trạng hôm nay' : '今日のコンディションを一目で確認',
+    'page-weight-title-text': lang === 'vi' ? 'Quản lý cân nặng' : '体重管理',
+    'page-weight-subtitle-text': lang === 'vi' ? 'Xem bản ghi và chỉ chỉnh sửa khi cần' : '記録の確認と、必要なときだけ編集',
+    'page-meals-title-text': lang === 'vi' ? 'Quản lý bữa ăn' : '食事メニュー管理',
+    'page-meals-subtitle-text': lang === 'vi' ? 'Nhập tên thực phẩm để ' : '食品名を入力して ',
+    'page-meals-subtitle-strong-text': lang === 'vi' ? 'tự động tính calo và PFC' : 'カロリー・PFC 自動計算',
+    'page-training-title-text': lang === 'vi' ? 'Lịch tập luyện' : '練習スケジュール',
+    'page-training-subtitle-text': lang === 'vi' ? 'Quản lý buổi tập, calo tiêu hao và ghi chú' : 'トレーニング記録・消費カロリー・感想レビュー管理',
+    'page-calories-title-text': lang === 'vi' ? 'Tính calo' : 'カロリー計算',
+    'page-calories-subtitle-text': lang === 'vi' ? 'Tính BMR/TDEE và quản lý cân bằng PFC' : 'BMR / TDEE 計算とPFCバランス管理',
+    'page-fight-title-text': lang === 'vi' ? 'Quản lý mục tiêu trận đấu' : '試合目標管理',
+    'page-fight-subtitle-text': lang === 'vi' ? 'Đếm ngược trận đấu và tiến độ giảm cân' : '次の試合に向けたカウントダウンと減量進捗',
+  };
+  Object.entries(pageHeaderMap).forEach(([id, text]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  });
+
   applyStaticLanguageReplacements(lang);
 }
 
 function applyStaticLanguageReplacements(lang) {
   const reverseMap = Object.fromEntries(Object.entries(JA_TO_VI_TEXT).map(([ja, vi]) => [vi, ja]));
   const replaceMap = lang === 'vi' ? JA_TO_VI_TEXT : reverseMap;
+  const replaceEntries = Object.entries(replaceMap).sort((a, b) => b[0].length - a[0].length);
   const roots = [
     document.querySelector('#mainWrapper'),
     document.querySelector('#sidebar'),
@@ -1174,32 +1219,36 @@ function applyStaticLanguageReplacements(lang) {
     document.querySelector('#modalOverlay'),
   ].filter(Boolean);
 
+  const translateText = (raw) => {
+    if (!raw) return raw;
+    let out = String(raw);
+    replaceEntries.forEach(([from, to]) => {
+      if (!from || from === to) return;
+      if (!out.includes(from)) return;
+      out = out.split(from).join(to);
+    });
+    return out;
+  };
+
   roots.forEach((root) => {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     const textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
     textNodes.forEach((node) => {
       const raw = node.nodeValue || '';
-      const trimmed = raw.trim();
-      if (!trimmed) return;
-      const next = replaceMap[trimmed];
-      if (!next || next === trimmed) return;
-      node.nodeValue = raw.replace(trimmed, next);
+      const next = translateText(raw);
+      if (next !== raw) node.nodeValue = next;
     });
 
     root.querySelectorAll('[placeholder]').forEach((el) => {
       const raw = el.getAttribute('placeholder') || '';
-      const trimmed = raw.trim();
-      const next = replaceMap[trimmed];
-      if (!next || next === trimmed) return;
-      el.setAttribute('placeholder', raw.replace(trimmed, next));
+      const next = translateText(raw);
+      if (next !== raw) el.setAttribute('placeholder', next);
     });
     root.querySelectorAll('[title]').forEach((el) => {
       const raw = el.getAttribute('title') || '';
-      const trimmed = raw.trim();
-      const next = replaceMap[trimmed];
-      if (!next || next === trimmed) return;
-      el.setAttribute('title', raw.replace(trimmed, next));
+      const next = translateText(raw);
+      if (next !== raw) el.setAttribute('title', next);
     });
   });
 

@@ -91,8 +91,8 @@
   <!-- ══════ DASHBOARD ══════ -->
   <div class="page active" id="page-dashboard">
     <div class="page-header">
-      <h1><i class="fas fa-th-large" style="color:var(--red);font-size:24px"></i> ダッシュボード</h1>
-      <p class="page-subtitle">今日のコンディションを一目で確認<span id="dashSubDate"></span></p>
+      <h1><i class="fas fa-th-large" style="color:var(--red);font-size:24px"></i> <span id="page-dashboard-title-text">ダッシュボード</span></h1>
+      <p class="page-subtitle"><span id="page-dashboard-subtitle-text">今日のコンディションを一目で確認</span><span id="dashSubDate"></span></p>
     </div>
 
     <!-- KPI Row -->
@@ -341,8 +341,8 @@
   <!-- ══════ WEIGHT PAGE ══════ -->
   <div class="page" id="page-weight">
     <div class="page-header">
-      <h1><i class="fas fa-weight-scale" style="color:var(--blue);font-size:24px"></i> 体重管理</h1>
-      <p class="page-subtitle">記録の確認と、必要なときだけ編集</p>
+      <h1><i class="fas fa-weight-scale" style="color:var(--blue);font-size:24px"></i> <span id="page-weight-title-text">体重管理</span></h1>
+      <p class="page-subtitle" id="page-weight-subtitle-text">記録の確認と、必要なときだけ編集</p>
     </div>
 
 	    <div class="weight-workspace" style="margin-bottom:16px">
@@ -542,8 +542,8 @@
   <!-- ══════ MEALS PAGE ══════ -->
   <div class="page" id="page-meals">
     <div class="page-header">
-      <h1><i class="fas fa-bowl-food" style="color:var(--green);font-size:24px"></i> 食事メニュー管理</h1>
-      <p class="page-subtitle">食品名を入力して <strong style="color:var(--red-light)">カロリー・PFC 自動計算</strong> ✨</p>
+      <h1><i class="fas fa-bowl-food" style="color:var(--green);font-size:24px"></i> <span id="page-meals-title-text">食事メニュー管理</span></h1>
+      <p class="page-subtitle"><span id="page-meals-subtitle-text">食品名を入力して </span><strong style="color:var(--red-light)" id="page-meals-subtitle-strong-text">カロリー・PFC 自動計算</strong> ✨</p>
     </div>
 
     <!-- Input Master -->
@@ -698,8 +698,8 @@
   <!-- ══════ TRAINING PAGE ══════ -->
   <div class="page" id="page-training">
     <div class="page-header">
-      <h1><i class="fas fa-person-running" style="color:var(--red);font-size:24px"></i> 練習スケジュール</h1>
-      <p class="page-subtitle">トレーニング記録・消費カロリー・感想レビュー管理</p>
+      <h1><i class="fas fa-person-running" style="color:var(--red);font-size:24px"></i> <span id="page-training-title-text">練習スケジュール</span></h1>
+      <p class="page-subtitle" id="page-training-subtitle-text">トレーニング記録・消費カロリー・感想レビュー管理</p>
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
@@ -833,8 +833,8 @@
   <!-- ══════ CALORIES PAGE ══════ -->
   <div class="page" id="page-calories">
     <div class="page-header">
-      <h1><i class="fas fa-fire-flame-curved" style="color:var(--red);font-size:24px"></i> カロリー計算</h1>
-      <p class="page-subtitle">BMR / TDEE 計算とPFCバランス管理</p>
+      <h1><i class="fas fa-fire-flame-curved" style="color:var(--red);font-size:24px"></i> <span id="page-calories-title-text">カロリー計算</span></h1>
+      <p class="page-subtitle" id="page-calories-subtitle-text">BMR / TDEE 計算とPFCバランス管理</p>
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
@@ -1052,8 +1052,8 @@
   <!-- ══════ FIGHT GOALS PAGE ══════ -->
   <div class="page" id="page-fight">
     <div class="page-header">
-      <h1><i class="fas fa-trophy" style="color:var(--gold);font-size:24px"></i> 試合目標管理</h1>
-      <p class="page-subtitle">次の試合に向けたカウントダウンと減量進捗</p>
+      <h1><i class="fas fa-trophy" style="color:var(--gold);font-size:24px"></i> <span id="page-fight-title-text">試合目標管理</span></h1>
+      <p class="page-subtitle" id="page-fight-subtitle-text">次の試合に向けたカウントダウンと減量進捗</p>
     </div>
 
     <div class="section-card" id="fightModeGuideCard" hidden>
@@ -1883,12 +1883,12 @@
 
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
-<script src="js/core/navigation.js?v=20"></script>
-<script src="js/services/storage.js?v=20"></script>
-<script src="js/pages/weight.js?v=20"></script>
-<script src="js/pages/fight.js?v=20"></script>
-<script src="js/core/helpers.js?v=20"></script>
-<script src="js/core/init.js?v=20"></script>
-<script src="js/app.js?v=20"></script>
+<script src="js/core/navigation.js?v=21"></script>
+<script src="js/services/storage.js?v=21"></script>
+<script src="js/pages/weight.js?v=21"></script>
+<script src="js/pages/fight.js?v=21"></script>
+<script src="js/core/helpers.js?v=21"></script>
+<script src="js/core/init.js?v=21"></script>
+<script src="js/app.js?v=21"></script>
 </body>
 </html>
