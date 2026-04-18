@@ -126,12 +126,111 @@ const STORAGE_MODE = {
   SUPABASE: 'supabase',
 };
 const GOAL_MODES = ['boxer_cut', 'fat_loss', 'maintenance'];
+const SUPPORTED_LANGUAGES = ['ja', 'vi'];
+
+const UI_TEXT = {
+  ja: {
+    pageTitles: {
+      dashboard: 'ダッシュボード',
+      weight: '体重管理',
+      meals: '食事メニュー',
+      training: '練習スケジュール',
+      calories: 'カロリー計算',
+      fight: '試合目標',
+      settings: 'マイ設定',
+    },
+    navLabels: {
+      dashboard: 'ダッシュボード',
+      weight: '体重管理',
+      meals: '食事メニュー',
+      training: '練習スケジュール',
+      calories: 'カロリー計算',
+      fight: '試合目標',
+      settings: 'マイ設定',
+    },
+    mobileNavLabels: {
+      dashboard: 'ホーム',
+      weight: '体重',
+      meals: '食事',
+      training: '練習',
+      fight: '試合',
+    },
+    quickSheet: {
+      title: 'すばやく記録',
+      sub: 'よく使う入力画面へすぐ移動（開いている画面から）',
+      close: '閉じる',
+      weight: '体重',
+      meals: '食事',
+      training: '練習',
+      hydration: '水分',
+      recovery: '睡眠・回復',
+      calories: 'カロリー',
+      settings: '設定',
+    },
+    settings: {
+      pageTitle: 'マイ設定',
+      pageSubtitle: '個人用の基本設定・通知・バックアップ管理',
+      languageLabel: '表示言語',
+      languageJa: '日本語',
+      languageVi: 'Tiếng Việt',
+      saveDone: '設定を保存しました',
+    },
+  },
+  vi: {
+    pageTitles: {
+      dashboard: 'Bảng điều khiển',
+      weight: 'Quản lý cân nặng',
+      meals: 'Bữa ăn',
+      training: 'Lịch tập',
+      calories: 'Tính calo',
+      fight: 'Mục tiêu trận đấu',
+      settings: 'Cài đặt',
+    },
+    navLabels: {
+      dashboard: 'Bảng điều khiển',
+      weight: 'Cân nặng',
+      meals: 'Bữa ăn',
+      training: 'Luyện tập',
+      calories: 'Calo',
+      fight: 'Trận đấu',
+      settings: 'Cài đặt',
+    },
+    mobileNavLabels: {
+      dashboard: 'Trang chủ',
+      weight: 'Cân nặng',
+      meals: 'Bữa ăn',
+      training: 'Luyện tập',
+      fight: 'Trận đấu',
+    },
+    quickSheet: {
+      title: 'Ghi nhanh',
+      sub: 'Đi đến màn hình nhập liệu thường dùng',
+      close: 'Đóng',
+      weight: 'Cân nặng',
+      meals: 'Bữa ăn',
+      training: 'Luyện tập',
+      hydration: 'Nước',
+      recovery: 'Ngủ/Phục hồi',
+      calories: 'Calo',
+      settings: 'Cài đặt',
+    },
+    settings: {
+      pageTitle: 'Cài đặt',
+      pageSubtitle: 'Thiết lập cá nhân, thông báo, sao lưu',
+      languageLabel: 'Ngôn ngữ hiển thị',
+      languageJa: 'Tiếng Nhật',
+      languageVi: 'Tiếng Việt',
+      saveDone: 'Đã lưu cài đặt',
+    },
+  },
+};
 
 let supabaseClientPromise = null;
 let supabaseAuthListenerBound = false;
 const DEFAULT_SETTINGS = {
   athleteName: 'Vu Minh Duc',
   athleteRole: 'SE / Pro Boxer',
+  language: 'ja',
   heightCm: 170,
   age: 27,
   gender: 'male',
@@ -159,6 +258,37 @@ function normalizeGoalMode(mode) {
   const value = String(mode || '').trim();
   return GOAL_MODES.includes(value) ? value : DEFAULT_SETTINGS.goalMode;
 }
+
+function normalizeLanguage(language) {
+  const value = String(language || '').trim().toLowerCase();
+  return SUPPORTED_LANGUAGES.includes(value) ? value : DEFAULT_SETTINGS.language;
+}
+
+function getCurrentLanguage() {
+  return normalizeLanguage(appSettings?.language || DEFAULT_SETTINGS.language);
+}
+
+function getUiText(key, fallback = '') {
+  const lang = getCurrentLanguage();
+  const source = UI_TEXT[lang] || UI_TEXT.ja;
+  const jaSource = UI_TEXT.ja;
+  const parts = String(key || '').split('.');
+  let current = source;
+  for (const part of parts) {
+    current = current?.[part];
+    if (current == null) break;
+  }
+  if (typeof current === 'string') return current;
+  let jaCurrent = jaSource;
+  for (const part of parts) {
+    jaCurrent = jaCurrent?.[part];
+    if (jaCurrent == null) break;
+  }
+  if (typeof jaCurrent === 'string') return jaCurrent;
+  return fallback;
+}
+
+window.getUiText = getUiText;
 
 function normalizeOptionalIsoDate(value) {
   const text = String(value || '').trim();
@@ -608,6 +738,7 @@ function mergeSettings(raw = {}) {
   return {
     ...DEFAULT_SETTINGS,
     ...raw,
+    language: normalizeLanguage(raw.language ?? DEFAULT_SETTINGS.language),
     heightCm: Number(raw.heightCm ?? DEFAULT_SETTINGS.heightCm) || DEFAULT_SETTINGS.heightCm,
     age: Number(raw.age ?? DEFAULT_SETTINGS.age) || DEFAULT_SETTINGS.age,
     dailyCalorieGoal: Number(raw.dailyCalorieGoal ?? DEFAULT_SETTINGS.dailyCalorieGoal) || DEFAULT_SETTINGS.dailyCalorieGoal,
@@ -816,6 +947,76 @@ function applyAppSettings(force = false) {
   if (typeof updateGoalBar === 'function') updateGoalBar();
   if (typeof updateWeightBmiPreview === 'function') updateWeightBmiPreview();
   applyGoalModeUi();
+  applyLanguageUi();
+}
+
+function applyLanguageUi() {
+  const lang = getCurrentLanguage();
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll('.nav-item[data-page]').forEach((item) => {
+    const page = item.dataset.page;
+    const label = getUiText(`navLabels.${page}`);
+    const span = item.querySelector('.nav-link span');
+    if (span && label) span.textContent = label;
+  });
+
+  document.querySelectorAll('.mobile-nav-btn[data-page]').forEach((btn) => {
+    const page = btn.dataset.page;
+    const label = getUiText(`mobileNavLabels.${page}`);
+    const span = btn.querySelector('span');
+    if (span && label) span.textContent = label;
+  });
+
+  const settingsTitle = document.getElementById('settings-page-title-text');
+  if (settingsTitle) settingsTitle.textContent = getUiText('settings.pageTitle', settingsTitle.textContent || '');
+  const settingsSubtitle = document.getElementById('settings-page-subtitle');
+  if (settingsSubtitle) settingsSubtitle.textContent = getUiText('settings.pageSubtitle', settingsSubtitle.textContent || '');
+  const languageLabel = document.getElementById('s-language-label');
+  if (languageLabel) languageLabel.textContent = getUiText('settings.languageLabel', languageLabel.textContent || '');
+
+  const languageSelect = document.getElementById('s-language');
+  if (languageSelect) {
+    const optionJa = languageSelect.querySelector('option[value="ja"]');
+    const optionVi = languageSelect.querySelector('option[value="vi"]');
+    if (optionJa) optionJa.textContent = getUiText('settings.languageJa', optionJa.textContent || '日本語');
+    if (optionVi) optionVi.textContent = getUiText('settings.languageVi', optionVi.textContent || 'Tiếng Việt');
+  }
+
+  const landingPageSelect = document.getElementById('s-landing-page');
+  if (landingPageSelect) {
+    landingPageSelect.querySelectorAll('option[value]').forEach((option) => {
+      const text = getUiText(`pageTitles.${option.value}`);
+      if (text) option.textContent = text;
+    });
+  }
+
+  const quickTitle = document.getElementById('mobileQuickTitle');
+  if (quickTitle) quickTitle.textContent = getUiText('quickSheet.title', quickTitle.textContent || '');
+  const quickSub = document.getElementById('mobileQuickSub');
+  if (quickSub) quickSub.textContent = getUiText('quickSheet.sub', quickSub.textContent || '');
+  const quickClose = document.getElementById('mobileQuickCloseBtn');
+  if (quickClose) quickClose.textContent = getUiText('quickSheet.close', quickClose.textContent || '');
+  const quickMap = {
+    'dash-weight': 'quickSheet.weight',
+    meals: 'quickSheet.meals',
+    training: 'quickSheet.training',
+    hydration: 'quickSheet.hydration',
+    recovery: 'quickSheet.recovery',
+    calories: 'quickSheet.calories',
+    settings: 'quickSheet.settings',
+  };
+  document.querySelectorAll('.mobile-quick-tile[data-mq-action]').forEach((btn) => {
+    const key = quickMap[btn.dataset.mqAction];
+    if (!key) return;
+    const span = btn.querySelector('span');
+    const text = getUiText(key);
+    if (span && text) span.textContent = text;
+  });
+
+  const activePage = document.querySelector('.page.active')?.id?.replace('page-', '') || 'dashboard';
+  const topTitle = document.getElementById('topbarTitle');
+  if (topTitle) topTitle.textContent = getUiText(`pageTitles.${activePage}`, topTitle.textContent || activePage);
 }
 
 function getLatestKnownHeightCm() {
@@ -1318,6 +1519,7 @@ function renderSettingsPage() {
   setFieldValue('s-intensity', appSettings.defaultTrainingIntensity);
   setFieldValue('s-landing-page', appSettings.landingPage);
   setFieldValue('s-goal-mode', appSettings.goalMode);
+  setFieldValue('s-language', appSettings.language);
   setFieldValue('s-fat-loss-target-date', appSettings.fatLossTargetDate);
   setFieldValue('s-reminders-enabled', String(appSettings.remindersEnabled));
   setFieldValue('s-reminder-weight', appSettings.reminderWeightTime);
@@ -1338,6 +1540,7 @@ function renderSettingsPage() {
   renderAiCoachMessages();
   updateAiCoachAvailability();
   updateSupabaseAuthUI();
+  applyLanguageUi();
   } catch (err) {
     console.error('BOXER PRO: renderSettingsPage', err);
   }
@@ -1386,6 +1589,7 @@ function saveAppSettings() {
   const di = document.getElementById('s-intensity').value;
   if (!TRAINING_INTENSITIES.includes(di)) { showToast('既定の練習強度を選択してください', 'error'); return; }
   const goalMode = normalizeGoalMode(document.getElementById('s-goal-mode')?.value || DEFAULT_SETTINGS.goalMode);
+  const language = normalizeLanguage(document.getElementById('s-language')?.value || DEFAULT_SETTINGS.language);
   const fatLossTargetRaw = (document.getElementById('s-fat-loss-target-date')?.value || '').trim();
   if (fatLossTargetRaw && !isIsoDateString(fatLossTargetRaw)) {
     showToast('一般減量の目標達成日は YYYY-MM-DD 形式で入力してください', 'error');
@@ -1402,6 +1606,7 @@ function saveAppSettings() {
     dailyCalorieGoal,
     defaultMealType: document.getElementById('s-meal-type').value || DEFAULT_SETTINGS.defaultMealType,
     defaultTrainingIntensity: di,
+    language,
     goalMode,
     fatLossTargetDate: goalMode === 'fat_loss' ? fatLossTargetRaw : '',
     landingPage: document.getElementById('s-landing-page').value || DEFAULT_SETTINGS.landingPage,
@@ -1416,7 +1621,7 @@ function saveAppSettings() {
   renderSettingsPage();
   renderWeightPage();
   renderCaloriesPage();
-  showToast('設定を保存しました', 'success');
+  showToast(getUiText('settings.saveDone', '設定を保存しました'), 'success');
 }
 
 function renderWeeklyFatLossCard() {

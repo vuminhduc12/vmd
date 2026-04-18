@@ -1551,8 +1551,8 @@
   <!-- ══════ SETTINGS PAGE ══════ -->
   <div class="page" id="page-settings">
     <div class="page-header">
-      <h1><i class="fas fa-sliders" style="color:var(--blue);font-size:24px"></i> マイ設定</h1>
-      <p class="page-subtitle">個人用の基本設定・通知・バックアップ管理</p>
+      <h1><i class="fas fa-sliders" style="color:var(--blue);font-size:24px"></i> <span id="settings-page-title-text">マイ設定</span></h1>
+      <p class="page-subtitle" id="settings-page-subtitle">個人用の基本設定・通知・バックアップ管理</p>
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
@@ -1627,6 +1627,13 @@
           </div>
         </div>
         <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" id="s-language-label">表示言語</label>
+            <select id="s-language" class="input-field">
+              <option value="ja">日本語</option>
+              <option value="vi">Tiếng Việt</option>
+            </select>
+          </div>
           <div class="form-group">
             <label class="form-label">目標モード</label>
             <select id="s-goal-mode" class="input-field">
@@ -1809,7 +1816,7 @@
   <div class="mobile-quick-sheet-inner">
     <div class="mobile-quick-handle" aria-hidden="true"></div>
     <h2 id="mobileQuickTitle" class="mobile-quick-title">すばやく記録</h2>
-    <p class="mobile-quick-sub">よく使う入力画面へすぐ移動（開いている画面から）</p>
+    <p class="mobile-quick-sub" id="mobileQuickSub">よく使う入力画面へすぐ移動（開いている画面から）</p>
     <div class="mobile-quick-grid">
       <button type="button" class="mobile-quick-tile" data-mq-action="dash-weight">
         <i class="fas fa-weight-scale"></i><span>体重</span>

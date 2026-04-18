@@ -189,17 +189,23 @@ function switchPage(pageName) {
   }
 
   // Update topbar title
-  const titles = {
-    dashboard: 'ダッシュボード',
-    weight: '体重管理',
-    meals: '食事メニュー',
-    training: '練習スケジュール',
-    calories: 'カロリー計算',
-    fight: '試合目標',
-    settings: 'マイ設定',
-  };
   const topTitle = document.getElementById('topbarTitle');
-  if (topTitle) topTitle.textContent = titles[page] || page;
+  if (topTitle) {
+    const fallback = ({
+      dashboard: 'ダッシュボード',
+      weight: '体重管理',
+      meals: '食事メニュー',
+      training: '練習スケジュール',
+      calories: 'カロリー計算',
+      fight: '試合目標',
+      settings: 'マイ設定',
+    })[page] || page;
+    if (typeof window.getUiText === 'function') {
+      topTitle.textContent = window.getUiText(`pageTitles.${page}`, fallback);
+    } else {
+      topTitle.textContent = fallback;
+    }
+  }
 
   // Load page-specific data
   if (page === 'weight') renderWeightPage();
