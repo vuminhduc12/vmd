@@ -647,6 +647,21 @@ async function fetchAiCoachReply(question) {
   if (!accessToken) {
     throw new Error('ログインセッションを取得できません');
   }
+  // 送信直前にサーバー側で管理者権限を再確認して、非管理者の利用を確実に遮断する
+  const adminCheck = await fetch('/api/admin/stats', {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (adminCheck.status === 401 || adminCheck.status === 403) {
+    aiCoachAdminAllowed = false;
+    throw new Error('AIコーチは管理者アカウントのみ利用できます');
+  }
+  if (!adminCheck.ok) {
+    const body = await adminCheck.text().catch(() => '');
+    throw new Error(body || `管理者権限チェックに失敗しました (${adminCheck.status})`);
+  }
+  aiCoachAdminAllowed = true;
 
   const res = await fetch('/api/ai/chat', {
     method: 'POST',
@@ -731,6 +746,7 @@ function updateSupabaseAuthUI() {
     }
     const session = await getSupabaseSessionSafe(sb);
     const email = session?.user?.email || '';
+    aiCoachAdminAllowed = false;
     emailEl.textContent = email || '未ログイン';
     const hasSession = !!session;
     const inCloud = activeStorageMode === STORAGE_MODE.SUPABASE && hasSession;
