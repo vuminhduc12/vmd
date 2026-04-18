@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/app-icon.svg">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=24">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -91,8 +91,8 @@
   <!-- ══════ DASHBOARD ══════ -->
   <div class="page active" id="page-dashboard">
     <div class="page-header">
-      <h1><i class="fas fa-th-large" style="color:var(--red);font-size:24px"></i> <span id="page-dashboard-title-text">ダッシュボード</span></h1>
-      <p class="page-subtitle"><span id="page-dashboard-subtitle-text">今日のコンディションを一目で確認</span><span id="dashSubDate"></span></p>
+      <h1><i class="fas fa-th-large" style="color:var(--red);font-size:24px"></i> <span id="page-dashboard-title-text" data-i18n="dashboard.title">ダッシュボード</span></h1>
+      <p class="page-subtitle"><span id="page-dashboard-subtitle-text" data-i18n="dashboard.subtitle">今日のコンディションを一目で確認</span><span id="dashSubDate"></span></p>
     </div>
 
     <!-- KPI Row -->
@@ -100,7 +100,7 @@
       <div class="kpi-card kpi-weight kpi-card-editable" role="button" tabindex="0" title="体重記録を編集" onclick="openDashboardEditor('weight')" onkeydown="triggerDashboardEditorFromKey(event, 'weight')">
         <div class="kpi-icon-wrap"><i class="fas fa-weight-scale"></i></div>
         <div class="kpi-body">
-          <div class="kpi-label">現在の体重</div>
+          <div class="kpi-label" data-i18n="dashboard.kpiWeight">現在の体重</div>
           <div class="kpi-value" id="kpi-current-weight">-- kg</div>
           <div class="kpi-sub" id="kpi-bmi-badge"></div>
         </div>
@@ -108,7 +108,7 @@
       <div class="kpi-card kpi-kcal kpi-card-editable" role="button" tabindex="0" title="本日の食事記録を修正" onclick="openDashboardEditor('meals')" onkeydown="triggerDashboardEditorFromKey(event, 'meals')">
         <div class="kpi-icon-wrap"><i class="fas fa-fire-flame-curved"></i></div>
         <div class="kpi-body">
-          <div class="kpi-label">本日摂取カロリー</div>
+          <div class="kpi-label" data-i18n="dashboard.kpiCalories">本日摂取カロリー</div>
           <div class="kpi-value" id="kpi-today-calories">-- kcal</div>
           <div class="kpi-sub kpi-judge" id="kpi-calorie-judge">判定: 計算待ち</div>
           <div id="kpi-cal-bar-wrap" style="margin-top:6px;width:100%;max-width:130px">
@@ -121,15 +121,15 @@
       <div class="kpi-card kpi-protein kpi-card-editable" role="button" tabindex="0" title="タンパク質を含む食事記録を修正" onclick="openDashboardEditor('protein')" onkeydown="triggerDashboardEditorFromKey(event, 'protein')">
         <div class="kpi-icon-wrap"><i class="fas fa-drumstick-bite"></i></div>
         <div class="kpi-body">
-          <div class="kpi-label">本日タンパク質</div>
+          <div class="kpi-label" data-i18n="dashboard.kpiProtein">本日タンパク質</div>
           <div class="kpi-value" id="kpi-today-protein">-- g</div>
-          <div class="kpi-sub">目安 体重×2.2g</div>
+          <div class="kpi-sub" data-i18n="dashboard.kpiProteinGuide">目安 体重×2.2g</div>
         </div>
       </div>
       <div class="kpi-card kpi-train kpi-card-editable" role="button" tabindex="0" title="本日の練習記録を編集" onclick="openDashboardEditor('training')" onkeydown="triggerDashboardEditorFromKey(event, 'training')">
         <div class="kpi-icon-wrap"><i class="fas fa-dumbbell"></i></div>
         <div class="kpi-body">
-          <div class="kpi-label">本日の練習</div>
+          <div class="kpi-label" data-i18n="dashboard.kpiTraining">本日の練習</div>
           <div class="kpi-value" id="kpi-today-training">-- 分</div>
           <div class="kpi-sub" id="kpi-burned">消費 -- kcal</div>
         </div>
@@ -143,27 +143,27 @@
       <div class="chart-card chart-card-featured">
         <div class="chart-card-header">
           <div>
-            <h3><i class="fas fa-chart-area"></i> 体重推移（直近14日）</h3>
-            <div class="chart-card-subtitle">減量ペースと目標ラインを同時に確認</div>
+            <h3><i class="fas fa-chart-area"></i> <span data-i18n="dashboard.weightTrendTitle">体重推移（直近14日）</span></h3>
+            <div class="chart-card-subtitle" data-i18n="dashboard.weightTrendSub">減量ペースと目標ラインを同時に確認</div>
           </div>
           <div class="trend-badge" id="dashWeightTrend">記録待ち</div>
         </div>
         <div class="chart-canvas-wrap chart-canvas-wrap-lg"><canvas id="weightChart"></canvas></div>
         <div class="chart-stat-grid">
           <div class="chart-stat">
-            <span>現在</span>
+            <span data-i18n="dashboard.statCurrent">現在</span>
             <strong id="dashWeightCurrent">-- kg</strong>
           </div>
           <div class="chart-stat">
-            <span>14日平均</span>
+            <span data-i18n="dashboard.statAvg14">14日平均</span>
             <strong id="dashWeightAvg">-- kg</strong>
           </div>
           <div class="chart-stat">
-            <span>前回比</span>
+            <span data-i18n="dashboard.statDelta">前回比</span>
             <strong id="dashWeightDelta">-- kg</strong>
           </div>
           <div class="chart-stat">
-            <span>目標差</span>
+            <span data-i18n="dashboard.statGap">目標差</span>
             <strong id="dashWeightGap">-- kg</strong>
           </div>
         </div>
@@ -171,8 +171,8 @@
       <div class="chart-card chart-card-accent">
         <div class="chart-card-header">
           <div>
-            <h3><i class="fas fa-chart-pie"></i> 本日 PFC バランス</h3>
-            <div class="chart-card-subtitle">食事から逆算して減量中でもチェック</div>
+            <h3><i class="fas fa-chart-pie"></i> <span data-i18n="dashboard.pfcTitle">本日 PFC バランス</span></h3>
+            <div class="chart-card-subtitle" data-i18n="dashboard.pfcSub">食事から逆算して減量中でもチェック</div>
           </div>
         </div>
         <div class="chart-donut-shell">
@@ -1883,12 +1883,12 @@
 
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
-<script src="js/core/navigation.js?v=21"></script>
-<script src="js/services/storage.js?v=21"></script>
-<script src="js/pages/weight.js?v=21"></script>
-<script src="js/pages/fight.js?v=21"></script>
-<script src="js/core/helpers.js?v=21"></script>
-<script src="js/core/init.js?v=21"></script>
-<script src="js/app.js?v=21"></script>
+<script src="js/core/navigation.js?v=24"></script>
+<script src="js/services/storage.js?v=24"></script>
+<script src="js/pages/weight.js?v=24"></script>
+<script src="js/pages/fight.js?v=24"></script>
+<script src="js/core/helpers.js?v=24"></script>
+<script src="js/core/init.js?v=24"></script>
+<script src="js/app.js?v=24"></script>
 </body>
 </html>

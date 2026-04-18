@@ -20,6 +20,8 @@ const API_MAX_PAGES = 40;
 const SUPABASE_PAGE_SIZE = 1000;
 const SUPABASE_MAX_PAGES = 20;
 const RETENTION_MAX_DELETES_PER_RUN = 120;
+const WRITE_RETRY_ATTEMPTS = 2;
+const WRITE_RETRY_DELAY_MS = 220;
 const RETENTION_POLICY_RULES = {
   meals: { days: 365 * 2, maxRows: 5000, dateField: 'date' },
   training_logs: { days: 365 * 2, maxRows: 5000, dateField: 'date' },
@@ -31,6 +33,67 @@ let supabaseSessionRequest = null;
 let supabaseSessionSnapshot = null;
 let retentionPolicyAppliedOnce = false;
 let aiCoachAdminAllowed = false;
+
+function sleep(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function isTransientHttpStatus(status) {
+  const s = Number(status || 0);
+  return s === 429 || s >= 500;
+}
+
+function isTransientWriteError(error) {
+  if (!error) return false;
+  if (error instanceof TypeError) return true;
+  const status = Number(error?.status || 0);
+  if (isTransientHttpStatus(status)) return true;
+  const msg = String(error?.message || '').toLowerCase();
+  return (
+    msg.includes('network')
+    || msg.includes('fetch')
+    || msg.includes('timeout')
+    || msg.includes('temporar')
+    || msg.includes('gateway')
+  );
+}
+
+async function withWriteRetry(task, label = 'write') {
+  let lastError = null;
+  for (let attempt = 1; attempt <= WRITE_RETRY_ATTEMPTS; attempt += 1) {
+    try {
+      return await task();
+    } catch (error) {
+      lastError = error;
+      const canRetry = attempt < WRITE_RETRY_ATTEMPTS && isTransientWriteError(error);
+      if (!canRetry) break;
+      console.warn(`BOXER PRO: retry ${label} (${attempt}/${WRITE_RETRY_ATTEMPTS})`, error);
+      await sleep(WRITE_RETRY_DELAY_MS * attempt);
+    }
+  }
+  throw lastError || new Error(`${label} failed`);
+}
+
+async function fetchWithWriteRetry(url, init, label = 'fetch-write') {
+  let lastError = null;
+  for (let attempt = 1; attempt <= WRITE_RETRY_ATTEMPTS; attempt += 1) {
+    try {
+      const res = await fetch(url, init);
+      if (attempt < WRITE_RETRY_ATTEMPTS && isTransientHttpStatus(res.status)) {
+        await sleep(WRITE_RETRY_DELAY_MS * attempt);
+        continue;
+      }
+      return res;
+    } catch (error) {
+      lastError = error;
+      const canRetry = attempt < WRITE_RETRY_ATTEMPTS && isTransientWriteError(error);
+      if (!canRetry) break;
+      console.warn(`BOXER PRO: retry ${label} (${attempt}/${WRITE_RETRY_ATTEMPTS})`, error);
+      await sleep(WRITE_RETRY_DELAY_MS * attempt);
+    }
+  }
+  throw lastError || new Error(`${label} failed`);
+}
 
 function withTimeout(promise, ms, label = 'operation') {
   return Promise.race([
@@ -318,13 +381,20 @@ async function persistAppSettingsToSupabase() {
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return;
   const user = await getSupabaseUserSafe(sb);
   if (!user) return;
-  const { error } = await sb.from('boxer_profiles').upsert({
-    user_id: user.id,
-    settings: appSettings,
-    last_seen_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }, { onConflict: 'user_id' });
-  if (error) console.error('Supabase settings save:', error);
+  try {
+    await withWriteRetry(async () => {
+      const { error } = await sb.from('boxer_profiles').upsert({
+        user_id: user.id,
+        settings: appSettings,
+        last_seen_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+      if (error) throw error;
+      return true;
+    }, 'supabase-settings');
+  } catch (error) {
+    console.error('Supabase settings save:', error);
+  }
 }
 
 async function initSupabaseAuth() {
@@ -939,15 +1009,15 @@ async function apiPost(table, data) {
     return saveLocalRecord(table, data);
   }
   if (activeStorageMode === STORAGE_MODE.SUPABASE) {
-    return boxerSupabaseApiPost(table, data);
+    return withWriteRetry(() => boxerSupabaseApiPost(table, data), `supabase-post:${table}`);
   }
 
   try {
-    const res = await fetch(`${API_BASE}/${table}`, {
+    const res = await fetchWithWriteRetry(`${API_BASE}/${table}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    });
+    }, `api-post:${table}`);
     if (!res.ok) {
       if (shouldFallbackToLocal(null, res)) {
         setStorageMode(STORAGE_MODE.LOCAL);
@@ -986,11 +1056,11 @@ async function apiDelete(table, id) {
     return true;
   }
   if (activeStorageMode === STORAGE_MODE.SUPABASE) {
-    return boxerSupabaseApiDelete(table, id);
+    return withWriteRetry(() => boxerSupabaseApiDelete(table, id), `supabase-delete:${table}`);
   }
 
   try {
-    const res = await fetch(`${API_BASE}/${table}/${id}`, { method: 'DELETE' });
+    const res = await fetchWithWriteRetry(`${API_BASE}/${table}/${id}`, { method: 'DELETE' }, `api-delete:${table}`);
     if (res.status === 204) {
       setStorageMode(STORAGE_MODE.API);
       return true;
@@ -1029,15 +1099,15 @@ async function apiPut(table, id, data) {
     return updateLocalRecord(table, id, data);
   }
   if (activeStorageMode === STORAGE_MODE.SUPABASE) {
-    return boxerSupabaseApiPut(table, id, data);
+    return withWriteRetry(() => boxerSupabaseApiPut(table, id, data), `supabase-put:${table}`);
   }
 
   try {
-    const res = await fetch(`${API_BASE}/${table}/${id}`, {
+    const res = await fetchWithWriteRetry(`${API_BASE}/${table}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    });
+    }, `api-put:${table}`);
     if (res.ok) {
       if (res.status === 204) {
         setStorageMode(STORAGE_MODE.API);

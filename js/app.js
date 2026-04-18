@@ -175,6 +175,31 @@ const UI_TEXT = {
       languageVi: 'Tiếng Việt',
       saveDone: '設定を保存しました',
     },
+    dashboard: {
+      title: 'ダッシュボード',
+      subtitle: '今日のコンディションを一目で確認',
+      kpiWeight: '現在の体重',
+      kpiCalories: '本日摂取カロリー',
+      kpiProtein: '本日タンパク質',
+      kpiTraining: '本日の練習',
+      kpiProteinGuide: '目安 体重×2.2g',
+      weightTrendTitle: '体重推移（直近14日）',
+      weightTrendSub: '減量ペースと目標ラインを同時に確認',
+      pfcTitle: '本日 PFC バランス',
+      pfcSub: '食事から逆算して減量中でもチェック',
+      statCurrent: '現在',
+      statAvg14: '14日平均',
+      statDelta: '前回比',
+      statGap: '目標差',
+    },
+    common: {
+      save: '保存',
+      close: '閉じる',
+      cancel: 'キャンセル',
+      delete: '削除',
+      edit: '編集',
+      add: '追加',
+    },
   },
   vi: {
     pageTitles: {
@@ -221,6 +246,31 @@ const UI_TEXT = {
       languageJa: 'Tiếng Nhật',
       languageVi: 'Tiếng Việt',
       saveDone: 'Đã lưu cài đặt',
+    },
+    dashboard: {
+      title: 'Bảng điều khiển',
+      subtitle: 'Xem nhanh tình trạng hôm nay',
+      kpiWeight: 'Cân nặng hiện tại',
+      kpiCalories: 'Calo hôm nay',
+      kpiProtein: 'Protein hôm nay',
+      kpiTraining: 'Buổi tập hôm nay',
+      kpiProteinGuide: 'Mốc: cân nặng x 2.2g',
+      weightTrendTitle: 'Xu hướng cân nặng (14 ngày gần nhất)',
+      weightTrendSub: 'Theo dõi cùng lúc tốc độ giảm cân và mốc mục tiêu',
+      pfcTitle: 'Cân bằng PFC hôm nay',
+      pfcSub: 'Kiểm tra cả khi giảm cân dựa trên bữa ăn',
+      statCurrent: 'Hiện tại',
+      statAvg14: 'TB 14 ngày',
+      statDelta: 'So với lần trước',
+      statGap: 'Chênh lệch mục tiêu',
+    },
+    common: {
+      save: 'Lưu',
+      close: 'Đóng',
+      cancel: 'Hủy',
+      delete: 'Xóa',
+      edit: 'Sửa',
+      add: 'Thêm',
     },
   },
 };
@@ -1118,6 +1168,7 @@ function applyAppSettings(force = false) {
 function applyLanguageUi() {
   const lang = getCurrentLanguage();
   document.documentElement.lang = lang;
+  applyDataI18nBindings();
 
   document.querySelectorAll('.nav-item[data-page]').forEach((item) => {
     const page = item.dataset.page;
@@ -1204,6 +1255,24 @@ function applyLanguageUi() {
   });
 
   applyStaticLanguageReplacements(lang);
+}
+
+function applyDataI18nBindings() {
+  const bindings = document.querySelectorAll('[data-i18n]');
+  bindings.forEach((el) => {
+    const key = (el.getAttribute('data-i18n') || '').trim();
+    if (!key) return;
+    const text = getUiText(key);
+    if (text) el.textContent = text;
+  });
+
+  const placeholderBindings = document.querySelectorAll('[data-i18n-placeholder]');
+  placeholderBindings.forEach((el) => {
+    const key = (el.getAttribute('data-i18n-placeholder') || '').trim();
+    if (!key) return;
+    const text = getUiText(key);
+    if (text) el.setAttribute('placeholder', text);
+  });
 }
 
 function applyStaticLanguageReplacements(lang) {
@@ -1566,7 +1635,19 @@ function getDailyRecovery(dateStr) {
   return recoveryLogs.filter(r => r.date && r.date.slice(0, 10) === dateStr);
 }
 
-function renderAiCoachMessages() {
+function scrollAiChatToBottom(force = false) {
+  const log = document.getElementById('ai-chat-log');
+  if (!log) return;
+  const threshold = 72;
+  const distance = log.scrollHeight - log.clientHeight - log.scrollTop;
+  const shouldScroll = force || distance <= threshold;
+  if (!shouldScroll) return;
+  window.requestAnimationFrame(() => {
+    log.scrollTop = log.scrollHeight;
+  });
+}
+
+function renderAiCoachMessages(forceScroll = false) {
   const log = document.getElementById('ai-chat-log');
   const empty = document.getElementById('ai-chat-empty');
   if (!log) return;
@@ -1621,7 +1702,7 @@ function renderAiCoachMessages() {
     `;
     log.appendChild(row);
   });
-  log.scrollTop = log.scrollHeight;
+  scrollAiChatToBottom(forceScroll);
 }
 
 function updateAiCoachAvailability() {
@@ -1673,7 +1754,7 @@ function updateAiCoachAvailability() {
 
 function clearAiCoachChat() {
   aiCoachMessages = [];
-  renderAiCoachMessages();
+  renderAiCoachMessages(true);
 }
 
 function setAiCoachWidgetOpen(open) {
@@ -1688,7 +1769,7 @@ function setAiCoachWidgetOpen(open) {
   fab.setAttribute('aria-expanded', aiCoachOpen ? 'true' : 'false');
   if (aiCoachOpen) {
     updateAiCoachAvailability();
-    renderAiCoachMessages();
+    renderAiCoachMessages(true);
     if (typeof window.refreshAiCoachAdminAccess === 'function') {
       window.refreshAiCoachAdminAccess()
         .catch(() => false)
@@ -1743,7 +1824,7 @@ async function sendAiCoachQuestion() {
   if (aiCoachPending) return;
 
   aiCoachMessages.push({ role: 'user', text: question });
-  renderAiCoachMessages();
+  renderAiCoachMessages(true);
   input.value = '';
   aiCoachPending = true;
   updateAiCoachAvailability();
@@ -1751,7 +1832,7 @@ async function sendAiCoachQuestion() {
   try {
     const answer = await fetchAiCoachReply(question);
     aiCoachMessages.push({ role: 'assistant', text: answer });
-    renderAiCoachMessages();
+    renderAiCoachMessages(true);
   } catch (error) {
     console.error('BOXER PRO: AI coach', error);
     showToast(`AI応答に失敗しました: ${error?.message || 'unknown error'}`, 'error');
@@ -1792,7 +1873,7 @@ function renderSettingsPage() {
       ? `体重 ${appSettings.reminderWeightTime} / 水分 ${appSettings.reminderHydrationTime} / 睡眠 ${appSettings.reminderSleepTime} ・ 通知権限 ${permission}`
       : '通知はOFFです。アプリ起動中のローカル通知も停止します。';
   }
-  renderAiCoachMessages();
+  renderAiCoachMessages(false);
   updateAiCoachAvailability();
   updateSupabaseAuthUI();
   applyLanguageUi();
@@ -2233,16 +2314,20 @@ function renderActivePageById(activePageId) {
   renderDashboard();
 }
 
-function syncAppDayBoundary(force = false) {
-  const today = TODAY();
-  if (!force && today === currentAppDayKey) return false;
-  currentAppDayKey = today;
-
+function refreshTodayBoundViews() {
   setDateInputs();
   loadMealSummary();
   renderDashboard();
   const activePageId = document.querySelector('.page.active')?.id || '';
   renderActivePageById(activePageId);
+  if (typeof window.applyLanguageUi === 'function') window.applyLanguageUi();
+}
+
+function syncAppDayBoundary(force = false) {
+  const today = TODAY();
+  if (!force && today === currentAppDayKey) return false;
+  currentAppDayKey = today;
+  refreshTodayBoundViews();
   return true;
 }
 

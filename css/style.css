@@ -432,7 +432,7 @@ textarea.input-field{resize:vertical;min-height:70px}
   right:18px;
   bottom:90px;
   width:min(420px, calc(100vw - 28px));
-  max-height:min(76vh, 760px);
+  height:min(76vh, 760px);
   z-index:181;
   border:1px solid var(--b1);
   border-radius:16px;
@@ -442,16 +442,20 @@ textarea.input-field{resize:vertical;min-height:70px}
   display:none;
   flex-direction:column;
   gap:10px;
+  overflow:hidden;
 }
 .ai-coach-widget:not([hidden]){display:flex}
 .ai-chat-log{
+  flex:1 1 auto;
+  min-height:0;
   margin-top:2px;
   border:1px solid var(--b1);
   border-radius:12px;
   background:rgba(5,9,18,0.55);
-  min-height:120px;
-  max-height:40vh;
+  min-height:150px;
   overflow:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
   padding:10px;
   display:flex;
   flex-direction:column;
@@ -554,7 +558,7 @@ textarea.input-field{resize:vertical;min-height:70px}
 .ai-chat-bubble{
   border:1px solid var(--b1);
   border-radius:12px;
-  padding:10px 12px;
+  padding:11px 13px;
   background:rgba(255,255,255,0.03);
 }
 .ai-chat-role{
@@ -566,12 +570,14 @@ textarea.input-field{resize:vertical;min-height:70px}
 }
 .ai-chat-text{
   color:var(--tx-1);
-  font-size:13px;
-  line-height:1.8;
+  font-size:14px;
+  line-height:1.85;
   white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 .ai-chat-rich p{
-  margin:0 0 8px;
+  margin:0 0 10px;
 }
 .ai-chat-rich p:last-child{
   margin-bottom:0;
@@ -584,8 +590,8 @@ textarea.input-field{resize:vertical;min-height:70px}
   margin-bottom:0;
 }
 .ai-chat-rich li{
-  margin:0 0 4px;
-  line-height:1.7;
+  margin:0 0 6px;
+  line-height:1.78;
 }
 .ai-chat-form{margin-top:10px}
 .ai-chat-actions{
@@ -613,7 +619,7 @@ textarea.input-field{resize:vertical;min-height:70px}
     left:10px;
     bottom:calc(186px + env(safe-area-inset-bottom, 0px));
     width:auto;
-    max-height:min(62vh, 640px);
+    height:min(68vh, 640px);
     padding:12px;
   }
   body:not(.standalone-mode) .ai-coach-fab{bottom:104px}
@@ -629,6 +635,14 @@ textarea.input-field{resize:vertical;min-height:70px}
   .ai-chat-actions .btn{
     flex:1;
     min-width:0;
+  }
+  .ai-chat-text{
+    font-size:15px;
+    line-height:1.9;
+  }
+  .ai-chat-bubble{
+    border-radius:14px;
+    padding:12px;
   }
 }
 .table-subnote{margin-top:4px;font-size:11px;color:var(--tx-3)}
