@@ -28,6 +28,37 @@ function initNav() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeSidebar();
   });
+
+  const brandHome = document.getElementById('sidebarBrandHome');
+  if (brandHome) {
+    brandHome.addEventListener('click', () => {
+      switchPage('dashboard');
+    });
+    brandHome.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      switchPage('dashboard');
+    });
+  }
+
+  const profileShortcut = document.getElementById('sidebarProfileShortcut');
+  if (profileShortcut) {
+    const goMailSettings = () => {
+      switchPage('settings');
+      window.setTimeout(() => {
+        const card = document.getElementById('supabase-auth-card');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 80);
+    };
+    profileShortcut.addEventListener('click', goMailSettings);
+    profileShortcut.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      goMailSettings();
+    });
+  }
 }
 
 function updateMobileNav(pageName) {
