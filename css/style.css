@@ -560,6 +560,9 @@ textarea.input-field{resize:vertical;min-height:70px}
   border-radius:12px;
   padding:11px 13px;
   background:rgba(255,255,255,0.03);
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
 }
 .ai-chat-role{
   font-size:11px;
@@ -625,12 +628,16 @@ textarea.input-field{resize:vertical;min-height:70px}
   body:not(.standalone-mode) .ai-coach-fab{bottom:104px}
   body:not(.standalone-mode) .ai-coach-widget{bottom:162px}
   .ai-chat-item,.ai-chat-item.user{
-    grid-template-columns:32px 1fr;
+    grid-template-columns:1fr;
+    gap:6px;
   }
   .ai-chat-item.user .ai-chat-badge{order:0}
   .ai-chat-item.user .ai-chat-bubble{order:0}
   .ai-chat-badge{
-    width:32px;height:32px;font-size:10px;
+    display:none;
+  }
+  .ai-chat-log{
+    padding:9px 8px;
   }
   .ai-chat-actions .btn{
     flex:1;
