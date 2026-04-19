@@ -779,6 +779,8 @@ let aiCoachMessages = [];
 let aiCoachPending = false;
 let aiCoachOpen = false;
 let dashboardSectionOrderApplied = false;
+let dashboardRenderTimer = null;
+const DASHBOARD_RENDER_DEBOUNCE_MS = 120;
 
 // ============================================================
 // UTILITIES
@@ -2387,7 +2389,7 @@ function setDateInputs() {
 
 function renderActivePageById(activePageId) {
   if (activePageId === 'page-dashboard') {
-    renderDashboard();
+    renderDashboard(true);
     return;
   }
   if (activePageId === 'page-weight') {
@@ -3289,7 +3291,7 @@ function applyDashboardSectionOrder() {
 // ============================================================
 // DASHBOARD
 // ============================================================
-function renderDashboard() {
+function renderDashboardNow() {
   applyDashboardSectionOrder();
   refreshCuttingPlanRows();
   const today = TODAY();
@@ -3365,6 +3367,22 @@ function renderDashboard() {
   renderRecentActivity();
   renderPerformanceCoach();
   renderAutoSummaries();
+}
+
+function renderDashboard(force = false) {
+  if (force) {
+    if (dashboardRenderTimer) {
+      window.clearTimeout(dashboardRenderTimer);
+      dashboardRenderTimer = null;
+    }
+    renderDashboardNow();
+    return;
+  }
+  if (dashboardRenderTimer) window.clearTimeout(dashboardRenderTimer);
+  dashboardRenderTimer = window.setTimeout(() => {
+    dashboardRenderTimer = null;
+    renderDashboardNow();
+  }, DASHBOARD_RENDER_DEBOUNCE_MS);
 }
 
 function renderFightGoalMini(fight) {

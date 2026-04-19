@@ -35,6 +35,9 @@ let supabaseSessionSnapshot = null;
 let retentionPolicyAppliedOnce = false;
 let aiCoachAdminAllowed = false;
 let supabaseLogoutInFlight = false;
+let supabaseAuthUiDebounceTimer = null;
+let supabaseAuthUiInFlight = false;
+let supabaseAuthUiQueued = false;
 
 function sleep(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -836,13 +839,21 @@ async function updateAdminStatsUi() {
   }
 }
 
-function updateSupabaseAuthUI() {
+async function updateSupabaseAuthUIInternal() {
+  if (supabaseAuthUiInFlight) {
+    supabaseAuthUiQueued = true;
+    return;
+  }
+  supabaseAuthUiInFlight = true;
   const hint = document.getElementById('supabase-config-hint');
   const emailEl = document.getElementById('supabase-auth-email');
   const loginBtn = document.getElementById('supabase-login-btn');
   const logoutBtn = document.getElementById('supabase-logout-btn');
   const mergeBtn = document.getElementById('supabase-merge-btn');
-  if (!hint || !emailEl || !loginBtn || !logoutBtn || !mergeBtn) return;
+  if (!hint || !emailEl || !loginBtn || !logoutBtn || !mergeBtn) {
+    supabaseAuthUiInFlight = false;
+    return;
+  }
 
   const configured = isSupabaseConfigured();
   hint.hidden = configured;
@@ -854,10 +865,11 @@ function updateSupabaseAuthUI() {
     logoutBtn.style.display = 'none';
     mergeBtn.style.display = 'none';
     resetAdminStatsUi();
+    supabaseAuthUiInFlight = false;
     return;
   }
 
-  getSupabaseClient().then(async (sb) => {
+  await getSupabaseClient().then(async (sb) => {
     if (!sb) {
       emailEl.textContent = '接続できません（URL・anon key・Console を確認）';
       renderProfileCard();
@@ -889,6 +901,21 @@ function updateSupabaseAuthUI() {
     mergeBtn.style.display = 'none';
     resetAdminStatsUi();
   });
+  supabaseAuthUiInFlight = false;
+  if (supabaseAuthUiQueued) {
+    supabaseAuthUiQueued = false;
+    void updateSupabaseAuthUIInternal();
+  }
+}
+
+function updateSupabaseAuthUI() {
+  if (supabaseAuthUiDebounceTimer) {
+    window.clearTimeout(supabaseAuthUiDebounceTimer);
+  }
+  supabaseAuthUiDebounceTimer = window.setTimeout(() => {
+    supabaseAuthUiDebounceTimer = null;
+    void updateSupabaseAuthUIInternal();
+  }, 120);
 }
 
 // ============================================================
@@ -1210,8 +1237,14 @@ async function loadAllData() {
     hydrationLogs = (hRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
     recoveryLogs  = (rRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
     hasInitialDataLoaded = true;
-    renderDashboard();
-    renderSettingsPage();
+    const activePageId = document.querySelector('.page.active')?.id || 'page-dashboard';
+    if (typeof renderActivePageById === 'function') {
+      renderActivePageById(activePageId);
+    } else if (activePageId === 'page-settings') {
+      renderSettingsPage();
+    } else {
+      renderDashboard();
+    }
     void enforceRetentionPolicyOnce().catch((error) => console.error('Retention policy run failed', error));
   } catch(e) {
     showToast('データの読み込みに失敗しました', 'error');
