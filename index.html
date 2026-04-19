@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/app-icon.svg">
-  <link rel="stylesheet" href="css/style.css?v=26">
+  <link rel="stylesheet" href="css/style.css?v=28">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -139,7 +139,7 @@
     <div id="dashboardOnboardingCard" class="section-card mt-16" style="display:none"></div>
 
     <!-- Charts Top Row -->
-    <div class="dash-grid-top" style="margin-bottom:16px">
+    <div class="dash-grid-top" id="dashGridTop" style="margin-bottom:16px">
       <div class="chart-card chart-card-featured">
         <div class="chart-card-header">
           <div>
@@ -212,7 +212,7 @@
     </div>
 
     <!-- Bottom Row: 7-day kcal chart + streak + activity -->
-    <div class="dash-grid-bot" style="margin-bottom:0">
+    <div class="dash-grid-bot" id="dashGridBottom" style="margin-bottom:0">
       <div class="chart-card">
         <div class="chart-card-header">
           <h3><i class="fas fa-chart-bar"></i> 過去7日 カロリー収支</h3>
@@ -275,7 +275,7 @@
     </div>
 
     <!-- Recent Activity -->
-    <div class="section-card mt-16">
+    <div class="section-card mt-16" id="dashboardRecentActivityCard">
       <div class="section-card-header">
         <h3><i class="fas fa-history"></i> 最近のアクティビティ</h3>
         <span id="activityCount" style="font-size:11px;color:var(--tx-3)"></span>
@@ -283,7 +283,7 @@
       <div id="recentActivity"><div class="empty-state">まだ記録がありません</div></div>
     </div>
 
-    <div class="section-card mt-16 performance-card">
+    <div class="section-card mt-16 performance-card" id="dashboardPerformanceCard">
       <div class="section-card-header">
         <h3><i class="fas fa-bolt"></i> 今日の戦闘コンディション</h3>
         <span class="trend-badge" id="readinessBadge">分析待ち</span>
@@ -1883,12 +1883,12 @@
 
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
-<script src="js/core/navigation.js?v=26"></script>
-<script src="js/services/storage.js?v=26"></script>
-<script src="js/pages/weight.js?v=26"></script>
-<script src="js/pages/fight.js?v=26"></script>
-<script src="js/core/helpers.js?v=26"></script>
-<script src="js/core/init.js?v=26"></script>
-<script src="js/app.js?v=26"></script>
+<script src="js/core/navigation.js?v=28"></script>
+<script src="js/services/storage.js?v=28"></script>
+<script src="js/pages/weight.js?v=28"></script>
+<script src="js/pages/fight.js?v=28"></script>
+<script src="js/core/helpers.js?v=28"></script>
+<script src="js/core/init.js?v=28"></script>
+<script src="js/app.js?v=28"></script>
 </body>
 </html>

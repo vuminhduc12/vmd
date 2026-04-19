@@ -762,6 +762,7 @@ let mealPfcChartInst = null;
 let weeklyTrainingChartInst = null;
 let calorieBalanceChartInst = null;
 let trainingWeightRecoveryChartInst = null;
+let dash7dayChartInst = null;
 let editingWeightId = null;
 let editingTrainingId = null;
 let editingOpponentId = null;
@@ -777,6 +778,7 @@ let pendingOpponentPhotoPreviewUrl = '';
 let aiCoachMessages = [];
 let aiCoachPending = false;
 let aiCoachOpen = false;
+let dashboardSectionOrderApplied = false;
 
 // ============================================================
 // UTILITIES
@@ -3176,10 +3178,119 @@ function getDashboardCalorieJudge(snapshot) {
   return { text: `判定: 調整中（基準比 ${kcalGap > 0 ? '+' : ''}${kcalGap}kcal）`, state: 'flat' };
 }
 
+function setRingFill(ringId, pctId, ratio) {
+  const ring = document.getElementById(ringId);
+  const pctEl = document.getElementById(pctId);
+  if (!ring || !pctEl) return;
+  const r = clampNumber(Number(ratio) || 0, 0, 1.2);
+  const pct = Math.round(r * 100);
+  const circumference = 201;
+  ring.style.strokeDashoffset = String(circumference * (1 - Math.min(r, 1)));
+  pctEl.textContent = `${pct}%`;
+}
+
+function renderDashboard7dayCalorieBalance() {
+  const canvas = document.getElementById('dash7dayChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const days7 = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return toLocalIsoDate(d);
+  });
+  const labels = days7.map((d) => d.slice(5));
+  const intake = days7.map((d) => Math.round(mealLogs
+    .filter((m) => m.date && m.date.slice(0, 10) === d)
+    .reduce((s, m) => s + (parseFloat(m.calories) || 0), 0)));
+  const burned = days7.map((d) => Math.round(trainingLogs
+    .filter((t) => t.date && t.date.slice(0, 10) === d)
+    .reduce((s, t) => s + (parseFloat(t.calories_burned) || 0), 0)));
+  const net = intake.map((v, i) => v - burned[i]);
+
+  if (dash7dayChartInst) dash7dayChartInst.destroy();
+  dash7dayChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: '摂取', data: intake, backgroundColor: createBarGradient(ctx, '#69b2ff', '#326fd6'), borderRadius: 7 },
+        { label: '消費', data: burned, backgroundColor: createBarGradient(ctx, '#ff6b78', '#c92d3d'), borderRadius: 7 },
+        { type: 'line', label: '収支', data: net, borderColor: '#f5c842', backgroundColor: 'rgba(245,200,66,0.08)', tension: 0.35, borderWidth: 2, pointRadius: 3 },
+      ],
+    },
+    options: chartOptions('kcal'),
+  });
+}
+
+function renderDashboardStreakAndRings(snapshot) {
+  const dayHasRecord = (day) => (
+    weightLogs.some((w) => w.date && w.date.slice(0, 10) === day)
+    || mealLogs.some((m) => m.date && m.date.slice(0, 10) === day)
+    || trainingLogs.some((t) => t.date && t.date.slice(0, 10) === day)
+    || hydrationLogs.some((h) => h.date && h.date.slice(0, 10) === day)
+    || recoveryLogs.some((r) => r.date && r.date.slice(0, 10) === day)
+  );
+
+  let streak = 0;
+  for (let i = 0; i < 365; i += 1) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = toLocalIsoDate(d);
+    if (!dayHasRecord(ds)) break;
+    streak += 1;
+  }
+  setText('streakDays', String(streak));
+  setText('streakSub', streak > 0 ? `直近${streak}日継続` : '今日の記録から開始');
+
+  const calTarget = Number(snapshot.planRow?.totalKcalTarget) || Number(appSettings.dailyCalorieGoal) || 0;
+  const proteinTarget = Number(snapshot.planRow?.protein) || ((Number(snapshot.actualWeight) || Number(appSettings.targetWeight) || 0) * 2.2);
+  const trainTarget = 60;
+  const calRatio = calTarget > 0 ? snapshot.calories / calTarget : 0;
+  const proteinRatio = proteinTarget > 0 ? snapshot.protein / proteinTarget : 0;
+  const trainRatio = trainTarget > 0 ? snapshot.trainingMinutes / trainTarget : 0;
+
+  setRingFill('ringCalFill', 'ringCalPct', calRatio);
+  setRingFill('ringProFill', 'ringProPct', proteinRatio);
+  setRingFill('ringTrainFill', 'ringTrainPct', trainRatio);
+}
+
+function applyDashboardSectionOrder() {
+  if (dashboardSectionOrderApplied) return;
+  const dashboardPage = document.getElementById('page-dashboard');
+  if (!dashboardPage) return;
+  const kpiGrid = dashboardPage.querySelector('.kpi-grid');
+  if (!kpiGrid) return;
+
+  const onboarding = document.getElementById('dashboardOnboardingCard');
+  const dashGridBottom = document.getElementById('dashGridBottom');
+  const dashGridTop = document.getElementById('dashGridTop');
+  const performanceCard = document.getElementById('dashboardPerformanceCard');
+  const quickRow = document.getElementById('dash-quick-anchor');
+  const activityCard = document.getElementById('dashboardRecentActivityCard');
+  const summaryRow = dashboardPage.querySelector('.two-col.mt-16');
+
+  const ordered = [
+    onboarding,
+    dashGridBottom,
+    dashGridTop,
+    performanceCard,
+    quickRow,
+    activityCard,
+    summaryRow,
+  ].filter(Boolean);
+  if (!ordered.length) return;
+
+  ordered.forEach((section) => {
+    dashboardPage.appendChild(section);
+  });
+  dashboardSectionOrderApplied = true;
+}
+
 // ============================================================
 // DASHBOARD
 // ============================================================
 function renderDashboard() {
+  applyDashboardSectionOrder();
   refreshCuttingPlanRows();
   const today = TODAY();
   const snapshot = getDailyPerformanceSnapshot(today);
@@ -3249,6 +3360,8 @@ function renderDashboard() {
   // Charts
   renderDashboardWeightChart();
   renderDashboardPFCChart(todayMeals);
+  renderDashboard7dayCalorieBalance();
+  renderDashboardStreakAndRings(snapshot);
   renderRecentActivity();
   renderPerformanceCoach();
   renderAutoSummaries();
