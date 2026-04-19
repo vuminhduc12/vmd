@@ -13,6 +13,7 @@ const BOXER_SUPABASE_TABLES = {
   recovery_logs: 'boxer_recovery_logs',
 };
 const SUPABASE_LAST_SEEN_SYNC_KEY = 'boxerpro.supabase.lastSeenSyncAt';
+const SUPABASE_AUTH_STORAGE_KEY = 'boxerpro.supabase.auth';
 const SUPABASE_LAST_SEEN_INTERVAL_MS = 30 * 60 * 1000;
 const SUPABASE_AUTH_TIMEOUT_MS = 8000;
 const API_PAGE_SIZE = 500;
@@ -33,6 +34,7 @@ let supabaseSessionRequest = null;
 let supabaseSessionSnapshot = null;
 let retentionPolicyAppliedOnce = false;
 let aiCoachAdminAllowed = false;
+let supabaseLogoutInFlight = false;
 
 function sleep(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -174,7 +176,7 @@ async function getSupabaseClient() {
       return createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
         auth: {
           storage: storageAdapter,
-          storageKey: 'boxerpro.supabase.auth',
+          storageKey: SUPABASE_AUTH_STORAGE_KEY,
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: false,
@@ -480,14 +482,49 @@ async function signInWithGoogle() {
 }
 
 async function signOutSupabase() {
+  if (supabaseLogoutInFlight) return;
   const sb = await getSupabaseClient();
   if (!sb) return;
-  const { error } = await sb.auth.signOut();
-  if (error) {
-    showToast('ログアウトに失敗しました', 'error');
-    return;
+  supabaseLogoutInFlight = true;
+  const loginBtn = document.getElementById('supabase-login-btn');
+  const logoutBtn = document.getElementById('supabase-logout-btn');
+  const mergeBtn = document.getElementById('supabase-merge-btn');
+  if (loginBtn) loginBtn.disabled = true;
+  if (logoutBtn) logoutBtn.disabled = true;
+  if (mergeBtn) mergeBtn.disabled = true;
+
+  const forceLocalLogout = async () => {
+    supabaseSessionSnapshot = null;
+    safeStorageRemoveItem(SUPABASE_AUTH_STORAGE_KEY);
+    safeStorageSetItem(SUPABASE_LAST_SEEN_SYNC_KEY, '0', { context: 'last seen reset' });
+    setStorageMode(STORAGE_MODE.LOCAL);
+    appSettings = loadSettingsFromStorage();
+    applyAppSettings(true);
+    try {
+      await loadAllData();
+    } catch (err) {
+      console.error('BOXER PRO: loadAllData after local logout', err);
+    }
+    syncSupabaseUi();
+    if (typeof renderDashboard === 'function') renderDashboard();
+  };
+
+  try {
+    // モバイルで 403(scope=global) が出るケースを避けるため local scope で終了する
+    const out = await withTimeout(sb.auth.signOut({ scope: 'local' }), 5000, 'signOut');
+    if (out?.error) throw out.error;
+    await forceLocalLogout();
+    showToast('ログアウトしました', 'success');
+  } catch (error) {
+    console.error('BOXER PRO: signOutSupabase fallback', error);
+    await forceLocalLogout();
+    showToast('ログアウト（ローカル）を完了しました', 'info');
+  } finally {
+    supabaseLogoutInFlight = false;
+    if (loginBtn) loginBtn.disabled = false;
+    if (logoutBtn) logoutBtn.disabled = false;
+    if (mergeBtn) mergeBtn.disabled = false;
   }
-  showToast('ログアウトしました', 'success');
 }
 
 async function mergeLocalDataToSupabase() {
