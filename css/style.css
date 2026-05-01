@@ -2005,6 +2005,17 @@ textarea.input-field{resize:vertical;min-height:70px}
   overflow:hidden;
   position:relative;
 }
+.notification-summary-card .section-card-header{
+  align-items:flex-start;
+}
+.notification-summary-card .section-card-header > div:first-child{
+  min-width:0;
+}
+.notification-summary-card .section-card-header h3{
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.35;
+}
 .notification-summary-card::before{
   content:'';
   position:absolute;
@@ -2069,6 +2080,8 @@ textarea.input-field{resize:vertical;min-height:70px}
   color:var(--tx-1);
   font-weight:900;
   font-size:14px;
+  min-width:0;
+  overflow-wrap:anywhere;
 }
 .trainer-notification-date{
   color:var(--tx-3);
@@ -2464,6 +2477,85 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .record-collapse-card .collapse-toggle{
     align-self:flex-end;
   }
+  .notification-shell{
+    max-width:none;
+    width:100%;
+  }
+  .notification-summary-card{
+    padding:14px;
+    border-radius:20px;
+  }
+  .notification-summary-card .section-card-header{
+    flex-direction:column;
+    align-items:stretch;
+    gap:12px;
+    padding:0;
+  }
+  .notification-summary-card .section-card-header h3{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:18px;
+    margin:0;
+    white-space:normal;
+    word-break:keep-all;
+    overflow-wrap:normal;
+  }
+  .notification-summary-card .chart-card-subtitle{
+    font-size:12px;
+    line-height:1.6;
+    margin-top:4px;
+  }
+  .notification-summary-card .trainer-flow-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    width:100%;
+  }
+  .notification-summary-card .trainer-flow-pill{
+    grid-column:1 / -1;
+    width:100%;
+    min-width:0;
+  }
+  .notification-summary-card .trainer-flow-actions .btn{
+    width:100%;
+    justify-content:center;
+    min-width:0;
+    padding:9px 10px;
+    font-size:12px;
+  }
+  .trainer-notification-list{
+    margin-top:14px;
+    gap:10px;
+  }
+  .trainer-notification-item{
+    gap:10px;
+    padding:12px;
+    border-radius:18px;
+  }
+  .trainer-notification-marker{
+    width:38px;
+    height:38px;
+    border-radius:14px;
+  }
+  .trainer-notification-head{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:4px;
+  }
+  .trainer-notification-title{
+    font-size:13px;
+    line-height:1.45;
+    word-break:keep-all;
+    overflow-wrap:anywhere;
+  }
+  .trainer-notification-date{
+    font-size:10.5px;
+  }
+  .trainer-notification-body{
+    font-size:12.5px;
+    line-height:1.65;
+  }
   #trainerAthleteList .stat-card{
     scroll-snap-align:start;
   }
@@ -2549,6 +2641,23 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .page-header{padding:4px 0 16px;margin-bottom:20px}
   .page-subtitle{font-size:12px;line-height:1.6}
   .chart-card{padding:16px}
+  .notification-summary-card{
+    padding:14px;
+  }
+  .notification-summary-card .section-card-header h3{
+    font-size:17px;
+  }
+  .notification-summary-card .trainer-flow-actions{
+    grid-template-columns:1fr;
+  }
+  .trainer-notification-item{
+    padding:12px;
+  }
+  .trainer-notification-marker{
+    width:36px;
+    height:36px;
+    border-radius:13px;
+  }
   .chart-card-header{flex-direction:column;align-items:flex-start}
   .chart-stat-grid{grid-template-columns:1fr 1fr}
   .chart-stat strong{font-size:20px}

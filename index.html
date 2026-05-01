@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/app-icon.svg">
-  <link rel="stylesheet" href="css/style.css?v=32">
+  <link rel="stylesheet" href="css/style.css?v=33">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -1782,9 +1782,9 @@
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
-      <div class="form-card record-collapse-card">
+      <div class="form-card record-collapse-card" id="settings-profile-card">
         <div class="collapsible-head form-title-row">
-          <h3 class="form-title"><i class="fas fa-user-gear"></i> 個人プロフィール設定</h3>
+          <h3 class="form-title" id="settingsProfileTitle"><i class="fas fa-user-gear"></i> 個人プロフィール設定</h3>
           <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsProfileBody', this)">折りたたむ</button>
         </div>
         <div id="settingsProfileBody">
@@ -1798,7 +1798,7 @@
             <input type="text" id="s-role" class="input-field" placeholder="例: SE / Pro Boxer">
           </div>
         </div>
-        <div class="form-row four-col">
+        <div class="form-row four-col settings-athlete-only">
           <div class="form-group">
             <label class="form-label">身長 (cm)</label>
             <input type="number" id="s-height" class="input-field" placeholder="170">
@@ -1819,7 +1819,7 @@
             <input type="number" id="s-target-weight" class="input-field" placeholder="63.5" step="0.1">
           </div>
         </div>
-        <div class="form-row four-col">
+        <div class="form-row four-col settings-athlete-only">
           <div class="form-group">
             <label class="form-label">既定 kcal</label>
             <input type="number" id="s-calorie-goal" class="input-field" placeholder="1800">
@@ -1857,7 +1857,7 @@
             </select>
           </div>
         </div>
-        <div class="form-row">
+        <div class="form-row settings-athlete-only">
           <div class="form-group">
             <label class="form-label" id="s-language-label">表示言語</label>
             <select id="s-language" class="input-field">
@@ -1874,7 +1874,7 @@
             </select>
           </div>
         </div>
-        <div class="form-row" id="fatLossTargetDateWrap" style="display:none">
+        <div class="form-row settings-athlete-only" id="fatLossTargetDateWrap" style="display:none">
           <div class="form-group">
             <label class="form-label">一般減量の目標達成日</label>
             <input type="date" id="s-fat-loss-target-date" class="input-field">
@@ -1911,7 +1911,7 @@
 
         <div class="form-card record-collapse-card" id="supabase-auth-card">
           <div class="collapsible-head form-title-row">
-            <h3 class="form-title"><i class="fas fa-cloud"></i> クラウド同期 (Supabase)</h3>
+            <h3 class="form-title" id="settingsCloudTitle"><i class="fas fa-cloud"></i> クラウド同期 (Supabase)</h3>
             <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsCloudBody', this)">折りたたむ</button>
           </div>
           <div id="settingsCloudBody">
@@ -2028,7 +2028,7 @@
           </div>
         </div>
 
-        <div class="form-card record-collapse-card">
+        <div class="form-card record-collapse-card" id="settings-backup-card">
           <div class="collapsible-head form-title-row">
             <h3 class="form-title"><i class="fas fa-cloud-arrow-down"></i> バックアップ / 復元</h3>
             <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsBackupBody', this)">折りたたむ</button>
@@ -2046,7 +2046,7 @@
           </div>
         </div>
 
-        <div class="form-card record-collapse-card">
+        <div class="form-card record-collapse-card" id="settings-reminder-card">
           <div class="collapsible-head form-title-row">
             <h3 class="form-title"><i class="fas fa-bell"></i> 通知 / リマインダー</h3>
             <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsReminderBody', this)">折りたたむ</button>
@@ -2204,6 +2204,6 @@
 <script src="js/pages/fight.js?v=31"></script>
 <script src="js/core/helpers.js?v=31"></script>
 <script src="js/core/init.js?v=31"></script>
-<script src="js/app.js?v=34"></script>
+<script src="js/app.js?v=35"></script>
 </body>
 </html>

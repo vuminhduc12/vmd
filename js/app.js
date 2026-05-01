@@ -2777,17 +2777,51 @@ function getEffectiveUserCapabilities() {
   return { roles: [], isAdmin: false, isAthlete: true, isTrainer: trainerAccessAvailable };
 }
 
+function isTrainerSettingsMode(caps = getEffectiveUserCapabilities()) {
+  return !!trainerAccessAvailable || (!!caps.isTrainer && caps.isAthlete === false);
+}
+
 function applySettingsCapabilityVisibility() {
   const caps = getEffectiveUserCapabilities();
+  const trainerMode = isTrainerSettingsMode(caps);
+  const settingsTitle = document.getElementById('settings-page-title-text');
+  const settingsSubtitle = document.getElementById('settings-page-subtitle');
+  const profileTitle = document.getElementById('settingsProfileTitle');
+  const cloudTitle = document.getElementById('settingsCloudTitle');
+  const topTitle = document.getElementById('topbarTitle');
+  if (settingsTitle) settingsTitle.textContent = trainerMode ? 'トレーナー設定' : getUiText('settings.pageTitle', 'マイ設定');
+  if (topTitle && document.querySelector('.page.active')?.id === 'page-settings') {
+    topTitle.textContent = trainerMode ? 'トレーナー設定' : getUiText('pageTitles.settings', 'マイ設定');
+  }
+  if (settingsSubtitle) {
+    settingsSubtitle.textContent = trainerMode
+      ? 'トレーナーのログインID・表示名だけを管理'
+      : getUiText('settings.pageSubtitle', '個人用の基本設定・通知・バックアップ管理');
+  }
+  if (profileTitle) profileTitle.innerHTML = `<i class="fas fa-user-gear"></i> ${trainerMode ? 'トレーナープロフィール' : '個人プロフィール設定'}`;
+  if (cloudTitle) cloudTitle.innerHTML = `<i class="fas fa-cloud"></i> ${trainerMode ? 'ログインID' : 'クラウド同期 (Supabase)'}`;
+
+  document.querySelectorAll('.settings-athlete-only').forEach((el) => {
+    el.hidden = trainerMode;
+  });
+  ['settings-backup-card', 'settings-reminder-card'].forEach((id) => {
+    const card = document.getElementById(id);
+    if (card) card.hidden = trainerMode;
+  });
+  const configHint = document.getElementById('supabase-config-hint');
+  if (configHint) configHint.hidden = trainerMode;
+  const mergeBtn = document.getElementById('supabase-merge-btn');
+  if (mergeBtn) mergeBtn.hidden = trainerMode;
+
   const trainerInviteCard = document.getElementById('trainer-invite-card');
   if (trainerInviteCard) {
-    trainerInviteCard.hidden = !!trainerAccessAvailable && !caps.isAthlete;
+    trainerInviteCard.hidden = trainerMode || (!!trainerAccessAvailable && !caps.isAthlete);
   }
   const athleteTrainerNotesCard = document.getElementById('athlete-trainer-notes-card');
   if (athleteTrainerNotesCard) {
-    athleteTrainerNotesCard.hidden = activeStorageMode !== STORAGE_MODE.SUPABASE || !!trainerAccessAvailable || caps.isAthlete === false;
+    athleteTrainerNotesCard.hidden = trainerMode || activeStorageMode !== STORAGE_MODE.SUPABASE || !!trainerAccessAvailable || caps.isAthlete === false;
   }
-  if (trainerAccessAvailable || caps.isTrainer) {
+  if (trainerMode || trainerAccessAvailable || caps.isTrainer) {
     ['settings-storage-card', 'admin-stats-card'].forEach((id) => {
       const card = document.getElementById(id);
       if (card) card.hidden = true;
@@ -2831,8 +2865,8 @@ function renderSettingsPage() {
   updateSupabaseAuthUI();
   void renderTrainerInvitePanel();
   void renderAthleteTrainerNotesPanel();
-  applySettingsCapabilityVisibility();
   applyLanguageUi();
+  applySettingsCapabilityVisibility();
   } catch (err) {
     console.error('BOXER PRO: renderSettingsPage', err);
   }
