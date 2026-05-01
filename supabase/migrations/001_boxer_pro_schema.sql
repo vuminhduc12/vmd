@@ -338,7 +338,7 @@ create policy "boxer_fight_insert_own" on public.boxer_fight_goals for insert wi
 create policy "boxer_fight_update_own" on public.boxer_fight_goals for update using (auth.uid() = user_id);
 create policy "boxer_fight_delete_own" on public.boxer_fight_goals for delete using (auth.uid() = user_id);
 
-create policy "boxer_weight_photos_select_own" on public.boxer_weight_log_photos for select using (auth.uid() = user_id);
+create policy "boxer_weight_photos_select_own" on public.boxer_weight_log_photos for select using (auth.uid() = user_id or public.boxer_is_approved_trainer(user_id));
 create policy "boxer_weight_photos_insert_own" on public.boxer_weight_log_photos for insert with check (auth.uid() = user_id);
 create policy "boxer_weight_photos_update_own" on public.boxer_weight_log_photos for update using (auth.uid() = user_id);
 create policy "boxer_weight_photos_delete_own" on public.boxer_weight_log_photos for delete using (auth.uid() = user_id);
@@ -387,7 +387,10 @@ create policy "weight_photos_select_own"
   on storage.objects for select
   using (
     bucket_id = 'weight-photos'
-    and auth.uid()::text = split_part(name, '/', 1)
+    and (
+      auth.uid()::text = split_part(name, '/', 1)
+      or public.boxer_is_approved_trainer(split_part(name, '/', 1)::uuid)
+    )
   );
 
 create policy "weight_photos_insert_own"

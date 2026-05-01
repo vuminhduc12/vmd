@@ -2129,7 +2129,38 @@ function renderTrainerEmptyData(message) {
   setText('trainerLatestWeightDate', '--');
   setText('trainerRecordCounts', '--');
   const tbody = document.getElementById('trainerWeightTableBody');
-  if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="empty-cell">${escapeHtml(message || '担当選手を選択してください')}</td></tr>`;
+  if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="empty-cell">${escapeHtml(message || '担当選手を選択してください')}</td></tr>`;
+}
+
+async function buildTrainerWeightPhotoMap(photos = []) {
+  const photoMap = new Map();
+  await Promise.all((photos || []).map(async (photo) => {
+    if (!photo?.weight_log_id || !photo?.storage_path) return;
+    const url = await getWeightPhotoSignedUrl(photo.storage_path);
+    if (!url) return;
+    const current = photoMap.get(photo.weight_log_id) || [];
+    current.push({
+      ...photo,
+      signed_url: url,
+    });
+    photoMap.set(photo.weight_log_id, current);
+  }));
+  photoMap.forEach((rows) => {
+    rows.sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+  });
+  return photoMap;
+}
+
+function renderTrainerWeightPhotoCell(photos = []) {
+  if (!photos.length) return '--';
+  const first = photos[0];
+  const extra = photos.length > 1 ? `<span class="table-subnote">+${photos.length - 1}枚</span>` : '';
+  return `
+    <a href="${escapeHtml(first.signed_url)}" target="_blank" rel="noopener" title="体重写真を開く" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit">
+      <img src="${escapeHtml(first.signed_url)}" alt="体重写真" style="width:44px;height:44px;border-radius:10px;object-fit:cover;border:1px solid var(--b1)">
+      ${extra}
+    </a>
+  `;
 }
 
 async function renderTrainerAthleteData() {
@@ -2158,9 +2189,10 @@ async function renderTrainerAthleteData() {
 
     if (!tbody) return;
     if (!weights.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">体重ログはまだありません</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">体重ログはまだありません</td></tr>';
       return;
     }
+    const photoMap = await buildTrainerWeightPhotoMap(snapshot.weight_log_photos || []);
     const activeHeight = Number(latest?.height_cm) || Number(athlete?.profile?.settings?.heightCm) || DEFAULT_SETTINGS.heightCm;
     tbody.innerHTML = [...weights].reverse().map((w) => `
       <tr>
@@ -2169,6 +2201,7 @@ async function renderTrainerAthleteData() {
         <td><strong>${escapeHtml(w.weight)} kg</strong></td>
         <td>${calculateBMI(w.weight, w.height_cm || activeHeight)?.toFixed(1) || '--'}</td>
         <td>${w.body_fat ? `${escapeHtml(w.body_fat)} %` : '--'}</td>
+        <td>${renderTrainerWeightPhotoCell(photoMap.get(w.id) || [])}</td>
         <td>${escapeHtml(w.note || '--')}</td>
       </tr>
     `).join('');

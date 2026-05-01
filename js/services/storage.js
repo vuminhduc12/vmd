@@ -441,13 +441,15 @@ async function fetchTrainerAthletes() {
 }
 
 async function fetchTrainerAthleteSnapshot(athleteUserId) {
-  const [weights, meals, training] = await Promise.all([
+  const [weights, photos, meals, training] = await Promise.all([
     boxerSupabaseApiGetForAthlete('weight_logs', athleteUserId, 'sort=date'),
+    boxerSupabaseApiGetForAthlete('weight_log_photos', athleteUserId, 'sort=created_at'),
     boxerSupabaseApiGetForAthlete('meals', athleteUserId, 'sort=date'),
     boxerSupabaseApiGetForAthlete('training_logs', athleteUserId, 'sort=date'),
   ]);
   return {
     weight_logs: weights.data || [],
+    weight_log_photos: photos.data || [],
     meals: meals.data || [],
     training_logs: training.data || [],
   };
