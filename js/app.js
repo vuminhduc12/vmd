@@ -2229,22 +2229,28 @@ function toggleTrainerLogRow(buttonEl) {
 
 window.toggleTrainerLogRow = toggleTrainerLogRow;
 
-function openTrainerDetailSections() {
-  ['trainerSummaryBody', 'trainerWeightListBody'].forEach((sectionId) => {
-    document.getElementById(sectionId)?.classList.remove('is-collapsed');
-    const button = document.querySelector(`.collapse-toggle[onclick*="${sectionId}"]`);
-    if (button) {
-      button.innerHTML = '<i class="fas fa-chevron-up" aria-hidden="true"></i>';
-      button.setAttribute('aria-label', '折りたたむ');
-    }
-  });
+function setTrainerSectionCollapsed(sectionId, collapsed) {
+  const section = document.getElementById(sectionId);
+  if (!section) return;
+  section.classList.toggle('is-collapsed', !!collapsed);
+  const button = document.querySelector(`.collapse-toggle[onclick*="${sectionId}"]`);
+  if (!button) return;
+  const icon = collapsed ? 'fa-chevron-down' : 'fa-chevron-up';
+  button.innerHTML = `<i class="fas ${icon}" aria-hidden="true"></i>`;
+  button.setAttribute('aria-label', collapsed ? '開く' : '折りたたむ');
+}
+
+function focusTrainerSelectedView() {
+  setTrainerSectionCollapsed('trainerAthletePanelBody', true);
+  setTrainerSectionCollapsed('trainerSummaryBody', false);
+  setTrainerSectionCollapsed('trainerWeightListBody', false);
 }
 
 async function selectTrainerAthlete(athleteUserId) {
   selectedTrainerAthleteId = String(athleteUserId || '').trim();
   renderTrainerAthleteList();
   await renderTrainerAthleteData();
-  openTrainerDetailSections();
+  focusTrainerSelectedView();
   window.requestAnimationFrame(() => {
     document.querySelector('.trainer-summary-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });

@@ -1713,6 +1713,12 @@ textarea.input-field{resize:vertical;min-height:70px}
 .trainer-flow-head{
   align-items:flex-start;
 }
+.trainer-flow-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
 .trainer-flow-pill{
   display:inline-flex;
   align-items:center;
@@ -1731,6 +1737,31 @@ textarea.input-field{resize:vertical;min-height:70px}
   grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
   gap:12px;
   margin-top:14px;
+}
+.trainer-athlete-picker-card,
+.trainer-summary-card,
+#trainerWeightSection{
+  position:relative;
+  overflow:hidden;
+}
+.trainer-athlete-picker-card::before,
+.trainer-summary-card::before,
+#trainerWeightSection::before{
+  content:'';
+  position:absolute;
+  left:0;right:0;top:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--red),var(--blue));
+  opacity:.72;
+}
+.trainer-athlete-picker-card .collapse-toggle,
+.trainer-summary-card .collapse-toggle,
+#trainerWeightSection .collapse-toggle,
+.trainer-guide-card .collapse-toggle{
+  width:34px;
+  height:34px;
+  padding:0;
+  border-radius:12px;
 }
 .trainer-athlete-card{
   display:flex;
@@ -1842,6 +1873,36 @@ textarea.input-field{resize:vertical;min-height:70px}
 }
 .trainer-profile-metrics{
   margin-top:12px;
+}
+.record-collapse-card{
+  position:relative;
+  overflow:hidden;
+}
+.record-collapse-card::before{
+  content:'';
+  position:absolute;
+  left:0;right:0;top:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--red),var(--blue));
+  opacity:.62;
+}
+.record-collapse-card .collapse-toggle{
+  width:34px;
+  height:34px;
+  padding:0;
+  border-radius:12px;
+}
+.record-collapse-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.record-collapse-card .form-title-row,
+.record-collapse-card .chart-card-header,
+.record-collapse-card .section-card-header{
+  gap:12px;
 }
 
 /* ══════════════════════════════════════════
@@ -2107,11 +2168,17 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
       var(--bg-card);
   }
   .trainer-flow-head{
+    flex-direction:column;
+    align-items:stretch;
     gap:10px;
   }
-  .trainer-flow-pill{
+  .trainer-flow-actions{
     width:100%;
+    justify-content:space-between;
+  }
+  .trainer-flow-pill{
     justify-content:center;
+    flex:1;
   }
   .trainer-workspace > .form-card:first-child{
     padding:12px;
@@ -2151,6 +2218,22 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   }
   .trainer-profile-metrics{
     gap:10px;
+  }
+  .record-collapse-card .chart-card-header,
+  .record-collapse-card .section-card-header{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .record-collapse-actions{
+    width:100%;
+    justify-content:space-between;
+  }
+  .record-collapse-actions .chart-filter,
+  .record-collapse-actions .filter-row{
+    flex:1 1 auto;
+  }
+  .record-collapse-card .collapse-toggle{
+    align-self:flex-end;
   }
   #trainerAthleteList .stat-card{
     scroll-snap-align:start;

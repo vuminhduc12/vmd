@@ -413,8 +413,12 @@
 	        </div>
 	      </div>
 	
-	      <div class="form-card" id="weightComposerCard" style="display:none">
-	        <h3 class="form-title" id="weightComposerTitle"><i class="fas fa-plus-circle"></i> 体重を記録</h3>
+	      <div class="form-card record-collapse-card" id="weightComposerCard" style="display:none">
+	        <div class="collapsible-head form-title-row">
+	          <h3 class="form-title" id="weightComposerTitle"><i class="fas fa-plus-circle"></i> 体重を記録</h3>
+	          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('weightComposerBody', this)">折りたたむ</button>
+	        </div>
+	        <div id="weightComposerBody">
 	        <div id="weightEditBanner" class="weight-edit-banner" style="display:none">
 	          <span><i class="fas fa-pen"></i> この行を編集中です。保存で反映されます。</span>
 	          <button type="button" class="btn btn-sm btn-secondary" onclick="closeWeightComposer()">キャンセル</button>
@@ -488,23 +492,28 @@
 	            <div id="bmiPreviewBadge"></div>
 	          </div>
 	        </div>
+	        </div>
 	      </div>
 	    </div>
 
     <!-- Weight Chart -->
-    <div class="chart-card mt-16">
+    <div class="chart-card mt-16 record-collapse-card">
       <div class="chart-card-header">
           <div>
             <h3><i class="fas fa-chart-line"></i> 体重推移グラフ</h3>
             <div class="chart-card-subtitle">体重・目標・体脂肪率をまとめて確認</div>
           </div>
-        <div class="chart-filter">
-          <button class="filter-btn active" onclick="setWeightRange(7,this)">7日</button>
-          <button class="filter-btn" onclick="setWeightRange(14,this)">14日</button>
-          <button class="filter-btn" onclick="setWeightRange(30,this)">30日</button>
-          <button class="filter-btn" onclick="setWeightRange(0,this)">全期間</button>
+        <div class="record-collapse-actions">
+          <div class="chart-filter">
+            <button class="filter-btn active" onclick="setWeightRange(7,this)">7日</button>
+            <button class="filter-btn" onclick="setWeightRange(14,this)">14日</button>
+            <button class="filter-btn" onclick="setWeightRange(30,this)">30日</button>
+            <button class="filter-btn" onclick="setWeightRange(0,this)">全期間</button>
+          </div>
+          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('weightChartBody', this)">折りたたむ</button>
         </div>
       </div>
+      <div id="weightChartBody">
         <div class="chart-canvas-wrap chart-canvas-wrap-xl"><canvas id="weightDetailChart"></canvas></div>
         <div class="chart-stat-grid">
           <div class="chart-stat">
@@ -524,14 +533,16 @@
             <strong id="weightDetailGap">-- kg</strong>
           </div>
         </div>
+      </div>
     </div>
 
     <!-- Weight Table -->
-    <div class="section-card mt-16 trainer-guide-card">
+    <div class="section-card mt-16 trainer-guide-card record-collapse-card">
       <div class="section-card-header">
         <h3><i class="fas fa-list"></i> 記録一覧</h3>
+        <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('weightTableBodyWrap', this)">折りたたむ</button>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" id="weightTableBodyWrap">
         <table class="data-table weight-data-table">
           <thead><tr>
             <th>日付</th><th>区分</th><th>体重</th><th>BMI</th><th>体脂肪率</th><th>メモ</th>
@@ -550,7 +561,12 @@
     </div>
 
     <!-- Input Master -->
-    <div class="meal-input-master" id="meal-input-anchor">
+    <div class="meal-input-master record-collapse-card" id="meal-input-anchor">
+      <div class="collapsible-head form-title-row">
+        <h3 class="form-title"><i class="fas fa-plus-circle"></i> 食事を記録</h3>
+        <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('mealInputBody', this)">折りたたむ</button>
+      </div>
+      <div id="mealInputBody">
       <div class="meal-input-top">
         <div class="form-group">
           <label class="form-label"><i class="fas fa-calendar"></i> 日付</label>
@@ -644,10 +660,16 @@
         <button class="btn btn-primary meal-save-btn" onclick="saveMealBatch()">
           <i class="fas fa-save"></i> この食事を保存       </button>
       </div>
+      </div>
     </div>
 
     <!-- Summary + 7-day -->
-    <div class="two-col mt-20">
+    <div class="section-card mt-20 record-collapse-card">
+      <div class="section-card-header">
+        <h3><i class="fas fa-chart-pie"></i> 食事サマリー・グラフ</h3>
+        <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('mealChartsBody', this)">折りたたむ</button>
+      </div>
+      <div class="two-col" id="mealChartsBody">
       <div class="meal-today-panel">
         <h3 class="form-title"><i class="fas fa-calendar-day"></i> 日別 食事サマリー</h3>
         <div style="margin-bottom:12px">
@@ -670,23 +692,27 @@
         <div class="chart-surface chart-surface-md"><canvas id="meal7dayChart"></canvas></div>
         <div class="weekly-meal-stats" id="weeklyMealStats"></div>
       </div>
+      </div>
     </div>
 
     <!-- Meals Table -->
-    <div class="section-card mt-20">
+    <div class="section-card mt-20 record-collapse-card">
       <div class="section-card-header">
         <h3><i class="fas fa-list"></i> 食事記録一覧</h3>
-        <div class="filter-row">
-          <input type="date" id="mealFilterDate" class="input-field input-sm" onchange="filterMeals()">
-          <select id="mealFilterType" class="input-field input-sm" onchange="filterMeals()">
-            <option value="">全タイプ</option>
-            <option>朝食</option><option>昼食</option><option>夕食</option>
-            <option>間食</option><option>プロテイン</option>
-          </select>
-          <button class="btn btn-sm btn-ghost" onclick="clearMealFilter()"><i class="fas fa-times"></i></button>
+        <div class="record-collapse-actions">
+          <div class="filter-row">
+            <input type="date" id="mealFilterDate" class="input-field input-sm" onchange="filterMeals()">
+            <select id="mealFilterType" class="input-field input-sm" onchange="filterMeals()">
+              <option value="">全タイプ</option>
+              <option>朝食</option><option>昼食</option><option>夕食</option>
+              <option>間食</option><option>プロテイン</option>
+            </select>
+            <button class="btn btn-sm btn-ghost" onclick="clearMealFilter()"><i class="fas fa-times"></i></button>
+          </div>
+          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('mealsTableWrap', this)">折りたたむ</button>
         </div>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" id="mealsTableWrap">
         <table class="data-table">
           <thead><tr>
             <th>日付</th><th>種別</th><th>食品名</th><th>量</th>
@@ -706,8 +732,12 @@
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
-      <div class="form-card" id="training-record-anchor">
-        <h3 class="form-title"><i class="fas fa-plus-circle"></i> 練習を記録</h3>
+      <div class="form-card record-collapse-card" id="training-record-anchor">
+        <div class="collapsible-head form-title-row">
+          <h3 class="form-title"><i class="fas fa-plus-circle"></i> 練習を記録</h3>
+          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainingInputBody', this)">折りたたむ</button>
+        </div>
+        <div id="trainingInputBody">
         <div id="trainingEditBanner" class="weight-edit-banner" style="display:none">
           <span><i class="fas fa-pen"></i> 既存の練習記録を編集中</span>
           <button type="button" class="btn btn-sm btn-ghost" onclick="cancelEditTraining()">新規入力に戻す</button>
@@ -783,25 +813,32 @@
         </div>
         <button type="button" id="trainingSaveBtn" class="btn btn-primary btn-full" onclick="saveTraining()">
           <i class="fas fa-save"></i> 練習を保存       </button>
+        </div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:14px">
         <!-- Week stats -->
-        <div class="training-today-panel">
-          <h3 class="form-title" style="margin-bottom:12px"><i class="fas fa-calendar-week"></i> 今週のサマリー</h3>
+        <div class="training-today-panel record-collapse-card">
+          <div class="collapsible-head form-title-row">
+            <h3 class="form-title" style="margin-bottom:12px"><i class="fas fa-calendar-week"></i> 今週のサマリー</h3>
+            <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainingWeekSummaryBody', this)">折りたたむ</button>
+          </div>
+          <div id="trainingWeekSummaryBody">
           <div class="week-stats">
             <div class="week-stat"><div class="week-stat-val" id="week-sessions">0</div><div class="week-stat-label">練習回数</div></div>
             <div class="week-stat"><div class="week-stat-val" id="week-minutes">0</div><div class="week-stat-label">合計分</div></div>
             <div class="week-stat"><div class="week-stat-val" id="week-burned">0</div><div class="week-stat-label">消費kcal</div></div>
           </div>
           <div class="chart-surface chart-surface-md"><canvas id="weeklyTrainingChart"></canvas></div>
+          </div>
         </div>
         <!-- Radar chart -->
-        <div class="chart-card" style="padding:16px">
+        <div class="chart-card record-collapse-card" style="padding:16px">
           <div class="chart-card-header" style="margin-bottom:10px">
             <h3><i class="fas fa-spider"></i> 練習バランス (今週)</h3>
+            <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainingRadarBody', this)">折りたたむ</button>
           </div>
-          <div class="radar-wrap chart-surface chart-surface-md"><canvas id="trainingRadarChart"></canvas></div>
+          <div class="radar-wrap chart-surface chart-surface-md" id="trainingRadarBody"><canvas id="trainingRadarChart"></canvas></div>
         </div>
       </div>
     </div>
@@ -820,9 +857,12 @@
     </div>
 
     <!-- Training table -->
-    <div class="section-card mt-16">
-      <div class="section-card-header"><h3><i class="fas fa-list"></i> 練習記録一覧</h3></div>
-      <div class="table-wrap">
+    <div class="section-card mt-16 record-collapse-card">
+      <div class="section-card-header">
+        <h3><i class="fas fa-list"></i> 練習記録一覧</h3>
+        <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainingTableWrap', this)">折りたたむ</button>
+      </div>
+      <div class="table-wrap" id="trainingTableWrap">
         <table class="data-table">
           <thead><tr>
             <th>日付</th><th>種目</th><th>時間(分)</th><th>強度</th><th>詳細</th><th>自己評価</th><th>消費kcal</th><th>メモ</th><th>操作</th>
@@ -1599,9 +1639,14 @@
             <h3 class="form-title"><i class="fas fa-users"></i> 1. 選手一覧</h3>
             <p class="settings-note">まず担当選手を選択してください。クリックするとプロフィールと体重ログが下に表示されます。</p>
           </div>
-          <span class="trainer-flow-pill"><i class="fas fa-hand-pointer"></i> 選択して確認</span>
+          <div class="trainer-flow-actions">
+            <span class="trainer-flow-pill"><i class="fas fa-hand-pointer"></i> 選択して確認</span>
+            <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainerAthletePanelBody', this)">折りたたむ</button>
+          </div>
         </div>
-        <div id="trainerAthleteList" class="trainer-athlete-list"></div>
+        <div id="trainerAthletePanelBody">
+          <div id="trainerAthleteList" class="trainer-athlete-list"></div>
+        </div>
       </div>
 
       <div class="form-card trainer-summary-card">
