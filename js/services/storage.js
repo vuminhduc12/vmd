@@ -853,11 +853,13 @@ if (typeof window !== 'undefined') {
 
 function resetAdminStatsUi() {
   const card = document.getElementById('admin-stats-card');
+  const storageCard = document.getElementById('settings-storage-card');
   const totalEl = document.getElementById('admin-total-users');
   const activeEl = document.getElementById('admin-active-users');
   const emailEl = document.getElementById('admin-stats-email');
   const updatedEl = document.getElementById('admin-stats-updated');
   if (card) card.hidden = true;
+  if (storageCard) storageCard.hidden = true;
   if (totalEl) totalEl.textContent = '--';
   if (activeEl) activeEl.textContent = '--';
   if (emailEl) emailEl.textContent = '--';
@@ -951,6 +953,7 @@ async function refreshAiCoachAdminAccess() {
 
 async function updateAdminStatsUi() {
   const card = document.getElementById('admin-stats-card');
+  const storageCard = document.getElementById('settings-storage-card');
   const totalEl = document.getElementById('admin-total-users');
   const activeEl = document.getElementById('admin-active-users');
   const emailEl = document.getElementById('admin-stats-email');
@@ -963,6 +966,7 @@ async function updateAdminStatsUi() {
   try {
     const data = await fetchAdminStats();
     if (!data) return;
+    if (storageCard) storageCard.hidden = false;
     card.hidden = false;
     totalEl.textContent = String(data.total_users ?? '--');
     activeEl.textContent = String(data.active_users_7d ?? '--');
