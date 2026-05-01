@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/app-icon.svg">
-  <link rel="stylesheet" href="css/style.css?v=34">
+  <link rel="stylesheet" href="css/style.css?v=35">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -97,10 +97,31 @@
   </header>
 
   <!-- ══════ DASHBOARD ══════ -->
-  <div class="page active" id="page-dashboard">
-    <div class="page-header">
-      <h1><i class="fas fa-th-large" style="color:var(--red);font-size:24px"></i> <span id="page-dashboard-title-text" data-i18n="dashboard.title">ダッシュボード</span></h1>
-      <p class="page-subtitle"><span id="page-dashboard-subtitle-text" data-i18n="dashboard.subtitle">今日のコンディションを一目で確認</span><span id="dashSubDate"></span></p>
+  <div class="page active dashboard-page" id="page-dashboard">
+    <div class="page-header dashboard-hero">
+      <div class="dashboard-hero-copy">
+        <div class="dashboard-eyebrow"><i class="fas fa-bolt"></i> BOXER CONTROL CENTER</div>
+        <h1><i class="fas fa-th-large" style="color:var(--red);font-size:24px"></i> <span id="page-dashboard-title-text" data-i18n="dashboard.title">ダッシュボード</span></h1>
+        <p class="page-subtitle"><span id="page-dashboard-subtitle-text" data-i18n="dashboard.subtitle">今日のコンディションを一目で確認</span><span id="dashSubDate"></span></p>
+      </div>
+      <div class="dashboard-hero-panel">
+        <div class="dashboard-hero-status">
+          <span class="dashboard-status-dot"></span>
+          <span>LIVE TRACKING</span>
+        </div>
+        <div class="dashboard-hero-title">今日の記録をすぐ追加</div>
+        <div class="dashboard-hero-actions">
+          <button type="button" class="btn btn-primary" onclick="switchPage('weight')">
+            <i class="fas fa-weight-scale"></i> 体重
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="switchPage('meals')">
+            <i class="fas fa-bowl-food"></i> 食事
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="switchPage('training')">
+            <i class="fas fa-dumbbell"></i> 練習
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- KPI Row -->
