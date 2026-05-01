@@ -1555,14 +1555,37 @@
   <div class="page" id="page-trainer">
     <div class="page-header">
       <h1><i class="fas fa-user-group" style="color:var(--blue);font-size:24px"></i> <span id="page-trainer-title-text">トレーナー閲覧</span></h1>
-      <p class="page-subtitle" id="page-trainer-subtitle-text">承認済み選手の体重管理データを閲覧できます</p>
+      <p class="page-subtitle" id="page-trainer-subtitle-text">トレーナー用画面：閲覧許可された選手の状態を確認します</p>
+    </div>
+
+    <div class="section-card mt-16">
+      <div class="section-card-header">
+        <h3><i class="fas fa-circle-info"></i> この画面でできること</h3>
+      </div>
+      <div class="settings-summary-grid admin-stats-grid" style="padding:16px">
+        <div class="stat-card">
+          <div class="stat-label">STEP 1</div>
+          <div class="stat-val" style="font-size:18px">選手が許可</div>
+          <div class="stat-sub">選手側のマイ設定で、トレーナーのGoogleメールを登録します。</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">STEP 2</div>
+          <div class="stat-val" style="font-size:18px">担当選手に表示</div>
+          <div class="stat-sub">同じメールでログインすると、左の担当選手一覧に出ます。</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">閲覧のみ</div>
+          <div class="stat-val" style="font-size:18px">編集・削除なし</div>
+          <div class="stat-sub">最新体重、記録件数、体重ログを確認できます。</div>
+        </div>
+      </div>
     </div>
 
     <div class="section-card mt-16" id="trainerCloudGate">
       <div class="section-card-header">
         <h3><i class="fas fa-cloud"></i> クラウドログインが必要です</h3>
       </div>
-      <p class="settings-note">トレーナー閲覧は Supabase ログイン中のみ利用できます。設定画面から Google ログインしてください。</p>
+      <p class="settings-note">トレーナー閲覧は Supabase ログイン中のみ利用できます。選手が登録したメールと同じ Google アカウントでログインしてください。</p>
       <button type="button" class="btn btn-primary" onclick="switchPage('settings')">
         <i class="fas fa-right-to-bracket"></i> ログイン設定へ
       </button>
@@ -1570,16 +1593,16 @@
 
     <div class="two-col" id="trainerWorkspace" style="margin-bottom:16px;display:none">
       <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-users"></i> 担当選手</h3>
-        <p class="settings-note">選手があなたのメールアドレスを登録すると、ここに表示されます。</p>
+        <h3 class="form-title"><i class="fas fa-users"></i> 1. 担当選手一覧</h3>
+        <p class="settings-note">選手があなたのGoogleメールに閲覧許可を出すと、ここに名前が表示されます。見たい選手を選択してください。</p>
         <div id="trainerAthleteList" class="settings-actions"></div>
       </div>
 
       <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-chart-line"></i> 選手サマリー</h3>
+        <h3 class="form-title"><i class="fas fa-chart-line"></i> 2. 選手サマリー</h3>
         <div class="settings-summary-grid admin-stats-grid">
           <div class="stat-card">
-            <div class="stat-label">選手</div>
+            <div class="stat-label">選択中の選手</div>
             <div class="stat-val" id="trainerSelectedName">--</div>
             <div class="stat-sub" id="trainerSelectedMeta">未選択</div>
           </div>
@@ -1599,7 +1622,8 @@
 
     <div class="section-card mt-16" id="trainerWeightSection" style="display:none">
       <div class="section-card-header">
-        <h3><i class="fas fa-weight-scale"></i> 体重ログ</h3>
+        <h3><i class="fas fa-weight-scale"></i> 3. 体重ログ一覧</h3>
+        <span class="section-card-subtitle">トレーナーは閲覧のみ。編集・削除はできません。</span>
       </div>
       <div class="table-wrap">
         <table class="data-table weight-data-table">
@@ -1765,11 +1789,28 @@
         </div>
 
         <div class="form-card" id="trainer-invite-card">
-          <h3 class="form-title"><i class="fas fa-user-plus"></i> トレーナー閲覧許可</h3>
-          <p class="settings-note">登録したトレーナーのGoogleメールに、あなたの体重・食事・練習ログの閲覧権限を付与します。編集や削除はできません。</p>
+          <h3 class="form-title"><i class="fas fa-user-plus"></i> 選手側：トレーナー閲覧許可</h3>
+          <p class="settings-note">ここは選手本人が操作する場所です。トレーナーのGoogleメールを登録すると、そのトレーナーの「トレーナー閲覧」画面にあなたが担当選手として表示されます。</p>
+          <div class="settings-summary-grid admin-stats-grid" style="margin-top:12px">
+            <div class="stat-card">
+              <div class="stat-label">選手がすること</div>
+              <div class="stat-val" style="font-size:17px">メールを登録</div>
+              <div class="stat-sub">下にトレーナーのGoogleメールを入力します。</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">トレーナーが見る場所</div>
+              <div class="stat-val" style="font-size:17px">トレーナー閲覧</div>
+              <div class="stat-sub">同じメールでログイン後、担当選手一覧に表示されます。</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">許可する内容</div>
+              <div class="stat-val" style="font-size:17px">閲覧のみ</div>
+              <div class="stat-sub">最新体重、記録件数、体重ログ。編集・削除は不可。</div>
+            </div>
+          </div>
           <div class="form-row">
             <div class="form-group" style="flex:1">
-              <label class="form-label">トレーナーのメール</label>
+              <label class="form-label">閲覧を許可するトレーナーのGoogleメール</label>
               <input type="email" id="trainerInviteEmail" class="input-field" placeholder="trainer@example.com">
             </div>
           </div>

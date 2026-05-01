@@ -1362,7 +1362,7 @@ function applyLanguageUi() {
     'page-fight-title-text': lang === 'vi' ? 'Quản lý mục tiêu trận đấu' : '試合目標管理',
     'page-fight-subtitle-text': lang === 'vi' ? 'Đếm ngược trận đấu và tiến độ giảm cân' : '次の試合に向けたカウントダウンと減量進捗',
     'page-trainer-title-text': lang === 'vi' ? 'HLV xem dữ liệu' : 'トレーナー閲覧',
-    'page-trainer-subtitle-text': lang === 'vi' ? 'Xem dữ liệu cân nặng của võ sĩ đã cấp quyền' : '承認済み選手の体重管理データを閲覧できます',
+    'page-trainer-subtitle-text': lang === 'vi' ? 'Màn hình HLV: xem võ sĩ đã cấp quyền' : 'トレーナー用画面：閲覧許可された選手の状態を確認します',
   };
   Object.entries(pageHeaderMap).forEach(([id, text]) => {
     const el = document.getElementById(id);
@@ -1976,7 +1976,7 @@ async function renderTrainerInvitePanel() {
   const seq = trainerInviteRenderSeq + 1;
   trainerInviteRenderSeq = seq;
   if (activeStorageMode !== STORAGE_MODE.SUPABASE) {
-    list.innerHTML = '<div class="settings-note">クラウドログイン後にトレーナー閲覧許可を設定できます。</div>';
+    list.innerHTML = '<div class="settings-note">選手本人がクラウドログインすると、ここでトレーナーのGoogleメールを登録できます。</div>';
     return;
   }
 
@@ -1985,14 +1985,14 @@ async function renderTrainerInvitePanel() {
     const links = await fetchAthleteTrainerLinks();
     if (seq !== trainerInviteRenderSeq) return;
     if (!links.length) {
-      list.innerHTML = '<div class="settings-note">閲覧を許可しているトレーナーはまだいません。</div>';
+      list.innerHTML = '<div class="settings-note">まだ閲覧を許可しているトレーナーはいません。上の入力欄にトレーナーのGoogleメールを入れてください。</div>';
       return;
     }
     list.innerHTML = links.map((link) => `
       <div class="stat-card" style="text-align:left">
-        <div class="stat-label">閲覧許可中</div>
+        <div class="stat-label">トレーナー閲覧許可中</div>
         <div class="stat-val" style="font-size:18px">${escapeHtml(link.trainer_email)}</div>
-        <div class="stat-sub">${escapeHtml(formatDateTimeJP(link.accepted_at || link.created_at))}</div>
+        <div class="stat-sub">このメールでログインしたトレーナーに表示されます / ${escapeHtml(formatDateTimeJP(link.accepted_at || link.created_at))}</div>
         <button type="button" class="btn btn-sm btn-danger" style="margin-top:8px" onclick="removeTrainerInviteFromSettings('${escapeHtml(link.id)}')">
           <i class="fas fa-user-xmark"></i> 解除
         </button>
@@ -2035,7 +2035,7 @@ function renderTrainerAthleteList() {
   const list = document.getElementById('trainerAthleteList');
   if (!list) return;
   if (!trainerAthletes.length) {
-    list.innerHTML = '<div class="settings-note">担当選手はまだいません。選手側の設定画面であなたのメールを登録してもらってください。</div>';
+    list.innerHTML = '<div class="settings-note">担当選手はまだいません。選手側の「マイ設定 > トレーナー閲覧許可」で、あなたのGoogleメールを登録してもらってください。</div>';
     return;
   }
   list.innerHTML = trainerAthletes.map((row) => {
@@ -2080,7 +2080,7 @@ async function renderTrainerAthleteData() {
     const latest = weights.length ? weights[weights.length - 1] : null;
     setText('trainerLatestWeight', latest?.weight != null ? `${latest.weight} kg` : '-- kg');
     setText('trainerLatestWeightDate', latest?.date ? `${formatDate(latest.date)} ${getWeightSlotLabel(latest.slot)}` : '--');
-    setText('trainerRecordCounts', `${weights.length} / ${(snapshot.meals || []).length} / ${(snapshot.training_logs || []).length}`);
+    setText('trainerRecordCounts', `体重 ${weights.length}件 / 食事 ${(snapshot.meals || []).length}件 / 練習 ${(snapshot.training_logs || []).length}件`);
 
     if (!tbody) return;
     if (!weights.length) {
@@ -2127,7 +2127,7 @@ async function renderTrainerPage() {
   const seq = trainerPageRenderSeq + 1;
   trainerPageRenderSeq = seq;
   const list = document.getElementById('trainerAthleteList');
-  if (list) list.innerHTML = '<div class="settings-note">担当選手を読み込み中...</div>';
+  if (list) list.innerHTML = '<div class="settings-note">あなたに閲覧許可した選手を読み込み中...</div>';
   try {
     trainerAthletes = await fetchTrainerAthletes();
     if (seq !== trainerPageRenderSeq) return;
