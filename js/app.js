@@ -2104,16 +2104,17 @@ function renderTrainerAthleteList() {
     const athleteId = row.athlete_user_id;
     const active = athleteId === selectedTrainerAthleteId;
     return `
-      <div class="stat-card" style="text-align:left">
-        <div class="stat-label">${active ? '選択中' : '担当選手'}</div>
-        <div class="stat-val" style="font-size:18px">${escapeHtml(getTrainerAthleteName(row))}</div>
-        <div class="stat-sub">${escapeHtml(getTrainerAthleteMeta(row))}</div>
-        <div class="settings-actions" style="margin-top:10px">
-          <button type="button" class="btn ${active ? 'btn-primary' : 'btn-secondary'} btn-full" onclick="selectTrainerAthlete('${escapeHtml(athleteId)}')">
-            <i class="fas fa-eye"></i> この選手を見る
-          </button>
-          <button type="button" class="btn btn-ghost btn-full" onclick="removeTrainerAthlete('${escapeHtml(row.id)}')">
-            <i class="fas fa-user-minus"></i> 担当から外す
+      <div class="trainer-athlete-card ${active ? 'is-active' : ''}" role="button" tabindex="0" onclick="selectTrainerAthlete('${escapeHtml(athleteId)}')" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); selectTrainerAthlete('${escapeHtml(athleteId)}'); }">
+        <div class="trainer-athlete-avatar">${escapeHtml(getTrainerAthleteInitials(row))}</div>
+        <div class="trainer-athlete-info">
+          <div class="trainer-athlete-status">${active ? '選択中' : '担当選手'}</div>
+          <div class="trainer-athlete-name">${escapeHtml(getTrainerAthleteName(row))}</div>
+          <div class="trainer-athlete-meta">${escapeHtml(getTrainerAthleteMeta(row))}</div>
+        </div>
+        <div class="trainer-athlete-actions">
+          <span class="trainer-athlete-view"><i class="fas fa-chevron-right"></i></span>
+          <button type="button" class="trainer-athlete-remove" title="担当から外す" onclick="event.stopPropagation(); removeTrainerAthlete('${escapeHtml(row.id)}')">
+            <i class="fas fa-user-minus"></i>
           </button>
         </div>
       </div>
@@ -2195,8 +2196,15 @@ async function renderTrainerAthleteData() {
     const photoMap = await buildTrainerWeightPhotoMap(snapshot.weight_log_photos || []);
     const activeHeight = Number(latest?.height_cm) || Number(athlete?.profile?.settings?.heightCm) || DEFAULT_SETTINGS.heightCm;
     tbody.innerHTML = [...weights].reverse().map((w) => `
-      <tr>
-        <td data-label="日付">${escapeHtml(formatDate(w.date))}</td>
+      <tr class="trainer-log-row">
+        <td data-label="日付">
+          <div class="trainer-log-date">
+            <span>${escapeHtml(formatDate(w.date))}</span>
+            <button type="button" class="trainer-log-toggle" aria-expanded="false" onclick="toggleTrainerLogRow(this)">
+              詳細 <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </button>
+          </div>
+        </td>
         <td data-label="区分"><span class="badge">${escapeHtml(getWeightSlotLabel(w.slot))}</span></td>
         <td data-label="体重"><strong>${escapeHtml(w.weight)} kg</strong></td>
         <td data-label="BMI">${calculateBMI(w.weight, w.height_cm || activeHeight)?.toFixed(1) || '--'}</td>
@@ -2211,10 +2219,35 @@ async function renderTrainerAthleteData() {
   }
 }
 
+function toggleTrainerLogRow(buttonEl) {
+  const row = buttonEl?.closest?.('.trainer-log-row');
+  if (!row) return;
+  const expanded = row.classList.toggle('is-expanded');
+  buttonEl.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  buttonEl.innerHTML = `${expanded ? '閉じる' : '詳細'} <i class="fas ${expanded ? 'fa-chevron-up' : 'fa-chevron-down'}" aria-hidden="true"></i>`;
+}
+
+window.toggleTrainerLogRow = toggleTrainerLogRow;
+
+function openTrainerDetailSections() {
+  ['trainerSummaryBody', 'trainerWeightListBody'].forEach((sectionId) => {
+    document.getElementById(sectionId)?.classList.remove('is-collapsed');
+    const button = document.querySelector(`.collapse-toggle[onclick*="${sectionId}"]`);
+    if (button) {
+      button.innerHTML = '<i class="fas fa-chevron-up" aria-hidden="true"></i>';
+      button.setAttribute('aria-label', '折りたたむ');
+    }
+  });
+}
+
 async function selectTrainerAthlete(athleteUserId) {
   selectedTrainerAthleteId = String(athleteUserId || '').trim();
   renderTrainerAthleteList();
   await renderTrainerAthleteData();
+  openTrainerDetailSections();
+  window.requestAnimationFrame(() => {
+    document.querySelector('.trainer-summary-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 async function removeTrainerAthlete(linkId) {

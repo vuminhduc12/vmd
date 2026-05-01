@@ -1558,11 +1558,12 @@
       <p class="page-subtitle" id="page-trainer-subtitle-text">トレーナー用画面：閲覧許可された選手の状態を確認します</p>
     </div>
 
-    <div class="section-card mt-16">
+    <div class="section-card mt-16 trainer-guide-card">
       <div class="section-card-header">
         <h3><i class="fas fa-circle-info"></i> この画面でできること</h3>
+        <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainerGuideBody', this)">開く</button>
       </div>
-      <div class="settings-summary-grid admin-stats-grid trainer-guide-grid">
+      <div class="settings-summary-grid admin-stats-grid trainer-guide-grid is-collapsed" id="trainerGuideBody">
         <div class="stat-card">
           <div class="stat-label">STEP 1</div>
           <div class="stat-val" style="font-size:18px">選手が許可</div>
@@ -1591,35 +1592,43 @@
       </button>
     </div>
 
-    <div class="two-col trainer-workspace" id="trainerWorkspace" style="margin-bottom:16px;display:none">
-      <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-users"></i> 1. 担当選手一覧</h3>
-        <p class="settings-note">選手があなたのGoogleメールに閲覧許可を出すと、ここに名前が表示されます。見たい選手を選択してください。</p>
-        <div id="trainerAthleteList" class="settings-actions"></div>
+    <div class="trainer-workspace" id="trainerWorkspace" style="margin-bottom:16px;display:none">
+      <div class="form-card trainer-athlete-picker-card">
+        <div class="section-card-header trainer-flow-head">
+          <div>
+            <h3 class="form-title"><i class="fas fa-users"></i> 1. 選手一覧</h3>
+            <p class="settings-note">まず担当選手を選択してください。クリックするとプロフィールと体重ログが下に表示されます。</p>
+          </div>
+          <span class="trainer-flow-pill"><i class="fas fa-hand-pointer"></i> 選択して確認</span>
+        </div>
+        <div id="trainerAthleteList" class="trainer-athlete-list"></div>
       </div>
 
       <div class="form-card trainer-summary-card">
-        <h3 class="form-title"><i class="fas fa-chart-line"></i> 2. 選手サマリー</h3>
-        <div class="settings-summary-grid admin-stats-grid">
-          <div class="stat-card trainer-profile-card">
-            <div class="stat-label">選択中の選手</div>
-            <div class="trainer-selected-profile">
-              <div id="trainerSelectedAvatar" class="trainer-selected-avatar">--</div>
-              <div>
-                <div class="stat-val" id="trainerSelectedName">--</div>
-                <div class="stat-sub" id="trainerSelectedMeta">未選択</div>
-              </div>
+        <div class="collapsible-head form-title-row">
+          <h3 class="form-title"><i class="fas fa-id-card"></i> 2. 選手プロフィール</h3>
+          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainerSummaryBody', this)">折りたたむ</button>
+        </div>
+        <div id="trainerSummaryBody">
+          <div class="trainer-profile-hero">
+            <div id="trainerSelectedAvatar" class="trainer-selected-avatar trainer-profile-avatar">--</div>
+            <div class="trainer-profile-main">
+              <div class="stat-label">選択中の選手</div>
+              <div class="trainer-profile-name" id="trainerSelectedName">--</div>
+              <div class="stat-sub" id="trainerSelectedMeta">未選択</div>
             </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-label">最新体重</div>
-            <div class="stat-val" id="trainerLatestWeight">-- kg</div>
-            <div class="stat-sub" id="trainerLatestWeightDate">--</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">記録数</div>
-            <div class="stat-val" id="trainerRecordCounts">--</div>
-            <div class="stat-sub">体重 / 食事 / 練習</div>
+          <div class="settings-summary-grid admin-stats-grid trainer-profile-metrics">
+            <div class="stat-card">
+              <div class="stat-label">最新体重</div>
+              <div class="stat-val" id="trainerLatestWeight">-- kg</div>
+              <div class="stat-sub" id="trainerLatestWeightDate">--</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">記録数</div>
+              <div class="stat-val" id="trainerRecordCounts">--</div>
+              <div class="stat-sub">体重 / 食事 / 練習</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1628,9 +1637,12 @@
     <div class="section-card mt-16" id="trainerWeightSection" style="display:none">
       <div class="section-card-header">
         <h3><i class="fas fa-weight-scale"></i> 3. 体重ログ一覧</h3>
-        <span class="section-card-subtitle">トレーナーは閲覧のみ。編集・削除はできません。</span>
+        <div class="filter-row">
+          <span class="section-card-subtitle">閲覧のみ</span>
+          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainerWeightListBody', this)">折りたたむ</button>
+        </div>
       </div>
-      <div class="table-wrap trainer-weight-table-wrap">
+      <div class="table-wrap trainer-weight-table-wrap" id="trainerWeightListBody">
         <table class="data-table weight-data-table trainer-weight-table">
           <thead><tr>
             <th>日付</th><th>区分</th><th>体重</th><th>BMI</th><th>体脂肪率</th><th>写真</th><th>メモ</th>
