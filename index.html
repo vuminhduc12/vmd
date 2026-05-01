@@ -1706,8 +1706,12 @@
     </div>
 
     <div class="two-col" style="margin-bottom:16px">
-      <div class="form-card">
-        <h3 class="form-title"><i class="fas fa-user-gear"></i> 個人プロフィール設定</h3>
+      <div class="form-card record-collapse-card">
+        <div class="collapsible-head form-title-row">
+          <h3 class="form-title"><i class="fas fa-user-gear"></i> 個人プロフィール設定</h3>
+          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsProfileBody', this)">折りたたむ</button>
+        </div>
+        <div id="settingsProfileBody">
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">表示名</label>
@@ -1802,11 +1806,16 @@
         </div>
         <button class="btn btn-primary btn-full" onclick="saveAppSettings()">
           <i class="fas fa-save"></i> 設定を保存       </button>
+        </div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div class="form-card">
-          <h3 class="form-title"><i class="fas fa-database"></i> 保存先ステータス</h3>
+        <div class="form-card record-collapse-card">
+          <div class="collapsible-head form-title-row">
+            <h3 class="form-title"><i class="fas fa-database"></i> 保存先ステータス</h3>
+            <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsStorageBody', this)">折りたたむ</button>
+          </div>
+          <div id="settingsStorageBody">
           <div class="settings-summary-grid admin-stats-grid">
             <div class="stat-card">
               <div class="stat-label">保存先種別</div>
@@ -1821,10 +1830,15 @@
           </div>
           <div class="settings-note">
             当面はローカルファーストで保存し、必要になれば外部 BaaS へ移行できる設計です。         </div>
+          </div>
         </div>
 
-        <div class="form-card" id="supabase-auth-card">
-          <h3 class="form-title"><i class="fas fa-cloud"></i> クラウド同期 (Supabase)</h3>
+        <div class="form-card record-collapse-card" id="supabase-auth-card">
+          <div class="collapsible-head form-title-row">
+            <h3 class="form-title"><i class="fas fa-cloud"></i> クラウド同期 (Supabase)</h3>
+            <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsCloudBody', this)">折りたたむ</button>
+          </div>
+          <div id="settingsCloudBody">
           <p class="settings-note" id="supabase-config-hint">
             <code>js/config.example.js</code> を<code>js/config.js</code> にコピーし、Supabase の Project URL と anon public API key を設定してください。
           </p>
@@ -1848,10 +1862,15 @@
           <div class="settings-note" style="margin-top:8px">
             Supabase で SQL を実行し、Authentication → Google を有効にしてください。<code>supabase/migrations/001_boxer_pro_schema.sql</code> を参照。
           </div>
+          </div>
         </div>
 
-        <div class="form-card" id="trainer-invite-card">
-          <h3 class="form-title"><i class="fas fa-user-plus"></i> 選手側：トレーナー閲覧許可</h3>
+        <div class="form-card record-collapse-card" id="trainer-invite-card">
+          <div class="collapsible-head form-title-row">
+            <h3 class="form-title"><i class="fas fa-user-plus"></i> 選手側：トレーナー閲覧許可</h3>
+            <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsTrainerInviteBody', this)">折りたたむ</button>
+          </div>
+          <div id="settingsTrainerInviteBody">
           <p class="settings-note">ここは選手本人が操作する場所です。トレーナーのGoogleメールを登録すると、そのトレーナーの「トレーナー閲覧」画面にあなたが担当選手として表示されます。</p>
           <div class="settings-summary-grid admin-stats-grid" style="margin-top:12px">
             <div class="stat-card">
@@ -1885,10 +1904,15 @@
             </button>
           </div>
           <div id="trainerInviteList" class="settings-actions" style="margin-top:12px"></div>
+          </div>
         </div>
 
-        <div class="form-card" id="admin-stats-card" hidden>
-          <h3 class="form-title"><i class="fas fa-user-shield"></i> 管理者統計</h3>
+        <div class="form-card record-collapse-card" id="admin-stats-card" hidden>
+          <div class="collapsible-head form-title-row">
+            <h3 class="form-title"><i class="fas fa-user-shield"></i> 管理者統計</h3>
+            <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsAdminStatsBody', this)">折りたたむ</button>
+          </div>
+          <div id="settingsAdminStatsBody">
           <div class="settings-summary-grid admin-stats-grid">
             <div class="stat-card">
               <div class="stat-label">登録ユーザー数</div>
@@ -1909,10 +1933,15 @@
           <div class="settings-note">
             このカードは <code>ADMIN_EMAILS</code> に登録された管理者にだけ表示されます。
           </div>
+          </div>
         </div>
 
-        <div class="form-card">
-          <h3 class="form-title"><i class="fas fa-cloud-arrow-down"></i> バックアップ / 復元</h3>
+        <div class="form-card record-collapse-card">
+          <div class="collapsible-head form-title-row">
+            <h3 class="form-title"><i class="fas fa-cloud-arrow-down"></i> バックアップ / 復元</h3>
+            <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsBackupBody', this)">折りたたむ</button>
+          </div>
+          <div id="settingsBackupBody">
           <div class="settings-actions">
             <button class="btn btn-secondary btn-full" onclick="exportAppData()">
               <i class="fas fa-file-export"></i> JSONバックアップを保存           </button>
@@ -1922,10 +1951,15 @@
           <div class="settings-note">
             このエクスポートをベースに、別端末のクラウド移行や端末変更にも使えます。         </div>
           <input type="file" id="appDataImportInput" accept="application/json" hidden>
+          </div>
         </div>
 
-        <div class="form-card">
-          <h3 class="form-title"><i class="fas fa-bell"></i> 通知 / リマインダー</h3>
+        <div class="form-card record-collapse-card">
+          <div class="collapsible-head form-title-row">
+            <h3 class="form-title"><i class="fas fa-bell"></i> 通知 / リマインダー</h3>
+            <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsReminderBody', this)">折りたたむ</button>
+          </div>
+          <div id="settingsReminderBody">
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">通知を有効化</label>
@@ -1956,6 +1990,7 @@
             </div>
           </div>
           <div class="settings-note" id="reminderStatusText">アプリ起動中にローカル通知とトーストでお知らせします。</div>
+          </div>
         </div>
       </div>
     </div>
