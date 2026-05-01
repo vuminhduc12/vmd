@@ -2834,6 +2834,21 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
     padding:16px;
     margin-bottom:14px;
   }
+  .dashboard-hero-panel{
+    gap:10px;
+    padding:0;
+    border:none;
+    background:transparent;
+    backdrop-filter:none;
+  }
+  .dashboard-hero-status{
+    padding:5px 9px;
+    font-size:9px;
+    background:rgba(48,208,128,0.08);
+  }
+  .dashboard-hero-title{
+    display:none;
+  }
   .dashboard-eyebrow{
     font-size:9.5px;
     letter-spacing:.5px;
@@ -2845,10 +2860,16 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
     font-size:12.5px;
   }
   .dashboard-hero-actions{
-    grid-template-columns:1fr;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
   }
   .dashboard-hero-actions .btn{
     width:100%;
+    min-height:40px;
+    padding:8px 6px;
+    border-radius:14px;
+    font-size:12px;
+    box-shadow:none;
   }
   .page-subtitle{font-size:12px;line-height:1.6}
   .chart-card{padding:16px}
