@@ -1633,6 +1633,17 @@
     </div>
 
     <div class="trainer-workspace" id="trainerWorkspace" style="margin-bottom:16px;display:none">
+      <div class="form-card record-collapse-card" id="trainerInviteRequestsCard" style="display:none">
+        <div class="collapsible-head form-title-row">
+          <h3 class="form-title"><i class="fas fa-envelope-open-text"></i> 0. 承認待ちの招待</h3>
+          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainerInviteRequestsBody', this)">折りたたむ</button>
+        </div>
+        <div id="trainerInviteRequestsBody">
+          <p class="settings-note">選手から届いた閲覧招待です。承認すると担当選手一覧に表示されます。</p>
+          <div id="trainerInviteRequestsList" class="trainer-athlete-list"></div>
+        </div>
+      </div>
+
       <div class="form-card trainer-athlete-picker-card">
         <div class="section-card-header trainer-flow-head">
           <div>
@@ -1677,11 +1688,40 @@
           </div>
         </div>
       </div>
+
+      <div class="form-card record-collapse-card trainer-alert-card" id="trainerAlertSection" style="display:none">
+        <div class="collapsible-head form-title-row">
+          <h3 class="form-title"><i class="fas fa-triangle-exclamation"></i> 3. 危険アラート</h3>
+          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainerAlertBody', this)">折りたたむ</button>
+        </div>
+        <div id="trainerAlertBody">
+          <div id="trainerAlertList" class="trainer-alert-list">
+            <div class="settings-note">選手を選択すると、体重変化や記録状況から注意点を表示します。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card record-collapse-card trainer-notes-card" id="trainerNotesSection" style="display:none">
+        <div class="collapsible-head form-title-row">
+          <h3 class="form-title"><i class="fas fa-comment-medical"></i> 4. 選手別コメント・メモ</h3>
+          <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainerNotesBody', this)">折りたたむ</button>
+        </div>
+        <div id="trainerNotesBody">
+          <p class="settings-note">この選手に対するトレーナーメモです。承認済みトレーナーだけ保存できます。</p>
+          <textarea id="trainerNoteInput" class="input-field" rows="3" placeholder="例: 今週は体重の落ち方が速いので、水分・睡眠・食事内容を確認してください。"></textarea>
+          <div class="settings-actions" style="margin-top:10px">
+            <button type="button" class="btn btn-primary btn-full" onclick="saveTrainerNoteFromPage()">
+              <i class="fas fa-paper-plane"></i> コメントを保存
+            </button>
+          </div>
+          <div id="trainerNotesList" class="trainer-notes-list"></div>
+        </div>
+      </div>
     </div>
 
     <div class="section-card mt-16" id="trainerWeightSection" style="display:none">
       <div class="section-card-header">
-        <h3><i class="fas fa-weight-scale"></i> 3. 体重ログ一覧</h3>
+        <h3><i class="fas fa-weight-scale"></i> 5. 体重ログ一覧</h3>
         <div class="filter-row">
           <span class="section-card-subtitle">閲覧のみ</span>
           <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('trainerWeightListBody', this)">折りたたむ</button>
@@ -1871,33 +1911,33 @@
             <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('settingsTrainerInviteBody', this)">折りたたむ</button>
           </div>
           <div id="settingsTrainerInviteBody">
-          <p class="settings-note">ここは選手本人が操作する場所です。トレーナーのGoogleメールを登録すると、そのトレーナーの「トレーナー閲覧」画面にあなたが担当選手として表示されます。</p>
+          <p class="settings-note">ここは選手本人が操作する場所です。トレーナーのGoogleメールを登録すると「招待中」になり、トレーナーが承認すると閲覧可能になります。</p>
           <div class="settings-summary-grid admin-stats-grid" style="margin-top:12px">
             <div class="stat-card">
               <div class="stat-label">選手がすること</div>
-              <div class="stat-val" style="font-size:17px">メールを登録</div>
+              <div class="stat-val" style="font-size:17px">招待を送信</div>
               <div class="stat-sub">下にトレーナーのGoogleメールを入力します。</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">トレーナーが見る場所</div>
-              <div class="stat-val" style="font-size:17px">トレーナー閲覧</div>
-              <div class="stat-sub">同じメールでログイン後、担当選手一覧に表示されます。</div>
+              <div class="stat-val" style="font-size:17px">承認して表示</div>
+              <div class="stat-sub">同じメールでログイン後、招待を承認します。</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">許可する内容</div>
               <div class="stat-val" style="font-size:17px">閲覧のみ</div>
-              <div class="stat-sub">最新体重、記録件数、体重ログ。編集・削除は不可。</div>
+              <div class="stat-sub">承認後に最新体重、記録件数、体重ログを閲覧できます。</div>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group" style="flex:1">
-              <label class="form-label">閲覧を許可するトレーナーのGoogleメール</label>
+              <label class="form-label">招待するトレーナーのGoogleメール</label>
               <input type="email" id="trainerInviteEmail" class="input-field" placeholder="trainer@example.com">
             </div>
           </div>
           <div class="settings-actions" style="margin-top:10px">
             <button type="button" class="btn btn-primary btn-full" onclick="saveTrainerInviteFromSettings()">
-              <i class="fas fa-user-check"></i> 閲覧を許可
+              <i class="fas fa-paper-plane"></i> 招待を送信
             </button>
             <button type="button" class="btn btn-ghost btn-full" onclick="renderTrainerInvitePanel()">
               <i class="fas fa-rotate"></i> 一覧を更新

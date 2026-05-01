@@ -38,6 +38,45 @@ let supabaseLogoutInFlight = false;
 let supabaseAuthUiDebounceTimer = null;
 let supabaseAuthUiInFlight = false;
 let supabaseAuthUiQueued = false;
+const DEFAULT_USER_CAPABILITIES = {
+  roles: [],
+  isAdmin: false,
+  isAthlete: true,
+  isTrainer: false,
+  source: 'local',
+};
+let currentUserCapabilities = { ...DEFAULT_USER_CAPABILITIES };
+
+function publishCurrentUserCapabilities() {
+  if (typeof window !== 'undefined') {
+    window.currentUserCapabilities = { ...currentUserCapabilities };
+  }
+}
+
+function setCurrentUserCapabilities(patch = {}) {
+  const roles = Array.isArray(patch.roles)
+    ? [...new Set(patch.roles.map((role) => String(role || '').trim()).filter(Boolean))]
+    : currentUserCapabilities.roles;
+  currentUserCapabilities = {
+    ...currentUserCapabilities,
+    ...patch,
+    roles,
+  };
+  publishCurrentUserCapabilities();
+  return { ...currentUserCapabilities };
+}
+
+function resetCurrentUserCapabilities() {
+  currentUserCapabilities = { ...DEFAULT_USER_CAPABILITIES };
+  publishCurrentUserCapabilities();
+  return { ...currentUserCapabilities };
+}
+
+function getCurrentUserCapabilities() {
+  return { ...currentUserCapabilities };
+}
+
+publishCurrentUserCapabilities();
 
 function sleep(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -192,6 +231,46 @@ async function getSupabaseClient() {
     }
   })();
   return supabaseClientPromise;
+}
+
+async function fetchCurrentUserRoles() {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return [];
+  const user = await getSupabaseUserSafe(sb);
+  if (!user) return [];
+  try {
+    const { data, error } = await sb
+      .from('boxer_user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+    if (error) throw error;
+    return [...new Set((data || []).map((row) => String(row.role || '').trim()).filter(Boolean))];
+  } catch (error) {
+    const code = String(error?.code || '');
+    if (code === '42P01' || code === 'PGRST205') {
+      console.warn('BOXER PRO: boxer_user_roles migration has not been applied yet');
+      return [];
+    }
+    console.error('BOXER PRO: fetch user roles failed', error);
+    return [];
+  }
+}
+
+async function refreshCurrentUserCapabilities() {
+  if (activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    return resetCurrentUserCapabilities();
+  }
+  const roles = await fetchCurrentUserRoles();
+  const isAdmin = roles.includes('admin');
+  const isTrainer = roles.includes('trainer');
+  const isAthlete = roles.includes('athlete') || (!isTrainer && !roles.length);
+  return setCurrentUserCapabilities({
+    roles,
+    isAdmin,
+    isTrainer,
+    isAthlete,
+    source: roles.length ? 'db' : 'fallback',
+  });
 }
 
 function cleanupSupabaseAuthRedirectUrl() {
@@ -363,7 +442,7 @@ async function fetchAthleteTrainerLinks() {
   if (!user) return [];
   const { data, error } = await sb
     .from('boxer_trainer_links')
-    .select('id, athlete_user_id, trainer_email, status, created_at, accepted_at, updated_at')
+    .select('id, athlete_user_id, trainer_user_id, trainer_email, status, created_at, accepted_at, updated_at')
     .eq('athlete_user_id', user.id)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -384,32 +463,65 @@ async function saveTrainerInvite(email) {
   if (normalizeTrainerEmail(user.email) === trainerEmail) {
     throw new Error('自分自身のメールは登録できません');
   }
-  const timestamp = new Date().toISOString();
   const { data, error } = await sb
     .from('boxer_trainer_links')
     .upsert({
       athlete_user_id: user.id,
       trainer_email: trainerEmail,
-      status: 'accepted',
-      accepted_at: timestamp,
-      updated_at: timestamp,
+      status: 'pending',
+      accepted_at: null,
+      updated_at: new Date().toISOString(),
     }, { onConflict: 'athlete_user_id,trainer_email' })
-    .select('id, athlete_user_id, trainer_email, status, created_at, accepted_at, updated_at')
+    .select('id, athlete_user_id, trainer_user_id, trainer_email, status, created_at, accepted_at, updated_at')
     .single();
   if (error) throw error;
   return data;
 }
 
-async function deleteTrainerInvite(linkId) {
+async function revokeTrainerInvite(linkId) {
   const sb = await getSupabaseClient();
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) {
     throw new Error('クラウドログイン中のみ利用できます');
   }
   const id = String(linkId || '').trim();
-  if (!id) throw new Error('削除対象が不正です');
-  const { error } = await sb.from('boxer_trainer_links').delete().eq('id', id);
+  if (!id) throw new Error('対象が不正です');
+  const { data, error } = await sb.rpc('boxer_revoke_trainer_invite', { link_id: id });
   if (error) throw error;
-  return true;
+  if (!data) throw new Error('招待を解除できませんでした');
+  return data;
+}
+
+async function deleteTrainerInvite(linkId) {
+  return revokeTrainerInvite(linkId);
+}
+
+async function acceptTrainerInvite(linkId) {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    throw new Error('クラウドログイン中のみ利用できます');
+  }
+  const id = String(linkId || '').trim();
+  if (!id) throw new Error('招待が不正です');
+  const { data, error } = await sb.rpc('boxer_accept_trainer_invite', { link_id: id });
+  if (error) throw error;
+  if (!data) throw new Error('招待を承認できませんでした');
+  return data;
+}
+
+async function fetchTrainerInviteRequests() {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return [];
+  const user = await getSupabaseUserSafe(sb);
+  if (!user?.email) return [];
+  const trainerEmail = normalizeTrainerEmail(user.email);
+  const { data, error } = await sb
+    .from('boxer_trainer_links')
+    .select('id, athlete_user_id, trainer_user_id, trainer_email, status, created_at, accepted_at, updated_at')
+    .eq('trainer_email', trainerEmail)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
 }
 
 async function fetchTrainerAthletes() {
@@ -420,7 +532,7 @@ async function fetchTrainerAthletes() {
   const trainerEmail = normalizeTrainerEmail(user.email);
   const { data: links, error } = await sb
     .from('boxer_trainer_links')
-    .select('id, athlete_user_id, trainer_email, status, created_at, accepted_at, updated_at')
+    .select('id, athlete_user_id, trainer_user_id, trainer_email, status, created_at, accepted_at, updated_at')
     .eq('trainer_email', trainerEmail)
     .eq('status', 'accepted')
     .order('created_at', { ascending: false });
@@ -441,18 +553,82 @@ async function fetchTrainerAthletes() {
 }
 
 async function fetchTrainerAthleteSnapshot(athleteUserId) {
-  const [weights, photos, meals, training] = await Promise.all([
+  const [weights, photos, meals, training, hydration, recovery, notes] = await Promise.all([
     boxerSupabaseApiGetForAthlete('weight_logs', athleteUserId, 'sort=date'),
     boxerSupabaseApiGetForAthlete('weight_log_photos', athleteUserId, 'sort=created_at'),
     boxerSupabaseApiGetForAthlete('meals', athleteUserId, 'sort=date'),
     boxerSupabaseApiGetForAthlete('training_logs', athleteUserId, 'sort=date'),
+    boxerSupabaseApiGetForAthlete('hydration_logs', athleteUserId, 'sort=date'),
+    boxerSupabaseApiGetForAthlete('recovery_logs', athleteUserId, 'sort=date'),
+    fetchTrainerNotes(athleteUserId),
   ]);
   return {
     weight_logs: weights.data || [],
     weight_log_photos: photos.data || [],
     meals: meals.data || [],
     training_logs: training.data || [],
+    hydration_logs: hydration.data || [],
+    recovery_logs: recovery.data || [],
+    trainer_notes: notes || [],
   };
+}
+
+async function fetchTrainerNotes(athleteUserId) {
+  const sb = await getSupabaseClient();
+  const targetUserId = String(athleteUserId || '').trim();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE || !targetUserId) return [];
+  const { data, error } = await sb
+    .from('boxer_trainer_notes')
+    .select('id, athlete_user_id, trainer_user_id, note, created_at, updated_at')
+    .eq('athlete_user_id', targetUserId)
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error) {
+    const code = String(error?.code || '');
+    if (code === '42P01' || code === 'PGRST205') {
+      console.warn('BOXER PRO: boxer_trainer_notes migration has not been applied yet');
+      return [];
+    }
+    throw error;
+  }
+  return data || [];
+}
+
+async function saveTrainerNoteForAthlete(athleteUserId, note) {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    throw new Error('クラウドログイン中のみ利用できます');
+  }
+  const user = await getSupabaseUserSafe(sb);
+  const targetUserId = String(athleteUserId || '').trim();
+  const noteText = String(note || '').trim();
+  if (!user) throw new Error('ログインが必要です');
+  if (!targetUserId) throw new Error('選手が選択されていません');
+  if (!noteText) throw new Error('コメントを入力してください');
+  if (noteText.length > 1200) throw new Error('コメントは1200文字以内で入力してください');
+  const { data, error } = await sb
+    .from('boxer_trainer_notes')
+    .insert({
+      athlete_user_id: targetUserId,
+      trainer_user_id: user.id,
+      note: noteText,
+    })
+    .select('id, athlete_user_id, trainer_user_id, note, created_at, updated_at')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteTrainerNote(noteId) {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    throw new Error('クラウドログイン中のみ利用できます');
+  }
+  const id = String(noteId || '').trim();
+  if (!id) throw new Error('削除対象が不正です');
+  const { error } = await sb.from('boxer_trainer_notes').delete().eq('id', id);
+  if (error) throw error;
+  return true;
 }
 
 async function boxerSupabaseApiPost(table, data) {
@@ -560,10 +736,12 @@ async function initSupabaseAuth() {
   if (session?.user) {
     setStorageMode(STORAGE_MODE.SUPABASE);
     await loadAppSettingsFromSupabase();
+    await refreshCurrentUserCapabilities();
     await touchSupabaseLastSeen(true);
     cleanupSupabaseAuthRedirectUrl();
   } else {
     setStorageMode(STORAGE_MODE.LOCAL);
+    resetCurrentUserCapabilities();
   }
   bindSupabaseLastSeenTracking();
   syncSupabaseUi();
@@ -575,6 +753,7 @@ async function initSupabaseAuth() {
         supabaseSessionSnapshot = sess;
         setStorageMode(STORAGE_MODE.SUPABASE);
         await loadAppSettingsFromSupabase();
+        await refreshCurrentUserCapabilities();
         await touchSupabaseLastSeen(true);
         cleanupSupabaseAuthRedirectUrl();
         applyAppSettings(true);
@@ -584,6 +763,7 @@ async function initSupabaseAuth() {
       } else if (event === 'SIGNED_OUT') {
         supabaseSessionSnapshot = null;
         setStorageMode(STORAGE_MODE.LOCAL);
+        resetCurrentUserCapabilities();
         safeStorageSetItem(SUPABASE_LAST_SEEN_SYNC_KEY, '0', { context: 'last seen reset' });
         appSettings = loadSettingsFromStorage();
         applyAppSettings(true);
@@ -849,6 +1029,9 @@ if (typeof window !== 'undefined') {
   window.mergeLocalDataToSupabase = mergeLocalDataToSupabase;
   window.isAiCoachAdminAllowed = () => activeStorageMode === STORAGE_MODE.SUPABASE && aiCoachAdminAllowed;
   window.refreshAiCoachAdminAccess = refreshAiCoachAdminAccess;
+  window.getCurrentUserCapabilities = getCurrentUserCapabilities;
+  window.setCurrentUserCapabilities = setCurrentUserCapabilities;
+  window.refreshCurrentUserCapabilities = refreshCurrentUserCapabilities;
 }
 
 function resetAdminStatsUi() {
@@ -865,12 +1048,23 @@ function resetAdminStatsUi() {
   if (emailEl) emailEl.textContent = '--';
   if (updatedEl) updatedEl.textContent = '--';
   aiCoachAdminAllowed = false;
+  setAdminCapabilityAllowed(false);
 }
 
 function isTrainerAccessActiveForSettings() {
-  return typeof window !== 'undefined'
-    && typeof window.isTrainerAccessActive === 'function'
-    && window.isTrainerAccessActive();
+  const caps = getCurrentUserCapabilities();
+  return !!caps.isTrainer
+    || (typeof window !== 'undefined'
+      && typeof window.isTrainerAccessActive === 'function'
+      && window.isTrainerAccessActive());
+}
+
+function setAdminCapabilityAllowed(allowed) {
+  const caps = getCurrentUserCapabilities();
+  setCurrentUserCapabilities({
+    roles: caps.roles,
+    isAdmin: !!allowed,
+  });
 }
 
 async function fetchAdminStats() {
@@ -912,6 +1106,7 @@ async function fetchAiCoachReply(question) {
   });
   if (adminCheck.status === 401 || adminCheck.status === 403) {
     aiCoachAdminAllowed = false;
+    setAdminCapabilityAllowed(false);
     throw new Error('AIコーチは管理者アカウントのみ利用できます');
   }
   if (!adminCheck.ok) {
@@ -919,6 +1114,7 @@ async function fetchAiCoachReply(question) {
     throw new Error(body || `管理者権限チェックに失敗しました (${adminCheck.status})`);
   }
   aiCoachAdminAllowed = true;
+  setAdminCapabilityAllowed(true);
 
   const res = await fetch('/api/ai/chat', {
     method: 'POST',
@@ -946,13 +1142,19 @@ async function refreshAiCoachAdminAccess() {
   aiCoachAdminAllowed = false;
   const sb = await getSupabaseClient();
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return false;
+  if (isTrainerAccessActiveForSettings()) {
+    setAdminCapabilityAllowed(false);
+    return false;
+  }
   try {
     const data = await fetchAdminStats();
     aiCoachAdminAllowed = !!data;
+    setAdminCapabilityAllowed(aiCoachAdminAllowed);
     return aiCoachAdminAllowed;
   } catch (error) {
     console.error('BOXER PRO: refreshAiCoachAdminAccess', error);
     aiCoachAdminAllowed = false;
+    setAdminCapabilityAllowed(false);
     return false;
   }
 }
@@ -983,6 +1185,7 @@ async function updateAdminStatsUi() {
       ? `取得: ${formatDateTimeJP(data.measured_at)}`
       : '取得済み';
     aiCoachAdminAllowed = true;
+    setAdminCapabilityAllowed(true);
   } catch (err) {
     console.error('BOXER PRO: updateAdminStatsUi', err);
     resetAdminStatsUi();
