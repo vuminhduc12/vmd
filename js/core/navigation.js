@@ -230,6 +230,7 @@ function switchPage(pageName) {
       calories: 'カロリー計算',
       fight: '試合目標',
       trainer: 'トレーナー閲覧',
+      notifications: '通知',
       settings: 'マイ設定',
     })[page] || page;
     if (typeof window.getUiText === 'function') {
@@ -246,6 +247,7 @@ function switchPage(pageName) {
   if (page === 'calories') renderCaloriesPage();
   if (page === 'fight') renderFightPage();
   if (page === 'trainer') void renderTrainerPage();
+  if (page === 'notifications') void renderNotificationsPage();
   if (page === 'settings') renderSettingsPage();
   if (typeof applyGoalModeUi === 'function') applyGoalModeUi();
   if (typeof window.applyLanguageUi === 'function') window.applyLanguageUi();

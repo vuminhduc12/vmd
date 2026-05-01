@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/app-icon.svg">
-  <link rel="stylesheet" href="css/style.css?v=31">
+  <link rel="stylesheet" href="css/style.css?v=32">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -54,6 +54,11 @@
     </li>
     <li class="nav-item" data-page="trainer">
       <a href="#" class="nav-link"><i class="fas fa-user-group"></i><span>トレーナー閲覧</span></a>
+    </li>
+    <li class="nav-item" data-page="notifications">
+      <a href="#" class="nav-link"><i class="fas fa-bell"></i><span>通知</span>
+        <span class="nav-badge" id="navNotificationBadge" style="display:none">0</span>
+      </a>
     </li>
     <li class="nav-item" data-page="settings">
       <a href="#" class="nav-link"><i class="fas fa-sliders"></i><span>マイ設定</span></a>
@@ -1738,6 +1743,37 @@
     </div>
   </div>
 
+  <!-- ══════ NOTIFICATIONS PAGE ══════ -->
+  <div class="page" id="page-notifications">
+    <div class="page-header">
+      <h1><i class="fas fa-bell" style="color:var(--gold);font-size:24px"></i> 通知</h1>
+      <p class="page-subtitle">トレーナーから届いたコメント・メモを一覧で確認</p>
+    </div>
+
+    <div class="notification-shell">
+      <div class="section-card notification-summary-card">
+        <div class="section-card-header">
+          <div>
+            <h3><i class="fas fa-inbox"></i> トレーナーコメント通知</h3>
+            <div class="chart-card-subtitle">新しいコメントを見逃さないための一覧画面です。</div>
+          </div>
+          <div class="trainer-flow-actions">
+            <span class="trainer-flow-pill" id="trainerNotificationCountPill"><i class="fas fa-bell"></i> -- 件</span>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="markAllTrainerNotificationsRead()">
+              <i class="fas fa-check-double"></i> 全て既読
+            </button>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="renderNotificationsPage()">
+              <i class="fas fa-rotate"></i> 更新
+            </button>
+          </div>
+        </div>
+        <div id="trainerNotificationList" class="trainer-notification-list">
+          <div class="settings-note">通知を読み込み中...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════ SETTINGS PAGE ══════ -->
   <div class="page" id="page-settings">
     <div class="page-header">
@@ -1953,10 +1989,10 @@
             <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('athleteTrainerNotesBody', this)">折りたたむ</button>
           </div>
           <div id="athleteTrainerNotesBody">
-            <p class="settings-note">承認済みトレーナーが保存した、あなた宛のコメント・メモを確認できます。</p>
+            <p class="settings-note">承認済みトレーナーが保存した、あなた宛のコメント・メモを通知画面で確認できます。</p>
             <div class="settings-actions" style="margin-top:10px">
-              <button type="button" class="btn btn-ghost btn-full" onclick="renderAthleteTrainerNotesPanel()">
-                <i class="fas fa-rotate"></i> コメントを更新
+              <button type="button" class="btn btn-primary btn-full" onclick="switchPage('notifications')">
+                <i class="fas fa-bell"></i> 通知一覧を開く
               </button>
             </div>
             <div id="athleteTrainerNotesList" class="trainer-notes-list"></div>
@@ -2162,7 +2198,7 @@
 
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
-<script src="js/core/navigation.js?v=32"></script>
+<script src="js/core/navigation.js?v=33"></script>
 <script src="js/services/storage.js?v=33"></script>
 <script src="js/pages/weight.js?v=31"></script>
 <script src="js/pages/fight.js?v=31"></script>

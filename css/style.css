@@ -1997,6 +1997,112 @@ textarea.input-field{resize:vertical;min-height:70px}
   color:var(--red-light);
   border-color:rgba(232,57,74,0.35);
 }
+.notification-shell{
+  max-width:920px;
+  margin:0 auto;
+}
+.notification-summary-card{
+  overflow:hidden;
+  position:relative;
+}
+.notification-summary-card::before{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--gold),var(--red),var(--blue));
+  opacity:.8;
+}
+.trainer-notification-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:16px;
+}
+.trainer-notification-item{
+  display:flex;
+  gap:12px;
+  border:1px solid var(--b1);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at top left, rgba(240,192,64,0.08), transparent 30%),
+    rgba(255,255,255,0.04);
+  padding:14px;
+}
+.trainer-notification-item.is-unread{
+  border-color:rgba(240,192,64,0.36);
+  background:
+    radial-gradient(circle at top left, rgba(240,192,64,0.18), transparent 34%),
+    rgba(255,255,255,0.055);
+}
+.trainer-notification-marker{
+  width:42px;
+  height:42px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  color:#111;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  box-shadow:0 10px 26px rgba(240,192,64,0.18);
+}
+.trainer-notification-item.is-read .trainer-notification-marker{
+  color:#fff;
+  background:rgba(255,255,255,0.10);
+  box-shadow:none;
+}
+.trainer-notification-content{
+  min-width:0;
+  flex:1;
+}
+.trainer-notification-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.trainer-notification-title{
+  color:var(--tx-1);
+  font-weight:900;
+  font-size:14px;
+}
+.trainer-notification-date{
+  color:var(--tx-3);
+  font-size:11px;
+  font-weight:800;
+}
+.trainer-notification-body{
+  color:var(--tx-1);
+  font-size:13px;
+  line-height:1.7;
+  white-space:pre-wrap;
+  margin-top:8px;
+}
+.trainer-notification-empty{
+  display:flex;
+  min-height:220px;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:8px;
+  color:var(--tx-3);
+  text-align:center;
+  border:1px dashed var(--b2);
+  border-radius:20px;
+  background:rgba(255,255,255,0.025);
+}
+.trainer-notification-empty i{
+  font-size:34px;
+  color:var(--gold);
+}
+.trainer-notification-empty strong{
+  color:var(--tx-1);
+  font-size:18px;
+}
 .record-collapse-card{
   position:relative;
   overflow:hidden;

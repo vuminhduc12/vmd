@@ -139,6 +139,7 @@ const UI_TEXT = {
       calories: 'カロリー計算',
       fight: '試合目標',
       trainer: 'トレーナー閲覧',
+      notifications: '通知',
       settings: 'マイ設定',
     },
     navLabels: {
@@ -149,6 +150,7 @@ const UI_TEXT = {
       calories: 'カロリー計算',
       fight: '試合目標',
       trainer: 'トレーナー閲覧',
+      notifications: '通知',
       settings: 'マイ設定',
     },
     mobileNavLabels: {
@@ -213,6 +215,7 @@ const UI_TEXT = {
       calories: 'Tính calo',
       fight: 'Mục tiêu trận đấu',
       trainer: 'HLV xem dữ liệu',
+      notifications: 'Thông báo',
       settings: 'Cài đặt',
     },
     navLabels: {
@@ -223,6 +226,7 @@ const UI_TEXT = {
       calories: 'Calo',
       fight: 'Trận đấu',
       trainer: 'HLV',
+      notifications: 'Thông báo',
       settings: 'Cài đặt',
     },
     mobileNavLabels: {
@@ -467,7 +471,7 @@ const DEFAULT_SETTINGS = {
   fatLossTargetDate: '',
 };
 
-const APP_PAGE_IDS = ['dashboard', 'weight', 'meals', 'training', 'calories', 'fight', 'trainer', 'settings'];
+const APP_PAGE_IDS = ['dashboard', 'weight', 'meals', 'training', 'calories', 'fight', 'trainer', 'notifications', 'settings'];
 
 function normalizeAppPageId(name) {
   const p = String(name == null ? '' : name).trim();
@@ -2124,21 +2128,124 @@ async function renderAthleteTrainerNotesPanel() {
   list.innerHTML = '<div class="settings-note">コメントを読み込み中...</div>';
   try {
     const notes = await fetchCurrentAthleteTrainerNotes();
+    updateTrainerNotificationBadge(notes);
     if (!notes.length) {
       list.innerHTML = '<div class="settings-note">まだトレーナーからのコメントはありません。</div>';
       return;
     }
-    list.innerHTML = notes.map((note) => `
+    list.innerHTML = notes.slice(0, 3).map((note) => `
       <div class="trainer-note-item">
         <div class="trainer-note-head">
           <span><i class="fas fa-comment-dots"></i> ${escapeHtml(formatDateTimeJP(note.created_at))}</span>
         </div>
         <div class="trainer-note-body">${escapeHtml(note.note || '')}</div>
       </div>
-    `).join('');
+    `).join('') + (notes.length > 3 ? '<div class="settings-note">続きは通知一覧で確認できます。</div>' : '');
   } catch (error) {
     console.error('BOXER PRO: athlete trainer notes', error);
     list.innerHTML = '<div class="settings-note">トレーナーコメントを取得できませんでした。Supabase migration 004 が適用済みか確認してください。</div>';
+  }
+}
+
+function getTrainerNotificationReadIds() {
+  try {
+    const raw = localStorage.getItem('boxerTrainerNoteReadIds');
+    const parsed = JSON.parse(raw || '[]');
+    return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+  } catch (error) {
+    return new Set();
+  }
+}
+
+function saveTrainerNotificationReadIds(ids) {
+  try {
+    localStorage.setItem('boxerTrainerNoteReadIds', JSON.stringify([...ids].slice(-300)));
+  } catch (error) {
+    console.warn('BOXER PRO: save notification read ids', error);
+  }
+}
+
+function updateTrainerNotificationBadge(notes = null) {
+  const badge = document.getElementById('navNotificationBadge');
+  if (!badge) return;
+  if (!Array.isArray(notes)) {
+    badge.style.display = 'none';
+    return;
+  }
+  const readIds = getTrainerNotificationReadIds();
+  const unreadCount = notes.filter((note) => note?.id && !readIds.has(String(note.id))).length;
+  badge.textContent = String(unreadCount);
+  badge.style.display = unreadCount > 0 ? '' : 'none';
+}
+
+function renderTrainerNotificationCards(notes = []) {
+  const readIds = getTrainerNotificationReadIds();
+  return notes.map((note) => {
+    const unread = note?.id && !readIds.has(String(note.id));
+    return `
+      <div class="trainer-notification-item ${unread ? 'is-unread' : 'is-read'}">
+        <div class="trainer-notification-marker"><i class="fas ${unread ? 'fa-bell' : 'fa-check'}"></i></div>
+        <div class="trainer-notification-content">
+          <div class="trainer-notification-head">
+            <span class="trainer-notification-title">${unread ? '新しいコメント' : '確認済みコメント'}</span>
+            <span class="trainer-notification-date">${escapeHtml(formatDateTimeJP(note.created_at))}</span>
+          </div>
+          <div class="trainer-notification-body">${escapeHtml(note.note || '')}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function renderNotificationsPage() {
+  const list = document.getElementById('trainerNotificationList');
+  const pill = document.getElementById('trainerNotificationCountPill');
+  if (!list) return;
+  if (activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    list.innerHTML = '<div class="settings-note">通知を見るにはクラウドログインが必要です。</div>';
+    if (pill) pill.innerHTML = '<i class="fas fa-bell"></i> -- 件';
+    updateTrainerNotificationBadge([]);
+    return;
+  }
+  if (trainerAccessAvailable) {
+    list.innerHTML = '<div class="settings-note">トレーナー閲覧中は、選手本人向けの通知一覧は表示しません。</div>';
+    if (pill) pill.innerHTML = '<i class="fas fa-bell"></i> -- 件';
+    updateTrainerNotificationBadge([]);
+    return;
+  }
+
+  list.innerHTML = '<div class="settings-note">通知を読み込み中...</div>';
+  try {
+    const notes = await fetchCurrentAthleteTrainerNotes();
+    const readIds = getTrainerNotificationReadIds();
+    const unreadCount = notes.filter((note) => note?.id && !readIds.has(String(note.id))).length;
+    updateTrainerNotificationBadge(notes);
+    if (pill) pill.innerHTML = `<i class="fas fa-bell"></i> 未読 ${unreadCount}件 / 全${notes.length}件`;
+    if (!notes.length) {
+      list.innerHTML = '<div class="trainer-notification-empty"><i class="fas fa-inbox"></i><strong>通知はありません</strong><span>トレーナーがコメントを保存すると、ここに一覧表示されます。</span></div>';
+      return;
+    }
+    list.innerHTML = renderTrainerNotificationCards(notes);
+  } catch (error) {
+    console.error('BOXER PRO: render notifications page', error);
+    list.innerHTML = '<div class="settings-note">通知を取得できませんでした。Supabase migration 004/005 が適用済みか確認してください。</div>';
+  }
+}
+
+async function markAllTrainerNotificationsRead() {
+  try {
+    const notes = await fetchCurrentAthleteTrainerNotes();
+    const readIds = getTrainerNotificationReadIds();
+    notes.forEach((note) => {
+      if (note?.id) readIds.add(String(note.id));
+    });
+    saveTrainerNotificationReadIds(readIds);
+    updateTrainerNotificationBadge(notes);
+    await renderNotificationsPage();
+    showToast('トレーナーコメントを既読にしました', 'success');
+  } catch (error) {
+    console.error('BOXER PRO: mark notifications read', error);
+    showToast('既読にできませんでした', 'error');
   }
 }
 
