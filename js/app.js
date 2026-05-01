@@ -534,10 +534,22 @@ function applyGoalModeUi() {
   const countdownPill = document.getElementById('countdownPill');
   if (countdownPill) countdownPill.hidden = !boxerMode;
 
+  document.querySelectorAll('.nav-item[data-page]').forEach((item) => {
+    const page = item.dataset.page;
+    if (trainerAccessAvailable) {
+      item.style.display = page === 'trainer' ? '' : 'none';
+      return;
+    }
+    item.style.display = page === 'trainer' ? 'none' : '';
+  });
+  document.querySelectorAll('.mobile-nav-btn[data-page]').forEach((btn) => {
+    btn.style.display = trainerAccessAvailable ? 'none' : '';
+  });
+
   const desktopFightNav = document.querySelector('.nav-item[data-page="fight"]');
-  if (desktopFightNav) desktopFightNav.style.display = boxerMode ? '' : 'none';
+  if (desktopFightNav && !trainerAccessAvailable) desktopFightNav.style.display = boxerMode ? '' : 'none';
   const mobileFightNav = document.querySelector('.mobile-nav-btn[data-page="fight"]');
-  if (mobileFightNav) mobileFightNav.style.display = boxerMode ? '' : 'none';
+  if (mobileFightNav && !trainerAccessAvailable) mobileFightNav.style.display = boxerMode ? '' : 'none';
   const trainerNav = document.querySelector('.nav-item[data-page="trainer"]');
   if (trainerNav) trainerNav.style.display = trainerAccessAvailable ? '' : 'none';
 
@@ -576,6 +588,11 @@ function applyGoalModeUi() {
   if (!trainerAccessAvailable && activePage === 'page-trainer' && !trainerNavRedirecting) {
     trainerNavRedirecting = true;
     switchPage('dashboard');
+    trainerNavRedirecting = false;
+  }
+  if (trainerAccessAvailable && activePage !== 'page-trainer' && !trainerNavRedirecting) {
+    trainerNavRedirecting = true;
+    switchPage('trainer');
     trainerNavRedirecting = false;
   }
 }
@@ -1978,6 +1995,16 @@ function getTrainerAthleteMeta(row) {
   return `${role} / ${lastSeen}`;
 }
 
+function getTrainerAthleteInitials(row) {
+  const name = getTrainerAthleteName(row).replace(/^選手\s*/, '').trim();
+  if (!name) return 'BP';
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
 function syncTrainerNavVisibility(athletes = trainerAthletes) {
   trainerAccessAvailable = activeStorageMode === STORAGE_MODE.SUPABASE && Array.isArray(athletes) && athletes.length > 0;
   if (!trainerAccessAvailable) {
@@ -2097,6 +2124,7 @@ function renderTrainerAthleteList() {
 function renderTrainerEmptyData(message) {
   setText('trainerSelectedName', '--');
   setText('trainerSelectedMeta', message || '未選択');
+  setText('trainerSelectedAvatar', '--');
   setText('trainerLatestWeight', '-- kg');
   setText('trainerLatestWeightDate', '--');
   setText('trainerRecordCounts', '--');
@@ -2115,6 +2143,7 @@ async function renderTrainerAthleteData() {
   const athlete = trainerAthletes.find((row) => row.athlete_user_id === selectedTrainerAthleteId) || null;
   setText('trainerSelectedName', athlete ? getTrainerAthleteName(athlete) : '--');
   setText('trainerSelectedMeta', athlete ? getTrainerAthleteMeta(athlete) : selectedTrainerAthleteId);
+  setText('trainerSelectedAvatar', athlete ? getTrainerAthleteInitials(athlete) : '--');
   const tbody = document.getElementById('trainerWeightTableBody');
   if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">読み込み中...</td></tr>';
 

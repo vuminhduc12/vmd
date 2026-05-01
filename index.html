@@ -1603,8 +1603,13 @@
         <div class="settings-summary-grid admin-stats-grid">
           <div class="stat-card">
             <div class="stat-label">選択中の選手</div>
-            <div class="stat-val" id="trainerSelectedName">--</div>
-            <div class="stat-sub" id="trainerSelectedMeta">未選択</div>
+            <div style="display:flex;align-items:center;gap:12px;margin:8px 0">
+              <div id="trainerSelectedAvatar" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(232,57,74,.9),rgba(74,144,226,.75));color:#fff;font-family:'Oswald',sans-serif;font-size:20px;font-weight:800;box-shadow:0 0 18px rgba(232,57,74,.28)">--</div>
+              <div>
+                <div class="stat-val" id="trainerSelectedName">--</div>
+                <div class="stat-sub" id="trainerSelectedMeta">未選択</div>
+              </div>
+            </div>
           </div>
           <div class="stat-card">
             <div class="stat-label">最新体重</div>
