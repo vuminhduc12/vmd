@@ -1677,6 +1677,24 @@ textarea.input-field{resize:vertical;min-height:70px}
 .weight-data-table td:last-child{min-width:180px;white-space:normal;word-break:break-word}
 .filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .section-card-subtitle{font-size:12px;color:var(--tx-3);margin-top:4px}
+.trainer-guide-grid{padding:16px}
+.trainer-selected-profile{display:flex;align-items:center;gap:12px;margin:8px 0}
+.trainer-selected-avatar{
+  width:56px;height:56px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(232,57,74,.9),rgba(74,144,226,.75));
+  color:#fff;font-family:'Oswald',sans-serif;font-size:20px;font-weight:800;
+  box-shadow:0 0 18px rgba(232,57,74,.28);
+  flex:0 0 auto;
+}
+.trainer-photo-link{
+  display:inline-flex;align-items:center;gap:8px;
+  text-decoration:none;color:inherit;
+}
+.trainer-photo-thumb{
+  width:44px;height:44px;border-radius:10px;
+  object-fit:cover;border:1px solid var(--b1);
+}
 
 /* ══════════════════════════════════════════
    TOAST
@@ -1906,6 +1924,40 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .dash-grid-mid{grid-template-columns:1fr}
   .three-col-grid{grid-template-columns:1fr}
   .settings-summary-grid{grid-template-columns:1fr}
+  .trainer-page .page-header{
+    padding:18px 16px;
+    margin-bottom:16px;
+    border:1px solid rgba(232,57,74,0.22);
+    border-radius:22px;
+    background:
+      radial-gradient(circle at top right, rgba(232,57,74,0.18), transparent 34%),
+      linear-gradient(135deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012));
+    box-shadow:0 18px 44px rgba(0,0,0,0.28);
+  }
+  .trainer-guide-grid{
+    padding:14px;
+    gap:10px;
+  }
+  .trainer-guide-grid .stat-card{
+    background:linear-gradient(135deg, rgba(232,57,74,0.10), rgba(74,144,226,0.06));
+  }
+  .trainer-workspace{
+    gap:14px;
+  }
+  .trainer-summary-card{
+    background:
+      radial-gradient(circle at 10% 0%, rgba(240,192,64,0.10), transparent 28%),
+      var(--bg-card);
+  }
+  .trainer-profile-card{
+    border-color:rgba(232,57,74,0.20);
+  }
+  .trainer-selected-profile{
+    gap:14px;
+  }
+  .trainer-selected-avatar{
+    width:68px;height:68px;font-size:24px;
+  }
   body.standalone-mode .mobile-bottom-nav{
     display:flex;
     left:max(10px, env(safe-area-inset-left, 0px));
@@ -2055,6 +2107,83 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .weight-record-view .stats-grid{grid-template-columns:1fr}
   .weight-record-view .media-thumb-grid{grid-template-columns:1fr}
   .weight-data-table{min-width:560px}
+  .trainer-weight-table-wrap{
+    overflow:visible;
+    padding:0;
+  }
+  .trainer-weight-table{
+    min-width:0;
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0 12px;
+  }
+  .trainer-weight-table thead{
+    display:none;
+  }
+  .trainer-weight-table tbody tr{
+    display:block;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:18px;
+    overflow:hidden;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012)),
+      var(--bg-input);
+    box-shadow:0 12px 28px rgba(0,0,0,0.22);
+  }
+  .trainer-weight-table tbody td{
+    display:grid;
+    grid-template-columns:86px minmax(0,1fr);
+    gap:10px;
+    align-items:center;
+    padding:10px 14px;
+    border-bottom:1px solid rgba(255,255,255,0.055);
+    color:var(--tx-1);
+  }
+  .trainer-weight-table tbody td:last-child{
+    border-bottom:none;
+    min-width:0;
+  }
+  .trainer-weight-table tbody td.empty-cell{
+    display:block;
+    padding:28px 16px !important;
+    text-align:center;
+  }
+  .trainer-weight-table tbody td.empty-cell::before{
+    display:none;
+  }
+  .trainer-weight-table tbody td::before{
+    content:attr(data-label);
+    font-size:10px;
+    color:var(--tx-3);
+    font-weight:900;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+  }
+  .trainer-weight-table tbody td[data-label="体重"] strong{
+    color:var(--red-light);
+    font-size:18px;
+  }
+  .trainer-weight-table tbody td[data-label="写真"]{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  .trainer-weight-table tbody td[data-label="写真"]::before{
+    margin-bottom:2px;
+  }
+  .trainer-photo-link{
+    width:100%;
+    align-items:flex-end;
+    justify-content:space-between;
+    padding:8px;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px;
+    background:rgba(255,255,255,0.03);
+  }
+  .trainer-photo-thumb{
+    width:96px;height:96px;
+    border-radius:16px;
+    box-shadow:0 10px 24px rgba(0,0,0,0.28);
+  }
   .opponent-editor-shell{grid-template-columns:1fr}
   .opponent-editor-side{position:static;order:-1}
   .opponent-editor-headline{flex-direction:column}

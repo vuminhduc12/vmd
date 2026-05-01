@@ -1552,7 +1552,7 @@
   </div>
 
   <!-- ══════ TRAINER PAGE ══════ -->
-  <div class="page" id="page-trainer">
+  <div class="page trainer-page" id="page-trainer">
     <div class="page-header">
       <h1><i class="fas fa-user-group" style="color:var(--blue);font-size:24px"></i> <span id="page-trainer-title-text">トレーナー閲覧</span></h1>
       <p class="page-subtitle" id="page-trainer-subtitle-text">トレーナー用画面：閲覧許可された選手の状態を確認します</p>
@@ -1562,7 +1562,7 @@
       <div class="section-card-header">
         <h3><i class="fas fa-circle-info"></i> この画面でできること</h3>
       </div>
-      <div class="settings-summary-grid admin-stats-grid" style="padding:16px">
+      <div class="settings-summary-grid admin-stats-grid trainer-guide-grid">
         <div class="stat-card">
           <div class="stat-label">STEP 1</div>
           <div class="stat-val" style="font-size:18px">選手が許可</div>
@@ -1591,20 +1591,20 @@
       </button>
     </div>
 
-    <div class="two-col" id="trainerWorkspace" style="margin-bottom:16px;display:none">
+    <div class="two-col trainer-workspace" id="trainerWorkspace" style="margin-bottom:16px;display:none">
       <div class="form-card">
         <h3 class="form-title"><i class="fas fa-users"></i> 1. 担当選手一覧</h3>
         <p class="settings-note">選手があなたのGoogleメールに閲覧許可を出すと、ここに名前が表示されます。見たい選手を選択してください。</p>
         <div id="trainerAthleteList" class="settings-actions"></div>
       </div>
 
-      <div class="form-card">
+      <div class="form-card trainer-summary-card">
         <h3 class="form-title"><i class="fas fa-chart-line"></i> 2. 選手サマリー</h3>
         <div class="settings-summary-grid admin-stats-grid">
-          <div class="stat-card">
+          <div class="stat-card trainer-profile-card">
             <div class="stat-label">選択中の選手</div>
-            <div style="display:flex;align-items:center;gap:12px;margin:8px 0">
-              <div id="trainerSelectedAvatar" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(232,57,74,.9),rgba(74,144,226,.75));color:#fff;font-family:'Oswald',sans-serif;font-size:20px;font-weight:800;box-shadow:0 0 18px rgba(232,57,74,.28)">--</div>
+            <div class="trainer-selected-profile">
+              <div id="trainerSelectedAvatar" class="trainer-selected-avatar">--</div>
               <div>
                 <div class="stat-val" id="trainerSelectedName">--</div>
                 <div class="stat-sub" id="trainerSelectedMeta">未選択</div>
@@ -1630,8 +1630,8 @@
         <h3><i class="fas fa-weight-scale"></i> 3. 体重ログ一覧</h3>
         <span class="section-card-subtitle">トレーナーは閲覧のみ。編集・削除はできません。</span>
       </div>
-      <div class="table-wrap">
-        <table class="data-table weight-data-table">
+      <div class="table-wrap trainer-weight-table-wrap">
+        <table class="data-table weight-data-table trainer-weight-table">
           <thead><tr>
             <th>日付</th><th>区分</th><th>体重</th><th>BMI</th><th>体脂肪率</th><th>写真</th><th>メモ</th>
           </tr></thead>

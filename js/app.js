@@ -2156,8 +2156,8 @@ function renderTrainerWeightPhotoCell(photos = []) {
   const first = photos[0];
   const extra = photos.length > 1 ? `<span class="table-subnote">+${photos.length - 1}枚</span>` : '';
   return `
-    <a href="${escapeHtml(first.signed_url)}" target="_blank" rel="noopener" title="体重写真を開く" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit">
-      <img src="${escapeHtml(first.signed_url)}" alt="体重写真" style="width:44px;height:44px;border-radius:10px;object-fit:cover;border:1px solid var(--b1)">
+    <a href="${escapeHtml(first.signed_url)}" target="_blank" rel="noopener" title="体重写真を開く" class="trainer-photo-link">
+      <img src="${escapeHtml(first.signed_url)}" alt="体重写真" class="trainer-photo-thumb">
       ${extra}
     </a>
   `;
@@ -2196,13 +2196,13 @@ async function renderTrainerAthleteData() {
     const activeHeight = Number(latest?.height_cm) || Number(athlete?.profile?.settings?.heightCm) || DEFAULT_SETTINGS.heightCm;
     tbody.innerHTML = [...weights].reverse().map((w) => `
       <tr>
-        <td>${escapeHtml(formatDate(w.date))}</td>
-        <td><span class="badge">${escapeHtml(getWeightSlotLabel(w.slot))}</span></td>
-        <td><strong>${escapeHtml(w.weight)} kg</strong></td>
-        <td>${calculateBMI(w.weight, w.height_cm || activeHeight)?.toFixed(1) || '--'}</td>
-        <td>${w.body_fat ? `${escapeHtml(w.body_fat)} %` : '--'}</td>
-        <td>${renderTrainerWeightPhotoCell(photoMap.get(w.id) || [])}</td>
-        <td>${escapeHtml(w.note || '--')}</td>
+        <td data-label="日付">${escapeHtml(formatDate(w.date))}</td>
+        <td data-label="区分"><span class="badge">${escapeHtml(getWeightSlotLabel(w.slot))}</span></td>
+        <td data-label="体重"><strong>${escapeHtml(w.weight)} kg</strong></td>
+        <td data-label="BMI">${calculateBMI(w.weight, w.height_cm || activeHeight)?.toFixed(1) || '--'}</td>
+        <td data-label="体脂肪率">${w.body_fat ? `${escapeHtml(w.body_fat)} %` : '--'}</td>
+        <td data-label="写真">${renderTrainerWeightPhotoCell(photoMap.get(w.id) || [])}</td>
+        <td data-label="メモ">${escapeHtml(w.note || '--')}</td>
       </tr>
     `).join('');
   } catch (error) {
