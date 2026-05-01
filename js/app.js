@@ -2136,7 +2136,7 @@ async function renderAthleteTrainerNotesPanel() {
     list.innerHTML = notes.slice(0, 3).map((note) => `
       <div class="trainer-note-item">
         <div class="trainer-note-head">
-          <span><i class="fas fa-comment-dots"></i> ${escapeHtml(formatDateTimeJP(note.created_at))}</span>
+          <span><i class="fas fa-comment-dots"></i> ${escapeHtml(getTrainerNoteSenderName(note))} / ${escapeHtml(formatDateTimeJP(note.created_at))}</span>
         </div>
         <div class="trainer-note-body">${escapeHtml(note.note || '')}</div>
       </div>
@@ -2145,6 +2145,11 @@ async function renderAthleteTrainerNotesPanel() {
     console.error('BOXER PRO: athlete trainer notes', error);
     list.innerHTML = '<div class="settings-note">トレーナーコメントを取得できませんでした。Supabase migration 004 が適用済みか確認してください。</div>';
   }
+}
+
+function getTrainerNoteSenderName(note) {
+  const name = String(note?.trainer_display_name || '').trim();
+  return name || 'トレーナー';
 }
 
 function getTrainerNotificationReadIds() {
@@ -2182,12 +2187,13 @@ function renderTrainerNotificationCards(notes = []) {
   const readIds = getTrainerNotificationReadIds();
   return notes.map((note) => {
     const unread = note?.id && !readIds.has(String(note.id));
+    const senderName = getTrainerNoteSenderName(note);
     return `
       <div class="trainer-notification-item ${unread ? 'is-unread' : 'is-read'}">
         <div class="trainer-notification-marker"><i class="fas ${unread ? 'fa-bell' : 'fa-check'}"></i></div>
         <div class="trainer-notification-content">
           <div class="trainer-notification-head">
-            <span class="trainer-notification-title">${unread ? '新しいコメント' : '確認済みコメント'}</span>
+            <span class="trainer-notification-title">${escapeHtml(senderName)} からの${unread ? '新しいコメント' : 'コメント'}</span>
             <span class="trainer-notification-date">${escapeHtml(formatDateTimeJP(note.created_at))}</span>
           </div>
           <div class="trainer-notification-body">${escapeHtml(note.note || '')}</div>
@@ -2559,7 +2565,7 @@ function renderTrainerNotes(notes = []) {
   list.innerHTML = notes.map((note) => `
     <div class="trainer-note-item">
       <div class="trainer-note-head">
-        <span><i class="fas fa-note-sticky"></i> ${escapeHtml(formatDateTimeJP(note.created_at))}</span>
+        <span><i class="fas fa-note-sticky"></i> ${escapeHtml(getTrainerNoteSenderName(note))} / ${escapeHtml(formatDateTimeJP(note.created_at))}</span>
         <button type="button" class="trainer-note-delete" title="コメントを削除" onclick="deleteTrainerNoteFromPage('${escapeHtml(note.id)}')">
           <i class="fas fa-trash"></i>
         </button>

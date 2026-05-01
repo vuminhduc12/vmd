@@ -1,6 +1,30 @@
--- BOXER PRO — trainer notes RPC helpers
--- Use this after 004_boxer_trainer_notes.sql. This is intentionally separate
--- so projects that already ran the first 004 can still receive the save/delete RPCs.
+-- BOXER PRO — show trainer display names on athlete notifications
+-- Use after 004/005 if those migrations were already applied before this change.
+
+alter table public.boxer_trainer_notes
+  add column if not exists trainer_display_name text not null default 'トレーナー';
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'boxer_trainer_notes_trainer_name_check'
+  ) then
+    alter table public.boxer_trainer_notes
+      add constraint boxer_trainer_notes_trainer_name_check
+      check (char_length(btrim(trainer_display_name)) between 1 and 80);
+  end if;
+end $$;
+
+update public.boxer_trainer_notes n
+set trainer_display_name = left(
+  coalesce(nullif(btrim(p.settings ->> 'athleteName'), ''), n.trainer_display_name, 'トレーナー'),
+  80
+)
+from public.boxer_profiles p
+where p.user_id = n.trainer_user_id
+  and (n.trainer_display_name is null or n.trainer_display_name = 'トレーナー');
 
 create or replace function public.boxer_create_trainer_note(
   target_athlete_user_id uuid,
@@ -48,39 +72,4 @@ begin
 end;
 $$;
 
-create or replace function public.boxer_delete_trainer_note(note_id uuid)
-returns boolean
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  target_note public.boxer_trainer_notes;
-begin
-  if auth.uid() is null then
-    raise exception 'ログインが必要です';
-  end if;
-
-  select * into target_note
-  from public.boxer_trainer_notes
-  where id = note_id;
-
-  if target_note.id is null then
-    return false;
-  end if;
-
-  if target_note.trainer_user_id <> auth.uid()
-     or not public.boxer_is_approved_trainer(target_note.athlete_user_id) then
-    raise exception 'このコメントを削除する権限がありません';
-  end if;
-
-  delete from public.boxer_trainer_notes
-  where id = note_id
-    and trainer_user_id = auth.uid();
-
-  return true;
-end;
-$$;
-
 grant execute on function public.boxer_create_trainer_note(uuid, text) to authenticated;
-grant execute on function public.boxer_delete_trainer_note(uuid) to authenticated;

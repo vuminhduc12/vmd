@@ -247,7 +247,8 @@ async function fetchCurrentUserRoles() {
     return [...new Set((data || []).map((row) => String(row.role || '').trim()).filter(Boolean))];
   } catch (error) {
     const code = String(error?.code || '');
-    if (code === '42P01' || code === 'PGRST205') {
+    const finalCode = String(error?.code || code);
+    if (finalCode === '42P01' || finalCode === 'PGRST205') {
       console.warn('BOXER PRO: boxer_user_roles migration has not been applied yet');
       return [];
     }
@@ -577,14 +578,27 @@ async function fetchTrainerNotes(athleteUserId) {
   const sb = await getSupabaseClient();
   const targetUserId = String(athleteUserId || '').trim();
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE || !targetUserId) return [];
-  const { data, error } = await sb
+  let { data, error } = await sb
     .from('boxer_trainer_notes')
-    .select('id, athlete_user_id, trainer_user_id, note, created_at, updated_at')
+    .select('id, athlete_user_id, trainer_user_id, trainer_display_name, note, created_at, updated_at')
     .eq('athlete_user_id', targetUserId)
     .order('created_at', { ascending: false })
     .limit(20);
   if (error) {
     const code = String(error?.code || '');
+    const message = String(error?.message || '');
+    if (code === '42703' || code === 'PGRST204' || message.includes('trainer_display_name')) {
+      const fallback = await sb
+        .from('boxer_trainer_notes')
+        .select('id, athlete_user_id, trainer_user_id, note, created_at, updated_at')
+        .eq('athlete_user_id', targetUserId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!fallback.error) {
+        return (fallback.data || []).map((row) => ({ ...row, trainer_display_name: 'トレーナー' }));
+      }
+      error = fallback.error;
+    }
     if (code === '42P01' || code === 'PGRST205') {
       console.warn('BOXER PRO: boxer_trainer_notes migration has not been applied yet');
       return [];

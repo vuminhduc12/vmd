@@ -5,11 +5,16 @@ create table if not exists public.boxer_trainer_notes (
   id uuid primary key default gen_random_uuid(),
   athlete_user_id uuid not null references auth.users (id) on delete cascade,
   trainer_user_id uuid not null references auth.users (id) on delete cascade,
+  trainer_display_name text not null default 'トレーナー',
   note text not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  constraint boxer_trainer_notes_trainer_name_check check (char_length(btrim(trainer_display_name)) between 1 and 80),
   constraint boxer_trainer_notes_note_check check (char_length(btrim(note)) between 1 and 1200)
 );
+
+alter table public.boxer_trainer_notes
+  add column if not exists trainer_display_name text not null default 'トレーナー';
 
 create index if not exists idx_boxer_trainer_notes_athlete
   on public.boxer_trainer_notes (athlete_user_id, created_at desc);
@@ -78,6 +83,7 @@ as $$
 declare
   inserted_note public.boxer_trainer_notes;
   cleaned_note text := btrim(coalesce(note_text, ''));
+  trainer_name text;
 begin
   if auth.uid() is null then
     raise exception 'ログインが必要です';
@@ -95,8 +101,16 @@ begin
     raise exception 'この選手へのコメント権限がありません';
   end if;
 
-  insert into public.boxer_trainer_notes (athlete_user_id, trainer_user_id, note)
-  values (target_athlete_user_id, auth.uid(), cleaned_note)
+  select btrim(coalesce(p.settings ->> 'athleteName', ''))
+    into trainer_name
+  from public.boxer_profiles p
+  where p.user_id = auth.uid();
+
+  trainer_name := coalesce(nullif(trainer_name, ''), lower(coalesce(auth.jwt() ->> 'email', 'トレーナー')));
+  trainer_name := left(trainer_name, 80);
+
+  insert into public.boxer_trainer_notes (athlete_user_id, trainer_user_id, trainer_display_name, note)
+  values (target_athlete_user_id, auth.uid(), trainer_name, cleaned_note)
   returning * into inserted_note;
 
   return inserted_note;
