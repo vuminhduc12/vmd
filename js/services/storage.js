@@ -315,13 +315,16 @@ async function boxerSupabaseApiGet(table, params = '') {
   const sb = await getSupabaseClient();
   const tn = BOXER_SUPABASE_TABLES[table];
   if (!sb || !tn) throw new Error('Supabase not available');
+  const user = await getSupabaseUserSafe(sb);
+  if (!user) throw new Error('Not signed in');
   const rows = [];
   for (let page = 0; page < SUPABASE_MAX_PAGES; page += 1) {
     const from = page * SUPABASE_PAGE_SIZE;
     const to = from + SUPABASE_PAGE_SIZE - 1;
     const { data, error } = await sb
       .from(tn)
-      .select('id, payload, created_at, updated_at')
+      .select('id, user_id, payload, created_at, updated_at')
+      .eq('user_id', user.id)
       .range(from, to);
     if (error) throw error;
     const chunk = (data || []).map(boxerRowToRecord);
@@ -476,7 +479,9 @@ async function boxerSupabaseApiDelete(table, id) {
   const sb = await getSupabaseClient();
   const tn = BOXER_SUPABASE_TABLES[table];
   if (!sb || !tn) throw new Error('Supabase not available');
-  const { error } = await sb.from(tn).delete().eq('id', id);
+  const user = await getSupabaseUserSafe(sb);
+  if (!user) throw new Error('Not signed in');
+  const { error } = await sb.from(tn).delete().eq('user_id', user.id).eq('id', id);
   if (error) throw error;
   return true;
 }
@@ -485,14 +490,17 @@ async function boxerSupabaseApiPut(table, id, data) {
   const sb = await getSupabaseClient();
   const tn = BOXER_SUPABASE_TABLES[table];
   if (!sb || !tn) throw new Error('Supabase not available');
-  const { data: prevRow, error: e0 } = await sb.from(tn).select('payload').eq('id', id).maybeSingle();
+  const user = await getSupabaseUserSafe(sb);
+  if (!user) throw new Error('Not signed in');
+  const { data: prevRow, error: e0 } = await sb.from(tn).select('payload').eq('user_id', user.id).eq('id', id).maybeSingle();
   if (e0) throw e0;
   const prev = prevRow?.payload && typeof prevRow.payload === 'object' ? prevRow.payload : {};
   const nextPayload = { ...prev, ...data, id, updated_at: new Date().toISOString() };
   const { data: row, error } = await sb.from(tn)
     .update({ payload: nextPayload })
+    .eq('user_id', user.id)
     .eq('id', id)
-    .select('id, payload, created_at, updated_at')
+    .select('id, user_id, payload, created_at, updated_at')
     .single();
   if (error) throw error;
   return boxerRowToRecord(row);
