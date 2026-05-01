@@ -138,6 +138,7 @@ const UI_TEXT = {
       training: '練習スケジュール',
       calories: 'カロリー計算',
       fight: '試合目標',
+      trainer: 'トレーナー閲覧',
       settings: 'マイ設定',
     },
     navLabels: {
@@ -147,6 +148,7 @@ const UI_TEXT = {
       training: '練習スケジュール',
       calories: 'カロリー計算',
       fight: '試合目標',
+      trainer: 'トレーナー閲覧',
       settings: 'マイ設定',
     },
     mobileNavLabels: {
@@ -210,6 +212,7 @@ const UI_TEXT = {
       training: 'Lịch tập',
       calories: 'Tính calo',
       fight: 'Mục tiêu trận đấu',
+      trainer: 'HLV xem dữ liệu',
       settings: 'Cài đặt',
     },
     navLabels: {
@@ -219,6 +222,7 @@ const UI_TEXT = {
       training: 'Luyện tập',
       calories: 'Calo',
       fight: 'Trận đấu',
+      trainer: 'HLV',
       settings: 'Cài đặt',
     },
     mobileNavLabels: {
@@ -463,7 +467,7 @@ const DEFAULT_SETTINGS = {
   fatLossTargetDate: '',
 };
 
-const APP_PAGE_IDS = ['dashboard', 'weight', 'meals', 'training', 'calories', 'fight', 'settings'];
+const APP_PAGE_IDS = ['dashboard', 'weight', 'meals', 'training', 'calories', 'fight', 'trainer', 'settings'];
 
 function normalizeAppPageId(name) {
   const p = String(name == null ? '' : name).trim();
@@ -778,6 +782,10 @@ let pendingOpponentPhotoPreviewUrl = '';
 let aiCoachMessages = [];
 let aiCoachPending = false;
 let aiCoachOpen = false;
+let trainerAthletes = [];
+let selectedTrainerAthleteId = '';
+let trainerInviteRenderSeq = 0;
+let trainerPageRenderSeq = 0;
 let dashboardSectionOrderApplied = false;
 let dashboardRenderTimer = null;
 const DASHBOARD_RENDER_DEBOUNCE_MS = 120;
@@ -1353,6 +1361,8 @@ function applyLanguageUi() {
     'page-calories-subtitle-text': lang === 'vi' ? 'Tính BMR/TDEE và quản lý cân bằng PFC' : 'BMR / TDEE 計算とPFCバランス管理',
     'page-fight-title-text': lang === 'vi' ? 'Quản lý mục tiêu trận đấu' : '試合目標管理',
     'page-fight-subtitle-text': lang === 'vi' ? 'Đếm ngược trận đấu và tiến độ giảm cân' : '次の試合に向けたカウントダウンと減量進捗',
+    'page-trainer-title-text': lang === 'vi' ? 'HLV xem dữ liệu' : 'トレーナー閲覧',
+    'page-trainer-subtitle-text': lang === 'vi' ? 'Xem dữ liệu cân nặng của võ sĩ đã cấp quyền' : '承認済み選手の体重管理データを閲覧できます',
   };
   Object.entries(pageHeaderMap).forEach(([id, text]) => {
     const el = document.getElementById(id);
@@ -1947,6 +1957,192 @@ async function sendAiCoachQuestion() {
   }
 }
 
+function getTrainerAthleteName(row) {
+  const settings = row?.profile?.settings && typeof row.profile.settings === 'object' ? row.profile.settings : {};
+  return settings.athleteName || `選手 ${String(row?.athlete_user_id || '').slice(0, 8)}`;
+}
+
+function getTrainerAthleteMeta(row) {
+  const settings = row?.profile?.settings && typeof row.profile.settings === 'object' ? row.profile.settings : {};
+  const role = settings.athleteRole || 'Boxer';
+  const lastSeen = row?.profile?.last_seen_at ? `最終利用 ${formatDate(row.profile.last_seen_at)}` : '最終利用 --';
+  return `${role} / ${lastSeen}`;
+}
+
+async function renderTrainerInvitePanel() {
+  const list = document.getElementById('trainerInviteList');
+  const card = document.getElementById('trainer-invite-card');
+  if (!list || !card) return;
+  const seq = trainerInviteRenderSeq + 1;
+  trainerInviteRenderSeq = seq;
+  if (activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    list.innerHTML = '<div class="settings-note">クラウドログイン後にトレーナー閲覧許可を設定できます。</div>';
+    return;
+  }
+
+  list.innerHTML = '<div class="settings-note">読み込み中...</div>';
+  try {
+    const links = await fetchAthleteTrainerLinks();
+    if (seq !== trainerInviteRenderSeq) return;
+    if (!links.length) {
+      list.innerHTML = '<div class="settings-note">閲覧を許可しているトレーナーはまだいません。</div>';
+      return;
+    }
+    list.innerHTML = links.map((link) => `
+      <div class="stat-card" style="text-align:left">
+        <div class="stat-label">閲覧許可中</div>
+        <div class="stat-val" style="font-size:18px">${escapeHtml(link.trainer_email)}</div>
+        <div class="stat-sub">${escapeHtml(formatDateTimeJP(link.accepted_at || link.created_at))}</div>
+        <button type="button" class="btn btn-sm btn-danger" style="margin-top:8px" onclick="removeTrainerInviteFromSettings('${escapeHtml(link.id)}')">
+          <i class="fas fa-user-xmark"></i> 解除
+        </button>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('BOXER PRO: trainer invite list', error);
+    list.innerHTML = '<div class="settings-note">トレーナー許可一覧を取得できませんでした。</div>';
+  }
+}
+
+async function saveTrainerInviteFromSettings() {
+  const input = document.getElementById('trainerInviteEmail');
+  const email = input?.value || '';
+  try {
+    await saveTrainerInvite(email);
+    if (input) input.value = '';
+    await renderTrainerInvitePanel();
+    showToast('トレーナーに閲覧を許可しました', 'success');
+  } catch (error) {
+    console.error('BOXER PRO: save trainer invite', error);
+    showToast(error?.message || 'トレーナー許可に失敗しました', 'error');
+  }
+}
+
+async function removeTrainerInviteFromSettings(linkId) {
+  showModal('閲覧許可を解除', 'このトレーナーの閲覧権限を解除しますか？', async () => {
+    try {
+      await deleteTrainerInvite(linkId);
+      await renderTrainerInvitePanel();
+      showToast('トレーナーの閲覧権限を解除しました', 'info');
+    } catch (error) {
+      console.error('BOXER PRO: delete trainer invite', error);
+      showToast('解除に失敗しました', 'error');
+    }
+  });
+}
+
+function renderTrainerAthleteList() {
+  const list = document.getElementById('trainerAthleteList');
+  if (!list) return;
+  if (!trainerAthletes.length) {
+    list.innerHTML = '<div class="settings-note">担当選手はまだいません。選手側の設定画面であなたのメールを登録してもらってください。</div>';
+    return;
+  }
+  list.innerHTML = trainerAthletes.map((row) => {
+    const athleteId = row.athlete_user_id;
+    const active = athleteId === selectedTrainerAthleteId;
+    return `
+      <button type="button" class="btn ${active ? 'btn-primary' : 'btn-secondary'} btn-full" onclick="selectTrainerAthlete('${escapeHtml(athleteId)}')">
+        <i class="fas fa-user"></i> ${escapeHtml(getTrainerAthleteName(row))}
+      </button>
+    `;
+  }).join('');
+}
+
+function renderTrainerEmptyData(message) {
+  setText('trainerSelectedName', '--');
+  setText('trainerSelectedMeta', message || '未選択');
+  setText('trainerLatestWeight', '-- kg');
+  setText('trainerLatestWeightDate', '--');
+  setText('trainerRecordCounts', '--');
+  const tbody = document.getElementById('trainerWeightTableBody');
+  if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="empty-cell">${escapeHtml(message || '担当選手を選択してください')}</td></tr>`;
+}
+
+async function renderTrainerAthleteData() {
+  const section = document.getElementById('trainerWeightSection');
+  if (section) section.style.display = selectedTrainerAthleteId ? '' : 'none';
+  if (!selectedTrainerAthleteId) {
+    renderTrainerEmptyData('担当選手を選択してください');
+    return;
+  }
+
+  const athlete = trainerAthletes.find((row) => row.athlete_user_id === selectedTrainerAthleteId) || null;
+  setText('trainerSelectedName', athlete ? getTrainerAthleteName(athlete) : '--');
+  setText('trainerSelectedMeta', athlete ? getTrainerAthleteMeta(athlete) : selectedTrainerAthleteId);
+  const tbody = document.getElementById('trainerWeightTableBody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">読み込み中...</td></tr>';
+
+  try {
+    const snapshot = await fetchTrainerAthleteSnapshot(selectedTrainerAthleteId);
+    const weights = (snapshot.weight_logs || []).map(normalizeWeightLogRecord);
+    weights.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const latest = weights.length ? weights[weights.length - 1] : null;
+    setText('trainerLatestWeight', latest?.weight != null ? `${latest.weight} kg` : '-- kg');
+    setText('trainerLatestWeightDate', latest?.date ? `${formatDate(latest.date)} ${getWeightSlotLabel(latest.slot)}` : '--');
+    setText('trainerRecordCounts', `${weights.length} / ${(snapshot.meals || []).length} / ${(snapshot.training_logs || []).length}`);
+
+    if (!tbody) return;
+    if (!weights.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">体重ログはまだありません</td></tr>';
+      return;
+    }
+    const activeHeight = Number(latest?.height_cm) || Number(athlete?.profile?.settings?.heightCm) || DEFAULT_SETTINGS.heightCm;
+    tbody.innerHTML = [...weights].reverse().map((w) => `
+      <tr>
+        <td>${escapeHtml(formatDate(w.date))}</td>
+        <td><span class="badge">${escapeHtml(getWeightSlotLabel(w.slot))}</span></td>
+        <td><strong>${escapeHtml(w.weight)} kg</strong></td>
+        <td>${calculateBMI(w.weight, w.height_cm || activeHeight)?.toFixed(1) || '--'}</td>
+        <td>${w.body_fat ? `${escapeHtml(w.body_fat)} %` : '--'}</td>
+        <td>${escapeHtml(w.note || '--')}</td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    console.error('BOXER PRO: trainer athlete data', error);
+    renderTrainerEmptyData('選手データを取得できませんでした。閲覧許可またはSupabase RLSを確認してください。');
+  }
+}
+
+async function selectTrainerAthlete(athleteUserId) {
+  selectedTrainerAthleteId = String(athleteUserId || '').trim();
+  renderTrainerAthleteList();
+  await renderTrainerAthleteData();
+}
+
+async function renderTrainerPage() {
+  const gate = document.getElementById('trainerCloudGate');
+  const workspace = document.getElementById('trainerWorkspace');
+  const section = document.getElementById('trainerWeightSection');
+  if (!gate || !workspace) return;
+  const inCloud = activeStorageMode === STORAGE_MODE.SUPABASE;
+  gate.style.display = inCloud ? 'none' : '';
+  workspace.style.display = inCloud ? '' : 'none';
+  if (section) section.style.display = inCloud && selectedTrainerAthleteId ? '' : 'none';
+  if (!inCloud) {
+    renderTrainerEmptyData('クラウドログインが必要です');
+    return;
+  }
+
+  const seq = trainerPageRenderSeq + 1;
+  trainerPageRenderSeq = seq;
+  const list = document.getElementById('trainerAthleteList');
+  if (list) list.innerHTML = '<div class="settings-note">担当選手を読み込み中...</div>';
+  try {
+    trainerAthletes = await fetchTrainerAthletes();
+    if (seq !== trainerPageRenderSeq) return;
+    if (!trainerAthletes.some((row) => row.athlete_user_id === selectedTrainerAthleteId)) {
+      selectedTrainerAthleteId = trainerAthletes[0]?.athlete_user_id || '';
+    }
+    renderTrainerAthleteList();
+    await renderTrainerAthleteData();
+  } catch (error) {
+    console.error('BOXER PRO: render trainer page', error);
+    if (list) list.innerHTML = '<div class="settings-note">担当選手一覧を取得できませんでした。</div>';
+    renderTrainerEmptyData('担当選手一覧を取得できませんでした');
+  }
+}
+
 function renderSettingsPage() {
   try {
   setFieldValue('s-name', appSettings.athleteName);
@@ -1981,6 +2177,7 @@ function renderSettingsPage() {
   renderAiCoachMessages(false);
   updateAiCoachAvailability();
   updateSupabaseAuthUI();
+  void renderTrainerInvitePanel();
   applyLanguageUi();
   } catch (err) {
     console.error('BOXER PRO: renderSettingsPage', err);
@@ -2410,6 +2607,10 @@ function renderActivePageById(activePageId) {
   }
   if (activePageId === 'page-fight') {
     renderFightPage();
+    return;
+  }
+  if (activePageId === 'page-trainer') {
+    void renderTrainerPage();
     return;
   }
   if (activePageId === 'page-settings') {

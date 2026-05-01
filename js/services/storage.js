@@ -297,9 +297,18 @@ function boxerRowToRecord(row) {
   return {
     ...p,
     id: row.id,
+    user_id: row.user_id,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
+}
+
+function normalizeTrainerEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function isValidTrainerEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeTrainerEmail(email));
 }
 
 async function boxerSupabaseApiGet(table, params = '') {
@@ -320,6 +329,125 @@ async function boxerSupabaseApiGet(table, params = '') {
     if (chunk.length < SUPABASE_PAGE_SIZE) break;
   }
   return { data: sortRows(rows, params) };
+}
+
+async function boxerSupabaseApiGetForAthlete(table, athleteUserId, params = '') {
+  const sb = await getSupabaseClient();
+  const tn = BOXER_SUPABASE_TABLES[table];
+  const targetUserId = String(athleteUserId || '').trim();
+  if (!sb || !tn || !targetUserId) throw new Error('Supabase trainer read is not available');
+  const rows = [];
+  for (let page = 0; page < SUPABASE_MAX_PAGES; page += 1) {
+    const from = page * SUPABASE_PAGE_SIZE;
+    const to = from + SUPABASE_PAGE_SIZE - 1;
+    const { data, error } = await sb
+      .from(tn)
+      .select('id, user_id, payload, created_at, updated_at')
+      .eq('user_id', targetUserId)
+      .range(from, to);
+    if (error) throw error;
+    const chunk = (data || []).map(boxerRowToRecord);
+    rows.push(...chunk);
+    if (chunk.length < SUPABASE_PAGE_SIZE) break;
+  }
+  return { data: sortRows(rows, params) };
+}
+
+async function fetchAthleteTrainerLinks() {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return [];
+  const user = await getSupabaseUserSafe(sb);
+  if (!user) return [];
+  const { data, error } = await sb
+    .from('boxer_trainer_links')
+    .select('id, athlete_user_id, trainer_email, status, created_at, accepted_at, updated_at')
+    .eq('athlete_user_id', user.id)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function saveTrainerInvite(email) {
+  const trainerEmail = normalizeTrainerEmail(email);
+  if (!isValidTrainerEmail(trainerEmail)) {
+    throw new Error('トレーナーのメールアドレスを正しく入力してください');
+  }
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    throw new Error('クラウドログイン中のみ利用できます');
+  }
+  const user = await getSupabaseUserSafe(sb);
+  if (!user) throw new Error('ログインが必要です');
+  if (normalizeTrainerEmail(user.email) === trainerEmail) {
+    throw new Error('自分自身のメールは登録できません');
+  }
+  const timestamp = new Date().toISOString();
+  const { data, error } = await sb
+    .from('boxer_trainer_links')
+    .upsert({
+      athlete_user_id: user.id,
+      trainer_email: trainerEmail,
+      status: 'accepted',
+      accepted_at: timestamp,
+      updated_at: timestamp,
+    }, { onConflict: 'athlete_user_id,trainer_email' })
+    .select('id, athlete_user_id, trainer_email, status, created_at, accepted_at, updated_at')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteTrainerInvite(linkId) {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    throw new Error('クラウドログイン中のみ利用できます');
+  }
+  const id = String(linkId || '').trim();
+  if (!id) throw new Error('削除対象が不正です');
+  const { error } = await sb.from('boxer_trainer_links').delete().eq('id', id);
+  if (error) throw error;
+  return true;
+}
+
+async function fetchTrainerAthletes() {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return [];
+  const user = await getSupabaseUserSafe(sb);
+  if (!user?.email) return [];
+  const trainerEmail = normalizeTrainerEmail(user.email);
+  const { data: links, error } = await sb
+    .from('boxer_trainer_links')
+    .select('id, athlete_user_id, trainer_email, status, created_at, accepted_at, updated_at')
+    .eq('trainer_email', trainerEmail)
+    .eq('status', 'accepted')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  const rows = links || [];
+  const athleteIds = [...new Set(rows.map((row) => row.athlete_user_id).filter(Boolean))];
+  if (!athleteIds.length) return [];
+  const { data: profiles, error: profileError } = await sb
+    .from('boxer_profiles')
+    .select('user_id, settings, last_seen_at, updated_at')
+    .in('user_id', athleteIds);
+  if (profileError) throw profileError;
+  const profileMap = new Map((profiles || []).map((profile) => [profile.user_id, profile]));
+  return rows.map((link) => ({
+    ...link,
+    profile: profileMap.get(link.athlete_user_id) || null,
+  }));
+}
+
+async function fetchTrainerAthleteSnapshot(athleteUserId) {
+  const [weights, meals, training] = await Promise.all([
+    boxerSupabaseApiGetForAthlete('weight_logs', athleteUserId, 'sort=date'),
+    boxerSupabaseApiGetForAthlete('meals', athleteUserId, 'sort=date'),
+    boxerSupabaseApiGetForAthlete('training_logs', athleteUserId, 'sort=date'),
+  ]);
+  return {
+    weight_logs: weights.data || [],
+    meals: meals.data || [],
+    training_logs: training.data || [],
+  };
 }
 
 async function boxerSupabaseApiPost(table, data) {

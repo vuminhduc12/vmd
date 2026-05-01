@@ -52,6 +52,9 @@
         <span class="nav-badge" id="navFightBadge" style="display:none">!</span>
       </a>
     </li>
+    <li class="nav-item" data-page="trainer">
+      <a href="#" class="nav-link"><i class="fas fa-user-group"></i><span>トレーナー閲覧</span></a>
+    </li>
     <li class="nav-item" data-page="settings">
       <a href="#" class="nav-link"><i class="fas fa-sliders"></i><span>マイ設定</span></a>
     </li>
@@ -1548,6 +1551,67 @@
     </div>
   </div>
 
+  <!-- ══════ TRAINER PAGE ══════ -->
+  <div class="page" id="page-trainer">
+    <div class="page-header">
+      <h1><i class="fas fa-user-group" style="color:var(--blue);font-size:24px"></i> <span id="page-trainer-title-text">トレーナー閲覧</span></h1>
+      <p class="page-subtitle" id="page-trainer-subtitle-text">承認済み選手の体重管理データを閲覧できます</p>
+    </div>
+
+    <div class="section-card mt-16" id="trainerCloudGate">
+      <div class="section-card-header">
+        <h3><i class="fas fa-cloud"></i> クラウドログインが必要です</h3>
+      </div>
+      <p class="settings-note">トレーナー閲覧は Supabase ログイン中のみ利用できます。設定画面から Google ログインしてください。</p>
+      <button type="button" class="btn btn-primary" onclick="switchPage('settings')">
+        <i class="fas fa-right-to-bracket"></i> ログイン設定へ
+      </button>
+    </div>
+
+    <div class="two-col" id="trainerWorkspace" style="margin-bottom:16px;display:none">
+      <div class="form-card">
+        <h3 class="form-title"><i class="fas fa-users"></i> 担当選手</h3>
+        <p class="settings-note">選手があなたのメールアドレスを登録すると、ここに表示されます。</p>
+        <div id="trainerAthleteList" class="settings-actions"></div>
+      </div>
+
+      <div class="form-card">
+        <h3 class="form-title"><i class="fas fa-chart-line"></i> 選手サマリー</h3>
+        <div class="settings-summary-grid admin-stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">選手</div>
+            <div class="stat-val" id="trainerSelectedName">--</div>
+            <div class="stat-sub" id="trainerSelectedMeta">未選択</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">最新体重</div>
+            <div class="stat-val" id="trainerLatestWeight">-- kg</div>
+            <div class="stat-sub" id="trainerLatestWeightDate">--</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">記録数</div>
+            <div class="stat-val" id="trainerRecordCounts">--</div>
+            <div class="stat-sub">体重 / 食事 / 練習</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card mt-16" id="trainerWeightSection" style="display:none">
+      <div class="section-card-header">
+        <h3><i class="fas fa-weight-scale"></i> 体重ログ</h3>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table weight-data-table">
+          <thead><tr>
+            <th>日付</th><th>区分</th><th>体重</th><th>BMI</th><th>体脂肪率</th><th>メモ</th>
+          </tr></thead>
+          <tbody id="trainerWeightTableBody"><tr><td colspan="6" class="empty-cell">担当選手を選択してください</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════ SETTINGS PAGE ══════ -->
   <div class="page" id="page-settings">
     <div class="page-header">
@@ -1622,6 +1686,7 @@
               <option value="training">練習スケジュール</option>
               <option value="calories">カロリー計算</option>
               <option value="fight">試合目標</option>
+              <option value="trainer">トレーナー閲覧</option>
               <option value="settings">マイ設定</option>
             </select>
           </div>
@@ -1697,6 +1762,26 @@
           <div class="settings-note" style="margin-top:8px">
             Supabase で SQL を実行し、Authentication → Google を有効にしてください。<code>supabase/migrations/001_boxer_pro_schema.sql</code> を参照。
           </div>
+        </div>
+
+        <div class="form-card" id="trainer-invite-card">
+          <h3 class="form-title"><i class="fas fa-user-plus"></i> トレーナー閲覧許可</h3>
+          <p class="settings-note">登録したトレーナーのGoogleメールに、あなたの体重・食事・練習ログの閲覧権限を付与します。編集や削除はできません。</p>
+          <div class="form-row">
+            <div class="form-group" style="flex:1">
+              <label class="form-label">トレーナーのメール</label>
+              <input type="email" id="trainerInviteEmail" class="input-field" placeholder="trainer@example.com">
+            </div>
+          </div>
+          <div class="settings-actions" style="margin-top:10px">
+            <button type="button" class="btn btn-primary btn-full" onclick="saveTrainerInviteFromSettings()">
+              <i class="fas fa-user-check"></i> 閲覧を許可
+            </button>
+            <button type="button" class="btn btn-ghost btn-full" onclick="renderTrainerInvitePanel()">
+              <i class="fas fa-rotate"></i> 一覧を更新
+            </button>
+          </div>
+          <div id="trainerInviteList" class="settings-actions" style="margin-top:12px"></div>
         </div>
 
         <div class="form-card" id="admin-stats-card" hidden>
@@ -1883,12 +1968,12 @@
 
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
-<script src="js/core/navigation.js?v=31"></script>
-<script src="js/services/storage.js?v=31"></script>
+<script src="js/core/navigation.js?v=32"></script>
+<script src="js/services/storage.js?v=32"></script>
 <script src="js/pages/weight.js?v=31"></script>
 <script src="js/pages/fight.js?v=31"></script>
 <script src="js/core/helpers.js?v=31"></script>
 <script src="js/core/init.js?v=31"></script>
-<script src="js/app.js?v=31"></script>
+<script src="js/app.js?v=32"></script>
 </body>
 </html>
