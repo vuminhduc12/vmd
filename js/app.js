@@ -2176,7 +2176,7 @@ async function renderTrainerAthleteData() {
   setText('trainerSelectedMeta', athlete ? getTrainerAthleteMeta(athlete) : selectedTrainerAthleteId);
   setText('trainerSelectedAvatar', athlete ? getTrainerAthleteInitials(athlete) : '--');
   const tbody = document.getElementById('trainerWeightTableBody');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">読み込み中...</td></tr>';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">読み込み中...</td></tr>';
 
   try {
     const snapshot = await fetchTrainerAthleteSnapshot(selectedTrainerAthleteId);
