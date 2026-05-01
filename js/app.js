@@ -537,7 +537,7 @@ function applyGoalModeUi() {
   document.querySelectorAll('.nav-item[data-page]').forEach((item) => {
     const page = item.dataset.page;
     if (trainerAccessAvailable) {
-      item.style.display = page === 'trainer' ? '' : 'none';
+      item.style.display = page === 'trainer' || page === 'settings' ? '' : 'none';
       return;
     }
     item.style.display = page === 'trainer' ? 'none' : '';
@@ -590,7 +590,7 @@ function applyGoalModeUi() {
     switchPage('dashboard');
     trainerNavRedirecting = false;
   }
-  if (trainerAccessAvailable && activePage !== 'page-trainer' && !trainerNavRedirecting) {
+  if (trainerAccessAvailable && activePage !== 'page-trainer' && activePage !== 'page-settings' && !trainerNavRedirecting) {
     trainerNavRedirecting = true;
     switchPage('trainer');
     trainerNavRedirecting = false;
