@@ -2010,7 +2010,21 @@ function syncTrainerNavVisibility(athletes = trainerAthletes) {
   if (!trainerAccessAvailable) {
     selectedTrainerAthleteId = '';
   }
+  if (trainerAccessAvailable) {
+    ['settings-storage-card', 'admin-stats-card'].forEach((id) => {
+      const card = document.getElementById(id);
+      if (card) card.hidden = true;
+    });
+  }
   applyGoalModeUi();
+}
+
+function isTrainerAccessActive() {
+  return !!trainerAccessAvailable;
+}
+
+if (typeof window !== 'undefined') {
+  window.isTrainerAccessActive = isTrainerAccessActive;
 }
 
 async function refreshTrainerNavAccess() {

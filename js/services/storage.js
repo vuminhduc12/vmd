@@ -867,6 +867,12 @@ function resetAdminStatsUi() {
   aiCoachAdminAllowed = false;
 }
 
+function isTrainerAccessActiveForSettings() {
+  return typeof window !== 'undefined'
+    && typeof window.isTrainerAccessActive === 'function'
+    && window.isTrainerAccessActive();
+}
+
 async function fetchAdminStats() {
   const sb = await getSupabaseClient();
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return null;
@@ -962,10 +968,12 @@ async function updateAdminStatsUi() {
 
   resetAdminStatsUi();
   if (!isSupabaseConfigured()) return;
+  if (isTrainerAccessActiveForSettings()) return;
 
   try {
     const data = await fetchAdminStats();
     if (!data) return;
+    if (isTrainerAccessActiveForSettings()) return;
     if (storageCard) storageCard.hidden = false;
     card.hidden = false;
     totalEl.textContent = String(data.total_users ?? '--');
