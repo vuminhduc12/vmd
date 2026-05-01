@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/app-icon.svg">
-  <link rel="stylesheet" href="css/style.css?v=33">
+  <link rel="stylesheet" href="css/style.css?v=34">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -1762,6 +1762,9 @@
             <button type="button" class="btn btn-sm btn-ghost" onclick="markAllTrainerNotificationsRead()">
               <i class="fas fa-check-double"></i> 全て既読
             </button>
+            <button type="button" class="btn btn-sm btn-ghost" id="trainerNotificationArchiveToggle" onclick="toggleTrainerNotificationArchiveView()">
+              <i class="fas fa-box-archive"></i> 履歴
+            </button>
             <button type="button" class="btn btn-sm btn-ghost" onclick="renderNotificationsPage()">
               <i class="fas fa-rotate"></i> 更新
             </button>
@@ -2199,11 +2202,11 @@
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script src="js/core/navigation.js?v=33"></script>
-<script src="js/services/storage.js?v=34"></script>
+<script src="js/services/storage.js?v=35"></script>
 <script src="js/pages/weight.js?v=31"></script>
 <script src="js/pages/fight.js?v=31"></script>
 <script src="js/core/helpers.js?v=31"></script>
 <script src="js/core/init.js?v=31"></script>
-<script src="js/app.js?v=35"></script>
+<script src="js/app.js?v=36"></script>
 </body>
 </html>

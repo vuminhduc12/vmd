@@ -530,6 +530,7 @@ function isFightModeEnabled() {
 
 let goalModeUiRedirecting = false;
 let trainerNavRedirecting = false;
+let trainerNotificationsShowArchived = false;
 
 function applyGoalModeUi() {
   const mode = getCurrentGoalMode();
@@ -2183,20 +2184,30 @@ function updateTrainerNotificationBadge(notes = null) {
   badge.style.display = unreadCount > 0 ? '' : 'none';
 }
 
-function renderTrainerNotificationCards(notes = []) {
+function renderTrainerNotificationCards(notes = [], options = {}) {
   const readIds = getTrainerNotificationReadIds();
+  const archivedView = !!options.archivedView;
   return notes.map((note) => {
     const unread = note?.id && !readIds.has(String(note.id));
     const senderName = getTrainerNoteSenderName(note);
     return `
       <div class="trainer-notification-item ${unread ? 'is-unread' : 'is-read'}">
-        <div class="trainer-notification-marker"><i class="fas ${unread ? 'fa-bell' : 'fa-check'}"></i></div>
+        <div class="trainer-notification-marker"><i class="fas ${archivedView ? 'fa-box-archive' : (unread ? 'fa-bell' : 'fa-check')}"></i></div>
         <div class="trainer-notification-content">
           <div class="trainer-notification-head">
-            <span class="trainer-notification-title">${escapeHtml(senderName)} からの${unread ? '新しいコメント' : 'コメント'}</span>
+            <span class="trainer-notification-title">${escapeHtml(senderName)} からの${archivedView ? 'アーカイブ済みコメント' : (unread ? '新しいコメント' : 'コメント')}</span>
             <span class="trainer-notification-date">${escapeHtml(formatDateTimeJP(note.created_at))}</span>
           </div>
           <div class="trainer-notification-body">${escapeHtml(note.note || '')}</div>
+          ${archivedView ? `
+            <div class="trainer-notification-archived">アーカイブ: ${escapeHtml(formatDateTimeJP(note.archived_by_athlete_at))}</div>
+          ` : `
+            <div class="trainer-notification-actions">
+              <button type="button" class="btn btn-sm btn-ghost" onclick="archiveTrainerNotificationFromPage('${escapeHtml(note.id)}')">
+                <i class="fas fa-box-archive"></i> アーカイブ
+              </button>
+            </div>
+          `}
         </div>
       </div>
     `;
@@ -2222,19 +2233,31 @@ async function renderNotificationsPage() {
 
   list.innerHTML = '<div class="settings-note">通知を読み込み中...</div>';
   try {
-    const notes = await fetchCurrentAthleteTrainerNotes();
+    const notes = await fetchCurrentAthleteTrainerNotes({ includeArchived: trainerNotificationsShowArchived });
     const readIds = getTrainerNotificationReadIds();
     const unreadCount = notes.filter((note) => note?.id && !readIds.has(String(note.id))).length;
-    updateTrainerNotificationBadge(notes);
-    if (pill) pill.innerHTML = `<i class="fas fa-bell"></i> 未読 ${unreadCount}件 / 全${notes.length}件`;
+    if (!trainerNotificationsShowArchived) updateTrainerNotificationBadge(notes);
+    const archiveToggle = document.getElementById('trainerNotificationArchiveToggle');
+    if (archiveToggle) {
+      archiveToggle.innerHTML = trainerNotificationsShowArchived
+        ? '<i class="fas fa-inbox"></i> 通常一覧'
+        : '<i class="fas fa-box-archive"></i> 履歴';
+    }
+    if (pill) {
+      pill.innerHTML = trainerNotificationsShowArchived
+        ? `<i class="fas fa-box-archive"></i> アーカイブ ${notes.length}件`
+        : `<i class="fas fa-bell"></i> 未読 ${unreadCount}件 / 全${notes.length}件`;
+    }
     if (!notes.length) {
-      list.innerHTML = '<div class="trainer-notification-empty"><i class="fas fa-inbox"></i><strong>通知はありません</strong><span>トレーナーがコメントを保存すると、ここに一覧表示されます。</span></div>';
+      list.innerHTML = trainerNotificationsShowArchived
+        ? '<div class="trainer-notification-empty"><i class="fas fa-box-archive"></i><strong>アーカイブ履歴はありません</strong><span>通知をアーカイブすると、ここで後から確認できます。</span></div>'
+        : '<div class="trainer-notification-empty"><i class="fas fa-inbox"></i><strong>通知はありません</strong><span>トレーナーがコメントを保存すると、ここに一覧表示されます。</span></div>';
       return;
     }
-    list.innerHTML = renderTrainerNotificationCards(notes);
+    list.innerHTML = renderTrainerNotificationCards(notes, { archivedView: trainerNotificationsShowArchived });
   } catch (error) {
     console.error('BOXER PRO: render notifications page', error);
-    list.innerHTML = '<div class="settings-note">通知を取得できませんでした。Supabase migration 004/005 が適用済みか確認してください。</div>';
+    list.innerHTML = '<div class="settings-note">通知を取得できませんでした。Supabase migration 004/005/007 が適用済みか確認してください。</div>';
   }
 }
 
@@ -2253,6 +2276,28 @@ async function markAllTrainerNotificationsRead() {
     console.error('BOXER PRO: mark notifications read', error);
     showToast('既読にできませんでした', 'error');
   }
+}
+
+function toggleTrainerNotificationArchiveView() {
+  trainerNotificationsShowArchived = !trainerNotificationsShowArchived;
+  void renderNotificationsPage();
+}
+
+async function archiveTrainerNotificationFromPage(noteId) {
+  showModal('コメントをアーカイブ', 'このコメントを通常の通知一覧から非表示にしますか？アーカイブ履歴から後で確認できます。', async () => {
+    try {
+      await archiveTrainerNoteForAthlete(noteId);
+      const readIds = getTrainerNotificationReadIds();
+      if (noteId) readIds.add(String(noteId));
+      saveTrainerNotificationReadIds(readIds);
+      await renderNotificationsPage();
+      void renderAthleteTrainerNotesPanel();
+      showToast('コメントをアーカイブしました', 'success');
+    } catch (error) {
+      console.error('BOXER PRO: archive trainer notification', error);
+      showToast(error?.message || 'アーカイブできませんでした', 'error');
+    }
+  });
 }
 
 async function saveTrainerInviteFromSettings() {

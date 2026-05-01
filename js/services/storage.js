@@ -574,32 +574,37 @@ async function fetchTrainerAthleteSnapshot(athleteUserId) {
   };
 }
 
-async function fetchTrainerNotes(athleteUserId) {
+async function fetchTrainerNotes(athleteUserId, options = {}) {
   const sb = await getSupabaseClient();
   const targetUserId = String(athleteUserId || '').trim();
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE || !targetUserId) return [];
-  let { data, error } = await sb
+  const includeArchived = !!options.includeArchived;
+  let query = sb
     .from('boxer_trainer_notes')
-    .select('id, athlete_user_id, trainer_user_id, trainer_display_name, note, created_at, updated_at')
+    .select('id, athlete_user_id, trainer_user_id, trainer_display_name, archived_by_athlete_at, note, created_at, updated_at')
     .eq('athlete_user_id', targetUserId)
     .order('created_at', { ascending: false })
     .limit(20);
+  query = includeArchived ? query.not('archived_by_athlete_at', 'is', null) : query.is('archived_by_athlete_at', null);
+  let { data, error } = await query;
   if (error) {
     const code = String(error?.code || '');
     const message = String(error?.message || '');
-    if (code === '42703' || code === 'PGRST204' || message.includes('trainer_display_name')) {
-      const fallback = await sb
+    if (code === '42703' || code === 'PGRST204' || message.includes('trainer_display_name') || message.includes('archived_by_athlete_at')) {
+      const fallbackQuery = sb
         .from('boxer_trainer_notes')
         .select('id, athlete_user_id, trainer_user_id, note, created_at, updated_at')
         .eq('athlete_user_id', targetUserId)
         .order('created_at', { ascending: false })
         .limit(20);
+      const fallback = await fallbackQuery;
       if (!fallback.error) {
-        return (fallback.data || []).map((row) => ({ ...row, trainer_display_name: 'トレーナー' }));
+        return includeArchived ? [] : (fallback.data || []).map((row) => ({ ...row, trainer_display_name: 'トレーナー', archived_by_athlete_at: null }));
       }
       error = fallback.error;
     }
-    if (code === '42P01' || code === 'PGRST205') {
+    const finalCode = String(error?.code || code);
+    if (finalCode === '42P01' || finalCode === 'PGRST205') {
       console.warn('BOXER PRO: boxer_trainer_notes migration has not been applied yet');
       return [];
     }
@@ -608,12 +613,12 @@ async function fetchTrainerNotes(athleteUserId) {
   return data || [];
 }
 
-async function fetchCurrentAthleteTrainerNotes() {
+async function fetchCurrentAthleteTrainerNotes(options = {}) {
   const sb = await getSupabaseClient();
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return [];
   const user = await getSupabaseUserSafe(sb);
   if (!user) return [];
-  return fetchTrainerNotes(user.id);
+  return fetchTrainerNotes(user.id, options);
 }
 
 async function saveTrainerNoteForAthlete(athleteUserId, note) {
@@ -646,6 +651,19 @@ async function deleteTrainerNote(noteId) {
   const { data, error } = await sb.rpc('boxer_delete_trainer_note', { note_id: id });
   if (error) throw error;
   if (!data) throw new Error('コメントを削除できませんでした');
+  return data;
+}
+
+async function archiveTrainerNoteForAthlete(noteId) {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    throw new Error('クラウドログイン中のみ利用できます');
+  }
+  const id = String(noteId || '').trim();
+  if (!id) throw new Error('アーカイブ対象が不正です');
+  const { data, error } = await sb.rpc('boxer_archive_trainer_note', { note_id: id });
+  if (error) throw error;
+  if (!data) throw new Error('コメントをアーカイブできませんでした');
   return data;
 }
 

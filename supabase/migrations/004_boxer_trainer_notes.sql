@@ -7,6 +7,7 @@ create table if not exists public.boxer_trainer_notes (
   trainer_user_id uuid not null references auth.users (id) on delete cascade,
   trainer_display_name text not null default 'トレーナー',
   note text not null,
+  archived_by_athlete_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint boxer_trainer_notes_trainer_name_check check (char_length(btrim(trainer_display_name)) between 1 and 80),
@@ -16,8 +17,15 @@ create table if not exists public.boxer_trainer_notes (
 alter table public.boxer_trainer_notes
   add column if not exists trainer_display_name text not null default 'トレーナー';
 
+alter table public.boxer_trainer_notes
+  add column if not exists archived_by_athlete_at timestamptz;
+
 create index if not exists idx_boxer_trainer_notes_athlete
   on public.boxer_trainer_notes (athlete_user_id, created_at desc);
+
+create index if not exists idx_boxer_trainer_notes_athlete_active
+  on public.boxer_trainer_notes (athlete_user_id, created_at desc)
+  where archived_by_athlete_at is null;
 
 create index if not exists idx_boxer_trainer_notes_trainer
   on public.boxer_trainer_notes (trainer_user_id, created_at desc);
@@ -153,3 +161,25 @@ $$;
 
 grant execute on function public.boxer_create_trainer_note(uuid, text) to authenticated;
 grant execute on function public.boxer_delete_trainer_note(uuid) to authenticated;
+
+create or replace function public.boxer_archive_trainer_note(note_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'ログインが必要です';
+  end if;
+
+  update public.boxer_trainer_notes
+  set archived_by_athlete_at = coalesce(archived_by_athlete_at, now())
+  where id = note_id
+    and athlete_user_id = auth.uid();
+
+  return found;
+end;
+$$;
+
+grant execute on function public.boxer_archive_trainer_note(uuid) to authenticated;

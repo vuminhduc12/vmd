@@ -2095,6 +2095,17 @@ textarea.input-field{resize:vertical;min-height:70px}
   white-space:pre-wrap;
   margin-top:8px;
 }
+.trainer-notification-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:10px;
+}
+.trainer-notification-archived{
+  color:var(--tx-3);
+  font-size:11px;
+  font-weight:800;
+  margin-top:10px;
+}
 .trainer-notification-empty{
   display:flex;
   min-height:220px;
@@ -2555,6 +2566,13 @@ body.mobile-quick-open{overflow:hidden;touch-action:none}
   .trainer-notification-body{
     font-size:12.5px;
     line-height:1.65;
+  }
+  .trainer-notification-actions{
+    justify-content:stretch;
+  }
+  .trainer-notification-actions .btn{
+    width:100%;
+    justify-content:center;
   }
   #trainerAthleteList .stat-card{
     scroll-snap-align:start;
