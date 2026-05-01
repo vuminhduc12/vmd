@@ -2110,6 +2110,38 @@ async function renderTrainerInvitePanel() {
   }
 }
 
+async function renderAthleteTrainerNotesPanel() {
+  const card = document.getElementById('athlete-trainer-notes-card');
+  const list = document.getElementById('athleteTrainerNotesList');
+  if (!card || !list) return;
+  const caps = getEffectiveUserCapabilities();
+  const shouldShow = activeStorageMode === STORAGE_MODE.SUPABASE && !trainerAccessAvailable && caps.isAthlete !== false;
+  card.hidden = !shouldShow;
+  if (!shouldShow) {
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = '<div class="settings-note">コメントを読み込み中...</div>';
+  try {
+    const notes = await fetchCurrentAthleteTrainerNotes();
+    if (!notes.length) {
+      list.innerHTML = '<div class="settings-note">まだトレーナーからのコメントはありません。</div>';
+      return;
+    }
+    list.innerHTML = notes.map((note) => `
+      <div class="trainer-note-item">
+        <div class="trainer-note-head">
+          <span><i class="fas fa-comment-dots"></i> ${escapeHtml(formatDateTimeJP(note.created_at))}</span>
+        </div>
+        <div class="trainer-note-body">${escapeHtml(note.note || '')}</div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('BOXER PRO: athlete trainer notes', error);
+    list.innerHTML = '<div class="settings-note">トレーナーコメントを取得できませんでした。Supabase migration 004 が適用済みか確認してください。</div>';
+  }
+}
+
 async function saveTrainerInviteFromSettings() {
   const input = document.getElementById('trainerInviteEmail');
   const email = input?.value || '';
@@ -2638,6 +2670,10 @@ function applySettingsCapabilityVisibility() {
   if (trainerInviteCard) {
     trainerInviteCard.hidden = !!trainerAccessAvailable && !caps.isAthlete;
   }
+  const athleteTrainerNotesCard = document.getElementById('athlete-trainer-notes-card');
+  if (athleteTrainerNotesCard) {
+    athleteTrainerNotesCard.hidden = activeStorageMode !== STORAGE_MODE.SUPABASE || !!trainerAccessAvailable || caps.isAthlete === false;
+  }
   if (trainerAccessAvailable || caps.isTrainer) {
     ['settings-storage-card', 'admin-stats-card'].forEach((id) => {
       const card = document.getElementById(id);
@@ -2681,6 +2717,7 @@ function renderSettingsPage() {
   updateAiCoachAvailability();
   updateSupabaseAuthUI();
   void renderTrainerInvitePanel();
+  void renderAthleteTrainerNotesPanel();
   applySettingsCapabilityVisibility();
   applyLanguageUi();
   } catch (err) {

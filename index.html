@@ -1947,6 +1947,22 @@
           </div>
         </div>
 
+        <div class="form-card record-collapse-card" id="athlete-trainer-notes-card">
+          <div class="collapsible-head form-title-row">
+            <h3 class="form-title"><i class="fas fa-comments"></i> トレーナーからのコメント</h3>
+            <button type="button" class="btn btn-sm btn-ghost collapse-toggle" onclick="toggleCollapseSection('athleteTrainerNotesBody', this)">折りたたむ</button>
+          </div>
+          <div id="athleteTrainerNotesBody">
+            <p class="settings-note">承認済みトレーナーが保存した、あなた宛のコメント・メモを確認できます。</p>
+            <div class="settings-actions" style="margin-top:10px">
+              <button type="button" class="btn btn-ghost btn-full" onclick="renderAthleteTrainerNotesPanel()">
+                <i class="fas fa-rotate"></i> コメントを更新
+              </button>
+            </div>
+            <div id="athleteTrainerNotesList" class="trainer-notes-list"></div>
+          </div>
+        </div>
+
         <div class="form-card record-collapse-card" id="admin-stats-card" hidden>
           <div class="collapsible-head form-title-row">
             <h3 class="form-title"><i class="fas fa-user-shield"></i> 管理者統計</h3>
@@ -2147,11 +2163,11 @@
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script src="js/core/navigation.js?v=32"></script>
-<script src="js/services/storage.js?v=32"></script>
+<script src="js/services/storage.js?v=33"></script>
 <script src="js/pages/weight.js?v=31"></script>
 <script src="js/pages/fight.js?v=31"></script>
 <script src="js/core/helpers.js?v=31"></script>
 <script src="js/core/init.js?v=31"></script>
-<script src="js/app.js?v=32"></script>
+<script src="js/app.js?v=33"></script>
 </body>
 </html>

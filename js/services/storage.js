@@ -594,6 +594,14 @@ async function fetchTrainerNotes(athleteUserId) {
   return data || [];
 }
 
+async function fetchCurrentAthleteTrainerNotes() {
+  const sb = await getSupabaseClient();
+  if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) return [];
+  const user = await getSupabaseUserSafe(sb);
+  if (!user) return [];
+  return fetchTrainerNotes(user.id);
+}
+
 async function saveTrainerNoteForAthlete(athleteUserId, note) {
   const sb = await getSupabaseClient();
   if (!sb || activeStorageMode !== STORAGE_MODE.SUPABASE) {
@@ -606,15 +614,10 @@ async function saveTrainerNoteForAthlete(athleteUserId, note) {
   if (!targetUserId) throw new Error('選手が選択されていません');
   if (!noteText) throw new Error('コメントを入力してください');
   if (noteText.length > 1200) throw new Error('コメントは1200文字以内で入力してください');
-  const { data, error } = await sb
-    .from('boxer_trainer_notes')
-    .insert({
-      athlete_user_id: targetUserId,
-      trainer_user_id: user.id,
-      note: noteText,
-    })
-    .select('id, athlete_user_id, trainer_user_id, note, created_at, updated_at')
-    .single();
+  const { data, error } = await sb.rpc('boxer_create_trainer_note', {
+    target_athlete_user_id: targetUserId,
+    note_text: noteText,
+  });
   if (error) throw error;
   return data;
 }
@@ -626,9 +629,10 @@ async function deleteTrainerNote(noteId) {
   }
   const id = String(noteId || '').trim();
   if (!id) throw new Error('削除対象が不正です');
-  const { error } = await sb.from('boxer_trainer_notes').delete().eq('id', id);
+  const { data, error } = await sb.rpc('boxer_delete_trainer_note', { note_id: id });
   if (error) throw error;
-  return true;
+  if (!data) throw new Error('コメントを削除できませんでした');
+  return data;
 }
 
 async function boxerSupabaseApiPost(table, data) {
