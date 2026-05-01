@@ -1365,6 +1365,9 @@ async function loadAllData() {
     hydrationLogs = (hRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
     recoveryLogs  = (rRes.data || []).sort((a,b) => new Date(a.date) - new Date(b.date));
     hasInitialDataLoaded = true;
+    if (typeof refreshTrainerNavAccess === 'function') {
+      await refreshTrainerNavAccess();
+    }
     const activePageId = document.querySelector('.page.active')?.id || 'page-dashboard';
     if (typeof renderActivePageById === 'function') {
       renderActivePageById(activePageId);

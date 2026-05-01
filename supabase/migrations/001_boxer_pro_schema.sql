@@ -311,7 +311,11 @@ create policy "boxer_trainer_links_update_own_athlete"
 
 create policy "boxer_trainer_links_delete_own_athlete"
   on public.boxer_trainer_links for delete
-  using (auth.uid() = athlete_user_id);
+  using (
+    auth.uid() = athlete_user_id
+    or auth.uid() = trainer_user_id
+    or trainer_email = lower(coalesce(auth.jwt() ->> 'email', ''))
+  );
 
 -- Generic log policies (repeat per table)
 create policy "boxer_weight_select_own" on public.boxer_weight_logs for select using (auth.uid() = user_id or public.boxer_is_approved_trainer(user_id));

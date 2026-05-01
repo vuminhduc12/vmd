@@ -525,6 +525,7 @@ function isFightModeEnabled() {
 }
 
 let goalModeUiRedirecting = false;
+let trainerNavRedirecting = false;
 
 function applyGoalModeUi() {
   const mode = getCurrentGoalMode();
@@ -537,6 +538,8 @@ function applyGoalModeUi() {
   if (desktopFightNav) desktopFightNav.style.display = boxerMode ? '' : 'none';
   const mobileFightNav = document.querySelector('.mobile-nav-btn[data-page="fight"]');
   if (mobileFightNav) mobileFightNav.style.display = boxerMode ? '' : 'none';
+  const trainerNav = document.querySelector('.nav-item[data-page="trainer"]');
+  if (trainerNav) trainerNav.style.display = trainerAccessAvailable ? '' : 'none';
 
   const dashboardFightCard = document.querySelector('#dash-quick-anchor .dashboard-focus-card');
   if (dashboardFightCard) dashboardFightCard.style.display = boxerMode ? '' : 'none';
@@ -569,6 +572,11 @@ function applyGoalModeUi() {
     goalModeUiRedirecting = true;
     switchPage('dashboard');
     goalModeUiRedirecting = false;
+  }
+  if (!trainerAccessAvailable && activePage === 'page-trainer' && !trainerNavRedirecting) {
+    trainerNavRedirecting = true;
+    switchPage('dashboard');
+    trainerNavRedirecting = false;
   }
 }
 
@@ -786,6 +794,7 @@ let trainerAthletes = [];
 let selectedTrainerAthleteId = '';
 let trainerInviteRenderSeq = 0;
 let trainerPageRenderSeq = 0;
+let trainerAccessAvailable = false;
 let dashboardSectionOrderApplied = false;
 let dashboardRenderTimer = null;
 const DASHBOARD_RENDER_DEBOUNCE_MS = 120;
@@ -1969,6 +1978,32 @@ function getTrainerAthleteMeta(row) {
   return `${role} / ${lastSeen}`;
 }
 
+function syncTrainerNavVisibility(athletes = trainerAthletes) {
+  trainerAccessAvailable = activeStorageMode === STORAGE_MODE.SUPABASE && Array.isArray(athletes) && athletes.length > 0;
+  if (!trainerAccessAvailable) {
+    selectedTrainerAthleteId = '';
+  }
+  applyGoalModeUi();
+}
+
+async function refreshTrainerNavAccess() {
+  if (activeStorageMode !== STORAGE_MODE.SUPABASE) {
+    trainerAthletes = [];
+    syncTrainerNavVisibility([]);
+    return false;
+  }
+  try {
+    trainerAthletes = await fetchTrainerAthletes();
+    syncTrainerNavVisibility(trainerAthletes);
+    return trainerAccessAvailable;
+  } catch (error) {
+    console.error('BOXER PRO: refresh trainer nav access', error);
+    trainerAthletes = [];
+    syncTrainerNavVisibility([]);
+    return false;
+  }
+}
+
 async function renderTrainerInvitePanel() {
   const list = document.getElementById('trainerInviteList');
   const card = document.getElementById('trainer-invite-card');
@@ -2042,9 +2077,19 @@ function renderTrainerAthleteList() {
     const athleteId = row.athlete_user_id;
     const active = athleteId === selectedTrainerAthleteId;
     return `
-      <button type="button" class="btn ${active ? 'btn-primary' : 'btn-secondary'} btn-full" onclick="selectTrainerAthlete('${escapeHtml(athleteId)}')">
-        <i class="fas fa-user"></i> ${escapeHtml(getTrainerAthleteName(row))}
-      </button>
+      <div class="stat-card" style="text-align:left">
+        <div class="stat-label">${active ? '選択中' : '担当選手'}</div>
+        <div class="stat-val" style="font-size:18px">${escapeHtml(getTrainerAthleteName(row))}</div>
+        <div class="stat-sub">${escapeHtml(getTrainerAthleteMeta(row))}</div>
+        <div class="settings-actions" style="margin-top:10px">
+          <button type="button" class="btn ${active ? 'btn-primary' : 'btn-secondary'} btn-full" onclick="selectTrainerAthlete('${escapeHtml(athleteId)}')">
+            <i class="fas fa-eye"></i> この選手を見る
+          </button>
+          <button type="button" class="btn btn-ghost btn-full" onclick="removeTrainerAthlete('${escapeHtml(row.id)}')">
+            <i class="fas fa-user-minus"></i> 担当から外す
+          </button>
+        </div>
+      </div>
     `;
   }).join('');
 }
@@ -2110,6 +2155,30 @@ async function selectTrainerAthlete(athleteUserId) {
   await renderTrainerAthleteData();
 }
 
+async function removeTrainerAthlete(linkId) {
+  showModal('担当選手を外す', 'この選手をトレーナー閲覧から外しますか？外すと、この選手のデータは表示されなくなります。', async () => {
+    try {
+      await deleteTrainerInvite(linkId);
+      trainerAthletes = trainerAthletes.filter((row) => row.id !== linkId);
+      if (!trainerAthletes.some((row) => row.athlete_user_id === selectedTrainerAthleteId)) {
+        selectedTrainerAthleteId = trainerAthletes[0]?.athlete_user_id || '';
+      }
+      syncTrainerNavVisibility(trainerAthletes);
+      if (!trainerAccessAvailable) {
+        showToast('担当選手がいなくなったため、通常ユーザー画面に戻りました', 'info');
+        switchPage('dashboard');
+        return;
+      }
+      renderTrainerAthleteList();
+      await renderTrainerAthleteData();
+      showToast('担当選手を外しました', 'info');
+    } catch (error) {
+      console.error('BOXER PRO: remove trainer athlete', error);
+      showToast('担当選手を外せませんでした', 'error');
+    }
+  });
+}
+
 async function renderTrainerPage() {
   const gate = document.getElementById('trainerCloudGate');
   const workspace = document.getElementById('trainerWorkspace');
@@ -2129,7 +2198,7 @@ async function renderTrainerPage() {
   const list = document.getElementById('trainerAthleteList');
   if (list) list.innerHTML = '<div class="settings-note">あなたに閲覧許可した選手を読み込み中...</div>';
   try {
-    trainerAthletes = await fetchTrainerAthletes();
+    await refreshTrainerNavAccess();
     if (seq !== trainerPageRenderSeq) return;
     if (!trainerAthletes.some((row) => row.athlete_user_id === selectedTrainerAthleteId)) {
       selectedTrainerAthleteId = trainerAthletes[0]?.athlete_user_id || '';
