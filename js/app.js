@@ -1137,6 +1137,17 @@ function getUserDisplayName(user) {
   return meta.full_name || meta.name || meta.user_name || '';
 }
 
+function getCurrentDisplayName() {
+  const sessionUser = supabaseSessionSnapshot?.user || null;
+  const email = sessionUser?.email || '';
+  return (
+    getUserDisplayName(sessionUser)
+    || appSettings.athleteName
+    || (email ? email.split('@')[0] : '')
+    || DEFAULT_SETTINGS.athleteName
+  );
+}
+
 function renderProfileCard(authUser = null) {
   const nameEl = document.getElementById('profileNameDisplay');
   const roleEl = document.getElementById('profileRoleDisplay');
@@ -4230,6 +4241,15 @@ function renderDashboardNow() {
   refreshCuttingPlanRows();
   const today = TODAY();
   const snapshot = getDailyPerformanceSnapshot(today);
+  const displayName = getCurrentDisplayName();
+  const greetingName = displayName ? `${displayName}選手` : '選手';
+  const day = new Date(`${today}T00:00:00`).getDay();
+  const greetingSuffix = day === 1
+    ? '今週も頑張ろう！'
+    : day === 5
+      ? '週末まで集中していこう！'
+      : '今日もいい記録を積み上げよう！';
+  setText('dashboardGreetingText', `${greetingName}、${greetingSuffix}`);
 
   // Today's weight
   const todayWeights = weightLogs.filter(w => w.date && w.date.slice(0,10) === today);

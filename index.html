@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <!-- boxer-pro-build 13 -->
+  <!-- boxer-pro-build 14 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
   <meta name="theme-color" content="#080a10">
@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/app-icon.svg">
-  <link rel="stylesheet" href="css/style.css?v=37">
+  <link rel="stylesheet" href="css/style.css?v=38">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -101,6 +101,10 @@
     <div class="page-header dashboard-hero">
       <div class="dashboard-hero-copy">
         <div class="dashboard-eyebrow"><i class="fas fa-bolt"></i> BOXER CONTROL CENTER</div>
+        <div class="dashboard-greeting" id="dashboardGreeting">
+          <i class="fas fa-bell"></i>
+          <span id="dashboardGreetingText">今日も積み上げましょう。</span>
+        </div>
         <h1><i class="fas fa-th-large" style="color:var(--red);font-size:24px"></i> <span id="page-dashboard-title-text" data-i18n="dashboard.title">ダッシュボード</span></h1>
         <p class="page-subtitle"><span id="page-dashboard-subtitle-text" data-i18n="dashboard.subtitle">今日のコンディションを一目で確認</span><span id="dashSubDate"></span></p>
       </div>
@@ -2228,6 +2232,6 @@
 <script src="js/pages/fight.js?v=31"></script>
 <script src="js/core/helpers.js?v=31"></script>
 <script src="js/core/init.js?v=31"></script>
-<script src="js/app.js?v=36"></script>
+<script src="js/app.js?v=38"></script>
 </body>
 </html>
