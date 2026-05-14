@@ -1,4 +1,4 @@
-const CACHE_NAME = 'boxer-pro-v16';
+const CACHE_NAME = 'boxer-pro-v17';
 const CORE_ASSETS = [
   './',
   './index.html',

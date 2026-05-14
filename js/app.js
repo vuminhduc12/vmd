@@ -1141,8 +1141,8 @@ function getCurrentDisplayName() {
   const sessionUser = supabaseSessionSnapshot?.user || null;
   const email = sessionUser?.email || '';
   return (
-    getUserDisplayName(sessionUser)
-    || appSettings.athleteName
+    appSettings.athleteName
+    || getUserDisplayName(sessionUser)
     || (email ? email.split('@')[0] : '')
     || DEFAULT_SETTINGS.athleteName
   );
@@ -1153,7 +1153,8 @@ function renderProfileCard(authUser = null) {
   const roleEl = document.getElementById('profileRoleDisplay');
   if (!nameEl || !roleEl) return;
 
-  const defaultName = appSettings.athleteName || DEFAULT_SETTINGS.athleteName;
+  const appDisplayName = appSettings.athleteName || '';
+  const defaultName = appDisplayName || DEFAULT_SETTINGS.athleteName;
   const defaultRole = appSettings.athleteRole || DEFAULT_SETTINGS.athleteRole;
   if (!authUser) {
     nameEl.textContent = defaultName;
@@ -1162,7 +1163,7 @@ function renderProfileCard(authUser = null) {
   }
 
   const email = authUser.email || '';
-  const displayName = getUserDisplayName(authUser) || (email ? email.split('@')[0] : '') || defaultName;
+  const displayName = appDisplayName || getUserDisplayName(authUser) || (email ? email.split('@')[0] : '') || defaultName;
   nameEl.textContent = displayName;
   roleEl.textContent = email || `クラウド同期中 / ${defaultRole}`;
 }
