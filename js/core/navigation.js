@@ -152,6 +152,19 @@ function mobileNavigateTo(pageName, scrollSelector, focusId) {
   }, 100);
 }
 
+function mobileOpenWeightComposer() {
+  closeMobileQuickSheet();
+  switchPage('weight');
+  window.setTimeout(() => {
+    if (typeof openNewWeightComposer === 'function') {
+      openNewWeightComposer();
+      return;
+    }
+    const composer = document.getElementById('weightComposerCard');
+    if (composer) composer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 120);
+}
+
 function initMobileQuickUI() {
   const fab = document.getElementById('mobileRecordFab');
   const backdrop = document.getElementById('mobileQuickBackdrop');
@@ -161,7 +174,7 @@ function initMobileQuickUI() {
   if (closeBtn) closeBtn.addEventListener('click', closeMobileQuickSheet);
 
   const actions = {
-    'dash-weight': () => mobileNavigateTo('weight', '#weight-record-list-anchor', null),
+    'dash-weight': mobileOpenWeightComposer,
     meals: () => mobileNavigateTo('meals', '#meal-input-anchor', 'foodSearch'),
     training: () => mobileNavigateTo('training', '#training-record-anchor', 't-type'),
     hydration: () => mobileNavigateTo('calories', '#cal-anchor-hydration', 'h-water'),

@@ -265,13 +265,23 @@ function focusWeightComposerWeightInput(options = {}) {
   if (!input) return;
   const target = input.closest('.form-group') || input;
   const selectValue = options.selectValue === true;
+  const isMobile = window.innerWidth <= 900;
   window.setTimeout(() => {
     target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     window.setTimeout(() => {
-      input.focus({ preventScroll: true });
+      if (isMobile) {
+        input.focus();
+      } else {
+        input.focus({ preventScroll: true });
+      }
       if (selectValue && input.value) input.select();
       input.classList.add('input-attention');
       window.setTimeout(() => input.classList.remove('input-attention'), 900);
+      if (isMobile) {
+        window.setTimeout(() => {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }, 360);
+      }
     }, 260);
   }, 80);
 }
