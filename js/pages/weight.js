@@ -260,12 +260,28 @@ function cancelEditWeight() {
   closeWeightComposer();
 }
 
+function focusWeightComposerWeightInput(options = {}) {
+  const input = document.getElementById('w-weight');
+  if (!input) return;
+  const target = input.closest('.form-group') || input;
+  const selectValue = options.selectValue === true;
+  window.setTimeout(() => {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    window.setTimeout(() => {
+      input.focus({ preventScroll: true });
+      if (selectValue && input.value) input.select();
+      input.classList.add('input-attention');
+      window.setTimeout(() => input.classList.remove('input-attention'), 900);
+    }, 260);
+  }, 80);
+}
+
 function openNewWeightComposer() {
   editingWeightId = null;
   isWeightComposerOpen = true;
   resetWeightComposerForm();
   updateWeightEditUI();
-  window.setTimeout(() => document.getElementById('w-weight')?.focus(), 80);
+  focusWeightComposerWeightInput();
 }
 
 function startEditWeight(id) {
@@ -288,9 +304,7 @@ function startEditWeight(id) {
   void renderWeightPhotoGallery(id);
   if (typeof updateWeightBmiPreview === 'function') updateWeightBmiPreview();
   switchPage('weight');
-  window.setTimeout(() => {
-    document.getElementById('page-weight')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 50);
+  focusWeightComposerWeightInput({ selectValue: true });
 }
 
 async function deleteWeightLog(id) {

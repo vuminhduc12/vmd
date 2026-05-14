@@ -1187,11 +1187,11 @@ function openDashboardEditor(mode) {
   if (mode === 'weight') {
     const latest = getLatestWeightLog();
     if (latest?.id) {
-      switchPage('weight');
-      handleWeightRecordSelection(latest.id);
+      startEditWeight(latest.id);
       return;
     }
     switchPage('weight');
+    openNewWeightComposer();
     return;
   }
 
